@@ -8,28 +8,27 @@ import { Lock, CreditCard, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollReveal } from "@/components/scroll-reveal"
-import { useStore } from "@/context/store-context"
 
-// Mock promo codes data - in a real app this would come from an API or context
-const mockPromoCodes = [
+const orderItems = [
   {
-    code: "WELCOME10",
-    discountType: "percentage",
-    discountValue: 10,
-    validityDate: "2024-12-31T23:59",
-    isActive: true
+    id: 1,
+    name: "ESSENTIAL TEE",
+    price: 85,
+    quantity: 2,
+    size: "M",
+    image: "/placeholder.svg?height=100&width=80&text=Tee",
   },
   {
-    code: "SAVE20",
-    discountType: "fixed",
-    discountValue: 20,
-    validityDate: "2024-11-30T23:59",
-    isActive: true
-  }
+    id: 2,
+    name: "CARGO PANTS",
+    price: 195,
+    quantity: 1,
+    size: "M",
+    image: "/placeholder.svg?height=100&width=80&text=Cargo",
+  },
 ]
 
 export function CheckoutPage() {
-  const { cartItems, clearCart } = useStore()
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     email: "",
@@ -44,93 +43,20 @@ export function CheckoutPage() {
     cvv: "",
     nameOnCard: "",
   })
-  const [promoCode, setPromoCode] = useState("")
-  const [appliedPromoCode, setAppliedPromoCode] = useState<any>(null)
-  const [promoCodeError, setPromoCodeError] = useState("")
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = 0 // Free shipping
-  
-  // Calculate discount
-  let discount = 0
-  if (appliedPromoCode) {
-    if (appliedPromoCode.discountType === "percentage") {
-      discount = (subtotal * appliedPromoCode.discountValue) / 100
-    } else {
-      discount = appliedPromoCode.discountValue
-    }
-  }
-  
-  const tax = (subtotal - discount) * 0.08
-  const total = subtotal + shipping + tax - discount
+  const tax = subtotal * 0.08
+  const total = subtotal + shipping + tax
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleApplyPromoCode = () => {
-    setPromoCodeError("")
-    
-    // Find the promo code
-    const promo = mockPromoCodes.find(
-      code => code.code.toLowerCase() === promoCode.toLowerCase() && code.isActive
-    )
-    
-    if (!promo) {
-      setPromoCodeError("Invalid or inactive promo code")
-      return
-    }
-    
-    // Check if the promo code is still valid
-    const now = new Date()
-    const validityDate = new Date(promo.validityDate)
-    
-    if (now > validityDate) {
-      setPromoCodeError("This promo code has expired")
-      return
-    }
-    
-    setAppliedPromoCode(promo)
-  }
-
-  const handleRemovePromoCode = () => {
-    setAppliedPromoCode(null)
-    setPromoCode("")
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     // Process payment
-    // Clear cart after successful order
-    clearCart()
     setStep(4) // Success step
-  }
-
-  if (cartItems.length === 0) {
-    return (
-      <div className="min-h-screen pt-16 lg:pt-20">
-        <div className="container mx-auto px-4 py-16">
-          <ScrollReveal direction="up">
-            <div className="text-center max-w-2xl mx-auto">
-              <div className="mb-8 text-6xl">🛒</div>
-              <h1 className="mb-4 text-3xl font-black uppercase tracking-wider">Your Cart is Empty</h1>
-              <p className="mb-8 text-lg text-gray-600">
-                You need to add items to your cart before checking out.
-              </p>
-              <div className="space-y-4">
-                <Button
-                  size="lg"
-                  className="bg-black px-8 py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
-                  onClick={() => window.location.href = "/shop"}
-                >
-                  Continue Shopping
-                </Button>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
-      </div>
-    )
   }
 
   if (step === 4) {
@@ -142,17 +68,24 @@ export function CheckoutPage() {
               <div className="mb-8 text-6xl">✅</div>
               <h1 className="mb-4 text-3xl font-black uppercase tracking-wider">Order Confirmed!</h1>
               <p className="mb-8 text-lg text-gray-600">
-                Thank you for your purchase. Your order has been confirmed and will be shipped within 2-3
+                Thank you for your purchase. Your order #BLV-2024-001 has been confirmed and will be shipped within 2-3
                 business days.
               </p>
               <div className="space-y-4">
                 <Button
                   size="lg"
                   className="bg-black px-8 py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
-                  onClick={() => window.location.href = "/"}
                 >
-                  Continue Shopping
+                  Track Your Order
                 </Button>
+                <div>
+                  <Button
+                    variant="outline"
+                    className="border-black text-black hover:bg-black hover:text-white bg-transparent"
+                  >
+                    Continue Shopping
+                  </Button>
+                </div>
               </div>
             </div>
           </ScrollReveal>
@@ -428,8 +361,8 @@ export function CheckoutPage() {
 
                 {/* Order Items */}
                 <div className="mb-6 space-y-4">
-                  {cartItems.map((item) => (
-                    <div key={item.id + "-" + item.size + "-" + item.color} className="flex items-center space-x-4">
+                  {orderItems.map((item) => (
+                    <div key={item.id} className="flex items-center space-x-4">
                       <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden">
                         <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-cover" />
                       </div>
@@ -444,69 +377,12 @@ export function CheckoutPage() {
                   ))}
                 </div>
 
-                {/* Promo Code */}
-                <div className="mb-4">
-                  {appliedPromoCode ? (
-                    <div className="flex items-center justify-between bg-green-50 p-3 rounded">
-                      <div>
-                        <p className="font-semibold text-green-800">Promo Applied</p>
-                        <p className="text-sm text-green-600">{appliedPromoCode.code}</p>
-                      </div>
-                      <Button 
-                        onClick={handleRemovePromoCode}
-                        variant="outline"
-                        size="sm"
-                        className="border-green-500 text-green-500 hover:bg-green-100"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <label htmlFor="checkoutPromoCode" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
-                        Promo Code
-                      </label>
-                      <div className="flex">
-                        <input
-                          type="text"
-                          id="checkoutPromoCode"
-                          value={promoCode}
-                          onChange={(e) => setPromoCode(e.target.value)}
-                          placeholder="Enter code"
-                          className="flex-1 border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                        />
-                        <Button 
-                          onClick={handleApplyPromoCode}
-                          className="bg-black text-white hover:bg-gray-800"
-                        >
-                          Apply
-                        </Button>
-                      </div>
-                      {promoCodeError && (
-                        <p className="mt-2 text-sm text-red-500">{promoCodeError}</p>
-                      )}
-                    </>
-                  )}
-                </div>
-
                 {/* Pricing */}
                 <div className="space-y-2 border-t border-gray-300 pt-4">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
-                  
-                  {appliedPromoCode && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>
-                        Discount ({appliedPromoCode.code})
-                      </span>
-                      <span>
-                        -${discount.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-                  
                   <div className="flex justify-between text-sm">
                     <span>Shipping</span>
                     <span>Free</span>

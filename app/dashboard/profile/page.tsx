@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function ProfilePage() {
-  const { user, isLoading } = useAuth()
+  const { user, loading } = useAuth()
   const [name, setName] = useState(user?.name || "")
   const [email, setEmail] = useState(user?.email || "")
   const [isEditing, setIsEditing] = useState(false)
@@ -32,7 +32,7 @@ export default function ProfilePage() {
     setIsEditing(false)
   }
 
-  if (isLoading) {
+  if (loading) {
     return <p>Loading profile...</p>
   }
 

@@ -44,7 +44,8 @@ export default function WalletPage() {
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement | HTMLSelectElement
+    const target = e.target as HTMLInputElement
+    const { name, value, type, checked } = target
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,

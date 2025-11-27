@@ -48,7 +48,7 @@ export function ScrollReveal({
   }
 
   return (
-    <div ref={ref} className={`${getAnimationClass()} ${className}`}>
+    <div ref={ref as React.RefObject<HTMLDivElement>} className={`${getAnimationClass()} ${className}`}>
       {children}
     </div>
   )

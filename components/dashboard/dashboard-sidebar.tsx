@@ -2,24 +2,19 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, Repeat, MapPin, CreditCard, Shield } from "lucide-react"
+import { User, Package, Repeat, MapPin, CreditCard, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/context/auth-context"
 
 export function DashboardSidebar() {
   const pathname = usePathname()
-  const { user } = useAuth()
 
   const navItems = [
     { name: "Profile", href: "/dashboard/profile", icon: User },
     { name: "My Orders", href: "/dashboard/orders", icon: Package },
     { name: "Returns / Exchange", href: "/dashboard/returns", icon: Repeat },
+    { name: "My Wishlist", href: "/wishlist", icon: Heart }, // Links to existing wishlist page
     { name: "Addresses", href: "/dashboard/addresses", icon: MapPin },
     { name: "Wallet", href: "/dashboard/wallet", icon: CreditCard },
-  ]
-
-  const adminNavItems = [
-    { name: "Admin Dashboard", href: "/dashboard/admin", icon: Shield },
   ]
 
   return (
@@ -43,29 +38,6 @@ export function DashboardSidebar() {
           </Link>
         ))}
       </nav>
-
-      {/* Admin Section - now visible to all users */}
-      <div className="mt-8 pt-6 border-t border-gray-200">
-        <h3 className="text-lg font-bold uppercase tracking-wider mb-4 text-red-600">Admin Tools</h3>
-        <nav className="space-y-4">
-          {adminNavItems.map((item) => (
-            <Link key={item.name} href={item.href} passHref>
-              <Button
-                variant="outline"
-                className={`w-full justify-start px-6 py-4 text-base font-bold uppercase tracking-wide rounded-lg transition-all duration-200
-                  ${
-                    pathname === item.href
-                      ? "bg-red-600 text-white hover:bg-red-700 border-red-600"
-                      : "bg-white text-red-600 border-red-200 hover:bg-red-50"
-                  }`}
-              >
-                <item.icon className="mr-3 h-5 w-5" />
-                {item.name}
-              </Button>
-            </Link>
-          ))}
-        </nav>
-      </div>
     </aside>
   )
 }

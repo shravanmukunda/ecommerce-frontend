@@ -2,6 +2,7 @@ import { Header } from "@/components/header"
 import { Hero } from "@/components/hero"
 import { ProductGrid } from "@/components/product-grid"
 import { EditorialBanner } from "@/components/editorial-banner"
+import { Lookbook } from "@/components/lookbook"
 import { Footer } from "@/components/footer"
 
 export default function HomePage() {
@@ -17,6 +18,7 @@ export default function HomePage() {
           subtitle="Exclusive pieces. Limited quantities."
           pattern="checkerboard"
         />
+        <Lookbook />
       </main>
       <Footer />
     </div>

@@ -1,9 +1,7 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { StoreProvider } from "@/context/store-context"
-import { AuthProvider } from "@/context/auth-context" // Import AuthProvider
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,7 +23,7 @@ export const metadata: Metadata = {
     title: "Sacred Mayhem - Underground Luxury Fashion",
     description:
       "Discover Sacred Mayhem, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
-    url: "https://www.sacredmayhem.com", // Updated domain for Sacred Mayhem
+    url: "https://www.sacredmayhem.com",
     siteName: "Sacred Mayhem",
     images: [
       {
@@ -45,7 +43,6 @@ export const metadata: Metadata = {
       "Discover Sacred Mayhem, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
     images: ["/placeholder.svg?height=675&width=1200&text=Sacred+Mayhem+Twitter"],
   },
-    // ...removed v0.dev generator...
 }
 
 export default function RootLayout({
@@ -56,11 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>
-          {" "}
-          {/* Wrap with AuthProvider */}
-          <StoreProvider>{children}</StoreProvider>
-        </AuthProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

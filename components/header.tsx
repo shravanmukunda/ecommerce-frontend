@@ -3,24 +3,19 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, ShoppingCart, User } from "lucide-react"
+import { Menu, ShoppingCart, Heart, User } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
-import { useStore } from "@/context/store-context"
 
 export function Header() {
   const { user, logout } = useAuth()
-  const { cartItems } = useStore()
   const router = useRouter()
 
   const handleLogout = () => {
     logout()
     router.push("/login")
   }
-
-  // Calculate total items in cart
-  const cartItemCount = cartItems.reduce((total, item) => total + item.quantity, 0)
 
   return (
     <header className="flex h-20 w-full items-center justify-between px-4 md:px-6 lg:px-8 border-b border-gray-200 bg-white shadow-sm">
@@ -50,6 +45,13 @@ export function Header() {
               <Link href="/shop" className="hover:text-gray-900">
                 Shop
               </Link>
+              <Link href="/lookbook" className="hover:text-gray-900">
+                Lookbook
+              </Link>
+              <Link href="/about" className="hover:text-gray-900">
+                About
+              </Link>
+              {/* Blog link removed */}
               <Link href="/contact" className="hover:text-gray-900">
                 Contact
               </Link>
@@ -72,7 +74,7 @@ export function Header() {
         </Sheet>
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/public/images/sacred-mayhem-logo.png"
+            src="/images/sacred-mayhem-logo.png"
             alt="Sacred Mayhem Logo"
             width={50}
             height={50}
@@ -88,20 +90,26 @@ export function Header() {
         <Link href="/shop" className="hover:text-gray-900 transition-colors">
           Shop
         </Link>
+        <Link href="/lookbook" className="hover:text-gray-900 transition-colors">
+          Lookbook
+        </Link>
+        <Link href="/about" className="hover:text-gray-900 transition-colors">
+          About
+        </Link>
+        {/* Blog link removed */}
         <Link href="/contact" className="hover:text-gray-900 transition-colors">
           Contact
         </Link>
       </nav>
       <div className="flex items-center gap-4">
-        <Link href="/cart">
-          <Button variant="ghost" size="icon" className="relative">
-            <ShoppingCart className="h-6 w-6" />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {cartItemCount}
-              </span>
-            )}
-            <span className="sr-only">Shopping Cart</span>
+        <Button variant="ghost" size="icon">
+          <ShoppingCart className="h-6 w-6" />
+          <span className="sr-only">Shopping Cart</span>
+        </Button>
+        <Link href="/wishlist">
+          <Button variant="ghost" size="icon">
+            <Heart className="h-6 w-6" />
+            <span className="sr-only">Wishlist</span>
           </Button>
         </Link>
         {user ? (

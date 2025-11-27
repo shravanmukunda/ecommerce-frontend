@@ -1,32 +1,43 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Instagram, Twitter, Youtube, Mail, MapPin, Phone } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
+import Image from "next/image"
 
 export function Footer() {
   return (
-    <footer className="bg-black text-white py-16 px-4 md:px-8">
-      <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-        {/* Brand Info */}
+    <footer className="bg-black text-white py-12 px-4 md:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+        {/* Company Info */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-black uppercase tracking-wider">Sacred Mayhem</h2>
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/images/sacred-mayhem-logo.png"
+              alt="Sacred Mayhem Logo"
+              width={50}
+              height={50}
+              className="rounded-full"
+            />
+            <span className="text-2xl font-black uppercase tracking-wider">Sacred Mayhem</span>
+          </Link>
           <p className="text-gray-400 text-sm">
-            Luxury streetwear that transcends trends. Crafted for the underground, celebrated by the avant-garde.
+            Discover exclusive fashion that blends luxury with an edgy aesthetic. Sacred Mayhem offers unique designs
+            for the modern individual.
           </p>
           <div className="flex space-x-4">
-            <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-              <Instagram className="h-5 w-5" />
-              <span className="sr-only">Instagram</span>
+            <Link href="#" aria-label="Facebook">
+              <Facebook className="h-6 w-6 text-gray-400 hover:text-white transition-colors" />
             </Link>
-            <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-              <Twitter className="h-5 w-5" />
-              <span className="sr-only">Twitter</span>
+            <Link href="#" aria-label="Instagram">
+              <Instagram className="h-6 w-6 text-gray-400 hover:text-white transition-colors" />
             </Link>
-            <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-              <Youtube className="h-5 w-5" />
-              <span className="sr-only">YouTube</span>
+            <Link href="#" aria-label="Twitter">
+              <Twitter className="h-6 w-6 text-gray-400 hover:text-white transition-colors" />
+            </Link>
+            <Link href="#" aria-label="Youtube">
+              <Youtube className="h-6 w-6 text-gray-400 hover:text-white transition-colors" />
             </Link>
           </div>
         </div>
@@ -36,14 +47,22 @@ export function Footer() {
           <h3 className="text-lg font-bold uppercase tracking-wide">Quick Links</h3>
           <ul className="space-y-2 text-gray-400 text-sm">
             <li>
-              <Link href="/" className="hover:text-white transition-colors">
-                Home
-              </Link>
-            </li>
-            <li>
               <Link href="/shop" className="hover:text-white transition-colors">
                 Shop
               </Link>
+            </li>
+            <li>
+              <Link href="/lookbook" className="hover:text-white transition-colors">
+                Lookbook
+              </Link>
+            </li>
+            <li>
+              <Link href="/about" className="hover:text-white transition-colors">
+                About Us
+              </Link>
+            </li>
+            <li>
+              {/* Blog link removed */}
             </li>
             <li>
               <Link href="/contact" className="hover:text-white transition-colors">

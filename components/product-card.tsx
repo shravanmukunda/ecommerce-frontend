@@ -14,9 +14,24 @@ interface ProductCardProps {
 
 export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { addToCart } = useStore()
 
   // Determine the current image based on hover state
   const currentImage = isHovered && product.hoverImage ? product.hoverImage : product.image
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault() // Prevent default link navigation
+    setIsLoading(true)
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    // Always pass a default size and color if missing
+    addToCart({
+      ...product,
+      size: product.size || "M",
+      color: product.color || "Default",
+    }, 1)
+    setIsLoading(false)
+  }
 
   if (viewMode === "list") {
     return (
@@ -45,13 +60,13 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
             <p className="text-gray-600 text-sm">Premium quality streetwear piece crafted with attention to detail.</p>
           </div>
           <div className="flex space-x-4 mt-4">
-            <Link href={`/product/${product.id}`} className="flex-1">
-              <Button
-                className="w-full bg-black text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
-              >
-                Buy Now
-              </Button>
-            </Link>
+            <Button
+              onClick={handleAddToCart}
+              disabled={isLoading}
+              className="bg-black text-white hover:bg-gray-800 flex-1 hover:scale-105 transition-all duration-300"
+            >
+              {isLoading ? "Adding..." : "Add to Cart"}
+            </Button>
             <Link href={`/product/${product.id}`} className="flex-1">
               <Button
                 variant="outline"
@@ -86,11 +101,13 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
       <div className="p-4">
         <h3 className="mb-1 text-lg font-bold uppercase tracking-wide">{product.name}</h3>
         <p className="text-sm text-gray-600">${product.price}</p>
-        <Link href={`/product/${product.id}`}>
-          <Button className="w-full bg-black text-white hover:bg-gray-800 transition-all duration-300">
-            Buy Now
-          </Button>
-        </Link>
+        <Button
+          onClick={handleAddToCart}
+          disabled={isLoading}
+          className="w-full bg-black text-white hover:bg-gray-800 transition-all duration-300"
+        >
+          {isLoading ? "Adding to Cart..." : "Add to Cart"}
+        </Button>
       </div>
     </div>
   )

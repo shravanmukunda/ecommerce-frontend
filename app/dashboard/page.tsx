@@ -4,7 +4,7 @@ import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Package, User, Repeat, MapPin, CreditCard } from "lucide-react"
+import { Package, User, Heart, Repeat, MapPin, CreditCard } from "lucide-react"
 
 export default function DashboardHomePage() {
   const { user } = useAuth()
@@ -16,6 +16,7 @@ export default function DashboardHomePage() {
   const quickActions = [
     { name: "Update Profile", href: "/dashboard/profile", icon: User, description: "Manage your personal details." },
     { name: "View Orders", href: "/dashboard/orders", icon: Package, description: "Track your purchases." },
+    { name: "My Wishlist", href: "/wishlist", icon: Heart, description: "See saved items." },
     { name: "Initiate Return", href: "/dashboard/returns", icon: Repeat, description: "Start a return or exchange." },
     {
       name: "Manage Addresses",
