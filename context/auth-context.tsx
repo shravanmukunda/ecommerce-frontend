@@ -58,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Login function
   const login = async (email: string, password: string) => {
     try {
+      console.log('Attempting login with:', { email, password });
       setLoading(true)
       setError(null)
       
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         mutation: LOGIN_USER,
         variables: { email, password }
       })
+      console.log('Login response:', data);
 
       // Store token in localStorage
       localStorage.setItem('authToken', data.login.token)
@@ -72,8 +74,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Set user in state
       setUser(data.login.user)
       
+      console.log('Login successful, user set:', data.login.user);
       return { success: true, user: data.login.user }
     } catch (err: any) {
+      console.error('Login error:', err);
       setError(err.message)
       return { success: false, error: err.message || 'An unknown error occurred during login' }
     } finally {
@@ -86,13 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true)
       setError(null)
-      console.log('Attempting signup with:', { name, email, password });
       
       const { data }: any = await apolloClient.mutate({
         mutation: SIGNUP_USER,
         variables: { name, email, password }
       })
-      console.log('Signup mutation result:', data);
 
       // Store token in localStorage
       localStorage.setItem('authToken', data.signup.token)
@@ -102,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       return { success: true, user: data.signup.user }
     } catch (err: any) {
-      console.error('Signup error:', err);
       setError(err.message)
       return { success: false, error: err.message || 'An unknown error occurred during signup' }
     } finally {

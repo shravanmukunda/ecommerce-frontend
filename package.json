@@ -2,12 +2,20 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "graphql": "node server/server.js"
+    "graphql": "node server/server.cjs",
+    "graphql:enhanced": "node server/enhanced-server.js",
+    "test-queries": "node test-queries.js",
+    "test-auth-queries": "node test-auth-queries.js",
+    "test-auth-mutations": "node test-auth-mutations.js",
+    "test-all-queries": "node test-all-queries.js",
+    "run-all-queries": "node run-all-queries.js",
+    "run-all-mutations": "node run-all-mutations.js"
   },
   "dependencies": {
     "@apollo/client": "^4.0.9",
@@ -55,6 +63,7 @@
     "lucide-react": "^0.454.0",
     "next": "15.2.4",
     "next-themes": "^0.4.4",
+    "node-fetch": "^3.3.2",
     "react": "^19",
     "react-day-picker": "9.8.0",
     "react-dom": "^19",

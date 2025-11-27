@@ -1,4 +1,4 @@
-﻿import { useState, ChangeEvent, FormEvent } from 'react'
+    import { useState, ChangeEvent, FormEvent } from 'react'
 import { useAuth } from '@/context/auth-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 interface FormData {
   email: string
@@ -26,6 +27,7 @@ export function Login() {
   const [errors, setErrors] = useState<FormErrors>({})
   const { login, loading } = useAuth()
   const { toast } = useToast()
+  const router = useRouter()
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -75,7 +77,8 @@ export function Login() {
           title: "Login successful!",
           description: "Welcome back!",
         })
-        // Redirect will be handled by the parent page or router
+        // Redirect to home page after successful login
+        router.push('/')
       } else {
         const errorMessage = result.error || "Invalid email or password"
         setErrors({ general: errorMessage })

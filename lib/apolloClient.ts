@@ -2,8 +2,8 @@ import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
 const httpLink = new HttpLink({
-  uri: "http://localhost:8081",
-  credentials: "same-origin",
+  uri: "http://localhost:8081/graphql",
+  credentials: "include",
 });
 
 const authLink = setContext((_, { headers }) => {

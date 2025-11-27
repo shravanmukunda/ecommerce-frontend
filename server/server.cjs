@@ -36,30 +36,39 @@ const typeDefs = `#graphql
 const resolvers = {
   Query: {
     currentUser: (parent, args, context) => {
+      console.log('currentUser query called with token:', context.token);
       // In a real app, you would verify the token
       // For this mock, we'll just return a user if a token exists
       if (context.token) {
+        console.log('Returning user:', users[0]);
         return users[0];
       }
+      console.log('No token, returning null');
       return null;
-    }
+    },
   },
 
   Mutation: {
     login: (parent, { email, password }) => {
+      console.log('Login attempt with:', { email, password });
+      console.log('Current users:', users);
       // Find user by email
       const user = users.find(u => u.email === email);
+      console.log('Found user:', user);
       
       if (!user) {
+        console.log('User not found, throwing error');
         throw new Error('Invalid email or password');
       }
       
       // In a real app, you would verify the password
       // For this mock, we'll just check if password is provided
       if (!password) {
+        console.log('Password not provided, throwing error');
         throw new Error('Invalid email or password');
       }
       
+      console.log('Login successful for user:', user.email);
       // Return token and user
       return {
         token: 'mock-jwt-token',
@@ -68,10 +77,13 @@ const resolvers = {
     },
     
     signup: (parent, { name, email, password }) => {
+      console.log('Signup attempt with:', { name, email, password });
       // Check if user already exists
       const existingUser = users.find(u => u.email === email);
+      console.log('Existing user check:', existingUser);
       
       if (existingUser) {
+        console.log('User already exists, throwing error');
         throw new Error('User already exists');
       }
       
@@ -85,6 +97,7 @@ const resolvers = {
       };
       
       users.push(newUser);
+      console.log('New user created:', newUser);
       
       // Return token and user
       return {
@@ -114,14 +127,14 @@ async function startServer() {
       const token = req.headers.authorization || '';
       return { token };
     },
-    listen: { port: 8081 },
+    listen: { port: 8082 },
     cors: {
-      origin: ['http://localhost:3000'],
+      origin: ['http://localhost:3000', 'http://localhost:3001'],
       credentials: true,
     },
   });
 
-  console.log(`🚀 Server ready at ${url}`);
+  console.log(`Server ready at ${url}`);
 }
 
 // Start the server
