@@ -4,10 +4,11 @@ import { ProductForm } from "../../form"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { products as initialProducts } from "@/lib/data/products"
+import { Product } from "@/context/store-context"
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [product, setProduct] = useState<any | null>(null)
+  const [product, setProduct] = useState<Product | null>(null)
 
   // Find product by ID
   useEffect(() => {
@@ -24,7 +25,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     )
   }
 
-  const handleSubmit = (productData: any) => {
+  const handleSubmit = (productData: Omit<Product, 'id'>) => {
     // In a real app, this would be an API call
     console.log("Updating product:", { ...productData, id: product.id })
     alert("Product updated successfully!")

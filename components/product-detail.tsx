@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Heart, Share2, Truck, Shield, Ruler, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, Share2, Truck, Shield, Ruler, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollReveal } from "@/components/scroll-reveal"
@@ -17,6 +17,7 @@ const dummyProductData = {
   price: 85,
   description:
     "The perfect foundation for any wardrobe. Crafted from premium organic cotton with a relaxed fit that embodies effortless luxury. This essential piece features our signature minimalist design philosophy with attention to every detail.",
+  image: "/placeholder.svg?height=800&width=600&text=Essential+Tee+Front",
   images: [
     "/placeholder.svg?height=800&width=600&text=Essential+Tee+Front",
     "/placeholder.svg?height=800&width=600&text=Essential+Tee+Back",
@@ -90,8 +91,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
   const [activeTab, setActiveTab] = useState("description")
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
-  const { addToCart, addToWishlist, wishlistItems, removeFromWishlist } = useStore() // Get functions and state from global store
-  const isWishlisted = wishlistItems.some((item) => item.id === product.id)
+  const { addToCart } = useStore() // Get functions and state from global store
 
   const nextImage = () => {
     setCurrentImage((prev) => (prev + 1) % product.images.length)
@@ -122,14 +122,6 @@ export function ProductDetail({ productId }: ProductDetailProps) {
 
     setIsAddingToCart(false)
     alert(`${quantity} x ${product.name} (Size: ${selectedSize}) added to cart!`)
-  }
-
-  const handleToggleWishlist = () => {
-    if (isWishlisted) {
-      removeFromWishlist(product.id)
-    } else {
-      addToWishlist(product)
-    }
   }
 
   const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
@@ -328,26 +320,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                 >
                   {isAddingToCart ? "Adding to Cart..." : "Add to Cart"}
                 </Button>
-                <Link href="/checkout">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full border-black py-4 text-lg font-bold uppercase tracking-wide text-black hover:bg-black hover:text-white hover:scale-105 transition-all duration-300 bg-transparent"
-                    disabled={!selectedSize}
-                  >
-                    Buy Now
-                  </Button>
-                </Link>
                 <div className="flex space-x-4">
-                  <Button
-                    variant="ghost"
-                    onClick={handleToggleWishlist}
-                    className="flex-1 text-black hover:bg-gray-100 hover:scale-105 transition-all duration-300"
-                    aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-                  >
-                    <Heart className={`mr-2 h-5 w-5 ${isWishlisted ? "fill-current text-red-500" : ""}`} />
-                    {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
-                  </Button>
                   <Button
                     variant="ghost"
                     className="text-black hover:bg-gray-100 hover:scale-105 transition-all duration-300"

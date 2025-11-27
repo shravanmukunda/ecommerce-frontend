@@ -9,7 +9,8 @@ import {
   ShoppingCart,
   PlusCircle,
   Edit,
-  Eye
+  Eye,
+  Tag
 } from "lucide-react"
 import { products as initialProducts } from "@/lib/data/products"
 import { Product } from "@/context/store-context"
@@ -19,6 +20,7 @@ import { SalesChart } from "@/components/admin/sales-chart"
 import { RevenueChart } from "@/components/admin/revenue-chart"
 import { RecentOrders } from "@/components/admin/recent-orders"
 import { ProductManagement } from "@/components/admin/product-management"
+import { PromoCodeManagement } from "@/components/admin/promo-code-management"
 
 // Mock data for demonstration
 const mockSalesData = [
@@ -71,6 +73,9 @@ export default function AdminDashboardPage() {
 
       {/* Recent Orders */}
       <RecentOrders orders={mockOrders} />
+
+      {/* Promo Code Management */}
+      <PromoCodeManagement />
 
       {/* Products Management */}
       <ProductManagement products={products} />

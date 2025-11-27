@@ -8,24 +8,84 @@ import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { useStore } from "@/context/store-context" // Import useStore
 
+// Mock promo codes data - in a real app this would come from an API
+const mockPromoCodes = [
+  {
+    code: "WELCOME10",
+    discountType: "percentage",
+    discountValue: 10,
+    validityDate: "2024-12-31T23:59",
+    isActive: true
+  },
+  {
+    code: "SAVE20",
+    discountType: "fixed",
+    discountValue: 20,
+    validityDate: "2024-11-30T23:59",
+    isActive: true
+  }
+]
+
 export function CartPage() {
   const { cartItems, updateCartQuantity, removeFromCart, clearCart } = useStore() // Use cart items and actions from global store
   const [promoCode, setPromoCode] = useState("")
+  const [appliedPromoCode, setAppliedPromoCode] = useState<any>(null)
+  const [promoCodeError, setPromoCodeError] = useState("")
   const [isCheckingOut, setIsCheckingOut] = useState(false)
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const shipping = subtotal > 100 ? 0 : 15 // Example: Free shipping over $100
   const tax = subtotal * 0.08 // Example: 8% tax
-  const total = subtotal + shipping + tax
+  
+  // Calculate discount
+  let discount = 0
+  if (appliedPromoCode) {
+    if (appliedPromoCode.discountType === "percentage") {
+      discount = (subtotal * appliedPromoCode.discountValue) / 100
+    } else {
+      discount = appliedPromoCode.discountValue
+    }
+  }
+  
+  const total = subtotal + shipping + tax - discount
+
+  const handleApplyPromoCode = () => {
+    setPromoCodeError("")
+    
+    // Find the promo code
+    const promo = mockPromoCodes.find(
+      code => code.code.toLowerCase() === promoCode.toLowerCase() && code.isActive
+    )
+    
+    if (!promo) {
+      setPromoCodeError("Invalid or inactive promo code")
+      return
+    }
+    
+    // Check if the promo code is still valid
+    const now = new Date()
+    const validityDate = new Date(promo.validityDate)
+    
+    if (now > validityDate) {
+      setPromoCodeError("This promo code has expired")
+      return
+    }
+    
+    setAppliedPromoCode(promo)
+  }
+
+  const handleRemovePromoCode = () => {
+    setAppliedPromoCode(null)
+    setPromoCode("")
+  }
 
   const handleCheckout = async () => {
     setIsCheckingOut(true)
     // Simulate checkout process
     await new Promise((resolve) => setTimeout(resolve, 2000))
     setIsCheckingOut(false)
-    clearCart() // Clear cart after successful checkout simulation
-    alert("Redirecting to secure checkout! Your cart has been cleared.")
-    // In a real app, redirect to payment processor or confirmation page
+    // Instead of clearing cart, redirect to checkout page
+    window.location.href = "/checkout"
   }
 
   if (cartItems.length === 0) {
@@ -170,6 +230,18 @@ export function CartPage() {
                     <span>Subtotal</span>
                     <span>${subtotal.toFixed(2)}</span>
                   </div>
+                  
+                  {appliedPromoCode && (
+                    <div className="flex justify-between text-green-600">
+                      <span>
+                        Discount ({appliedPromoCode.code})
+                      </span>
+                      <span>
+                        -${discount.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  
                   <div className="flex justify-between">
                     <span>Shipping</span>
                     <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
@@ -188,30 +260,57 @@ export function CartPage() {
 
                 {/* Promo Code */}
                 <div className="mt-6">
-                  <label htmlFor="promoCode" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
-                    Promo Code
-                  </label>
-                  <div className="flex">
-                    <input
-                      type="text"
-                      id="promoCode"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder="Enter code"
-                      className="flex-1 border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-                    />
-                    <Button className="bg-black text-white hover:bg-gray-800">Apply</Button>
-                  </div>
+                  {appliedPromoCode ? (
+                    <div className="flex items-center justify-between bg-green-50 p-3 rounded">
+                      <div>
+                        <p className="font-semibold text-green-800">Promo Applied</p>
+                        <p className="text-sm text-green-600">{appliedPromoCode.code}</p>
+                      </div>
+                      <Button 
+                        onClick={handleRemovePromoCode}
+                        variant="outline"
+                        size="sm"
+                        className="border-green-500 text-green-500 hover:bg-green-100"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <label htmlFor="promoCode" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                        Promo Code
+                      </label>
+                      <div className="flex">
+                        <input
+                          type="text"
+                          id="promoCode"
+                          value={promoCode}
+                          onChange={(e) => setPromoCode(e.target.value)}
+                          placeholder="Enter code"
+                          className="flex-1 border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                        <Button 
+                          onClick={handleApplyPromoCode}
+                          className="bg-black text-white hover:bg-gray-800"
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                      {promoCodeError && (
+                        <p className="mt-2 text-sm text-red-500">{promoCodeError}</p>
+                      )}
+                    </>
+                  )}
                 </div>
 
-                {/* Checkout Button */}
+                {/* Order Now Button */}
                 <Button
                   onClick={handleCheckout}
                   disabled={isCheckingOut || cartItems.length === 0}
                   size="lg"
                   className="mt-8 w-full bg-black py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
                 >
-                  {isCheckingOut ? "Processing..." : "Secure Checkout"}
+                  {isCheckingOut ? "Processing..." : "Order Now"}
                 </Button>
 
                 {/* Security Info */}

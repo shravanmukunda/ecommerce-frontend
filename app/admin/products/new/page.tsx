@@ -2,11 +2,12 @@
 
 import { ProductForm } from "../form"
 import { useRouter } from "next/navigation"
+import { Product } from "@/context/store-context"
 
 export default function NewProductPage() {
   const router = useRouter()
 
-  const handleSubmit = (productData: any) => {
+  const handleSubmit = (productData: Omit<Product, 'id'>) => {
     // In a real app, this would be an API call
     console.log("Adding new product:", productData)
     alert("Product added successfully!")

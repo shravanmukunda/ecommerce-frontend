@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, Repeat, MapPin, CreditCard, Heart, Shield } from "lucide-react"
+import { User, Package, Repeat, MapPin, CreditCard, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
 
@@ -14,7 +14,6 @@ export function DashboardSidebar() {
     { name: "Profile", href: "/dashboard/profile", icon: User },
     { name: "My Orders", href: "/dashboard/orders", icon: Package },
     { name: "Returns / Exchange", href: "/dashboard/returns", icon: Repeat },
-    { name: "My Wishlist", href: "/wishlist", icon: Heart }, // Links to existing wishlist page
     { name: "Addresses", href: "/dashboard/addresses", icon: MapPin },
     { name: "Wallet", href: "/dashboard/wallet", icon: CreditCard },
   ]
