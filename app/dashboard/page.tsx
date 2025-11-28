@@ -16,7 +16,6 @@ export default function DashboardHomePage() {
   const quickActions = [
     { name: "Update Profile", href: "/dashboard/profile", icon: User, description: "Manage your personal details." },
     { name: "View Orders", href: "/dashboard/orders", icon: Package, description: "Track your purchases." },
-    { name: "My Wishlist", href: "/wishlist", icon: Heart, description: "See saved items." },
     { name: "Initiate Return", href: "/dashboard/returns", icon: Repeat, description: "Start a return or exchange." },
     {
       name: "Manage Addresses",

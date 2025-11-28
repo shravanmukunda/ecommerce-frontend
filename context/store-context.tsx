@@ -28,17 +28,13 @@ interface StoreContextType {
   addToCart: (product: Product, quantity?: number, size?: string, color?: string) => void
   removeFromCart: (productId: number) => void
   updateCartQuantity: (productId: number, quantity: number) => void
-  addToWishlist: (product: Product) => void
-  removeFromWishlist: (productId: number) => void
   clearCart: () => void
-  clearWishlist: () => void
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -47,23 +43,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (storedCart) {
         setCartItems(JSON.parse(storedCart))
       }
-      const storedWishlist = localStorage.getItem("blvck_wishlist")
-      if (storedWishlist) {
-        setWishlistItems(JSON.parse(storedWishlist))
-      }
     } catch (error) {
       console.error("Failed to load store from localStorage", error)
     }
   }, [])
 
-  // Save to localStorage whenever cartItems or wishlistItems change
+  // Save to localStorage whenever cartItems change
   useEffect(() => {
     localStorage.setItem("blvck_cart", JSON.stringify(cartItems))
   }, [cartItems])
-
-  useEffect(() => {
-    localStorage.setItem("blvck_wishlist", JSON.stringify(wishlistItems))
-  }, [wishlistItems])
 
   const addToCart = (product: Product, quantity = 1, size?: string, color?: string) => {
     setCartItems((prevItems) => {
@@ -94,34 +82,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const addToWishlist = (product: Product) => {
-    setWishlistItems((prevItems) => {
-      if (!prevItems.find((item) => item.id === product.id)) {
-        return [...prevItems, product]
-      }
-      return prevItems
-    })
-  }
-
-  const removeFromWishlist = (productId: number) => {
-    setWishlistItems((prevItems) => prevItems.filter((item) => item.id !== productId))
-  }
-
   const clearCart = () => setCartItems([])
-  const clearWishlist = () => setWishlistItems([])
 
   return (
     <StoreContext.Provider
       value={{
         cartItems,
-        wishlistItems,
+        wishlistItems: [],
         addToCart,
         removeFromCart,
         updateCartQuantity,
-        addToWishlist,
-        removeFromWishlist,
         clearCart,
-        clearWishlist,
       }}
     >
       {children}

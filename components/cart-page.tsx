@@ -205,11 +205,23 @@ export function CartPage() {
                 </div>
 
                 {/* Checkout Button */}
+                <Link href="/checkout">
+                  <Button
+                    disabled={isCheckingOut || cartItems.length === 0}
+                    size="lg"
+                    className="mt-8 w-full bg-black py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
+                  >
+                    {isCheckingOut ? "Processing..." : "Order Now"}
+                  </Button>
+                </Link>
+
+                {/* Secure Checkout Button */}
                 <Button
                   onClick={handleCheckout}
                   disabled={isCheckingOut || cartItems.length === 0}
+                  variant="outline"
                   size="lg"
-                  className="mt-8 w-full bg-black py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
+                  className="mt-4 w-full border-black py-4 text-lg font-bold uppercase tracking-wide text-black hover:bg-black hover:text-white transition-all duration-300 bg-transparent"
                 >
                   {isCheckingOut ? "Processing..." : "Secure Checkout"}
                 </Button>

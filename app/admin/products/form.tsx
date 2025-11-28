@@ -11,21 +11,22 @@ import { Product } from "@/context/store-context"
 
 interface ProductFormProps {
   product?: Product
-  onSubmit: (product: Omit<Product, 'id'>) => void
+  onSubmit: (product: Omit<Product, 'id'>, additionalData?: any) => void
 }
 
 export function ProductForm({ product, onSubmit }: ProductFormProps) {
   const router = useRouter()
   const [name, setName] = useState(product?.name || "")
-  const [miniDescription, setMiniDescription] = useState(product?.description || "")
+  const [miniDescription, setMiniDescription] = useState("")
   const [mainDescription, setMainDescription] = useState("")
   const [price, setPrice] = useState(product?.price.toString() || "")
+  const [shippingPrice, setShippingPrice] = useState("0")
+  const [category, setCategory] = useState("")
   const [images, setImages] = useState<string[]>(product?.images || ["", "", "", "", ""])
   const [hoverImage, setHoverImage] = useState(product?.hoverImage || "")
-  const [sizes, setSizes] = useState<{ name: string; quantity: number }[]>(product?.sizes || [])
-  const [materials, setMaterials] = useState<string[]>(product?.materials || [""])
-  const [reviews, setReviews] = useState<string[]>([""])
-  const [shippingInfo, setShippingInfo] = useState("")
+  const [sizes, setSizes] = useState<{ name: string; quantity: number }[]>([])
+  const [materials, setMaterials] = useState<string[]>([""])
+  const [careInstructions, setCareInstructions] = useState<string[]>([""])
   const [expectedDelivery, setExpectedDelivery] = useState("")
   const [returnPolicy, setReturnPolicy] = useState("")
   const [sizeGuideLink, setSizeGuideLink] = useState("")
@@ -86,21 +87,21 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     setMaterials(materials.filter((_, i) => i !== index))
   }
 
-  // Add a new review field
-  const addReview = () => {
-    setReviews([...reviews, ""])
+  // Add a new care instruction field
+  const addCareInstruction = () => {
+    setCareInstructions([...careInstructions, ""])
   }
 
-  // Update a review field
-  const updateReview = (index: number, value: string) => {
-    const newReviews = [...reviews]
-    newReviews[index] = value
-    setReviews(newReviews)
+  // Update a care instruction field
+  const updateCareInstruction = (index: number, value: string) => {
+    const newCareInstructions = [...careInstructions]
+    newCareInstructions[index] = value
+    setCareInstructions(newCareInstructions)
   }
 
-  // Remove a review field
-  const removeReview = (index: number) => {
-    setReviews(reviews.filter((_, i) => i !== index))
+  // Remove a care instruction field
+  const removeCareInstruction = (index: number) => {
+    setCareInstructions(careInstructions.filter((_: any, i: number) => i !== index))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,14 +121,24 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       image: filteredImages[0] || "", // Set first image as main image
       hoverImage,
       images: filteredImages,
-      sizes: sizes.filter(size => size.name.trim() !== ""),
-      materials: materials.filter(mat => mat.trim() !== ""),
-      careInstructions: reviews.filter(review => review.trim() !== ""), // Using careInstructions for reviews
-      shippingPrice: 0, // We'll store shipping info in a custom field
-      category: shippingInfo, // Using category for shipping info temporarily
+      size: "", // Placeholder since we're using custom sizes
+      category, // Set the category
+      shippingPrice: parseFloat(shippingPrice) || 0, // Set shipping price
     }
     
-    onSubmit(productData)
+    // Additional data that doesn't fit in the base Product interface
+    const additionalData = {
+      sizes: sizes.filter(size => size.name.trim() !== ""),
+      materials: materials.filter(mat => mat.trim() !== ""),
+      careInstructions: careInstructions.filter(instruction => instruction.trim() !== ""),
+      expectedDelivery,
+      returnPolicy,
+      sizeGuideLink,
+      shippingPrice: parseFloat(shippingPrice) || 0,
+      category,
+    }
+    
+    onSubmit(productData, additionalData)
     
     // Reset form after submission (only for new products)
     if (!product) {
@@ -135,12 +146,13 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       setMiniDescription("")
       setMainDescription("")
       setPrice("")
+      setShippingPrice("0")
+      setCategory("")
       setImages(["", "", "", "", ""])
       setHoverImage("")
       setSizes([])
       setMaterials([""])
-      setReviews([""])
-      setShippingInfo("")
+      setCareInstructions([""])
       setExpectedDelivery("")
       setReturnPolicy("")
       setSizeGuideLink("")
@@ -230,17 +242,41 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
           </div>
           
           {/* 3. Price */}
-          <div className="space-y-2">
-            <Label htmlFor="price">Price ($) *</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="0.00"
-              required
-            />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="price">Price ($) *</Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="shippingPrice">Shipping Price ($)</Label>
+              <Input
+                id="shippingPrice"
+                type="number"
+                step="0.01"
+                value={shippingPrice}
+                onChange={(e) => setShippingPrice(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="Enter product category"
+              />
+            </div>
           </div>
           
           {/* 4. Sizes Available */}
@@ -294,19 +330,9 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
           
           {/* 6. Cart Button - This is for frontend display, not admin data entry */}
           
-          {/* 7. Shipping Information */}
+          {/* 7. Shipping (Expected Delivery Date) */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Shipping Information</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="shippingInfo">Shipping Details</Label>
-              <Input
-                id="shippingInfo"
-                value={shippingInfo}
-                onChange={(e) => setShippingInfo(e.target.value)}
-                placeholder="Enter shipping information"
-              />
-            </div>
             
             <div className="space-y-2">
               <Label htmlFor="expectedDelivery">Expected Delivery Date</Label>
@@ -389,19 +415,19 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
             </div>
             
             <div className="space-y-4">
-              <h4 className="font-medium">Reviews</h4>
-              {reviews.map((review, index) => (
+              <h4 className="font-medium">Care Instructions</h4>
+              {careInstructions.map((instruction, index) => (
                 <div key={index} className="flex items-center space-x-2">
                   <Input
-                    value={review}
-                    onChange={(e) => updateReview(index, e.target.value)}
-                    placeholder="Enter customer review"
+                    value={instruction}
+                    onChange={(e) => updateCareInstruction(index, e.target.value)}
+                    placeholder="Enter care instruction"
                   />
-                  {reviews.length > 1 && (
+                  {careInstructions.length > 1 && (
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => removeReview(index)}
+                      onClick={() => removeCareInstruction(index)}
                       className="shrink-0"
                     >
                       Remove
@@ -413,10 +439,10 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={addReview}
+                onClick={addCareInstruction}
                 className="w-full"
               >
-                Add Review
+                Add Care Instruction
               </Button>
             </div>
           </div>

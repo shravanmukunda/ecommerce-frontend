@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation"
 export default function TestProductFormPage() {
   const router = useRouter()
 
-  const handleSubmit = (productData: any) => {
-    console.log("Product data submitted:", productData)
+  const handleSubmit = (productData: any, additionalData?: any) => {
+    console.log("Product data submitted:", productData, additionalData)
     alert("Product data logged to console. Check developer tools.")
     router.push("/admin")
   }

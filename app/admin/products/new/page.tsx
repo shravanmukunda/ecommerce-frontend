@@ -7,9 +7,9 @@ import { Product } from "@/context/store-context"
 export default function NewProductPage() {
   const router = useRouter()
 
-  const handleSubmit = (productData: Omit<Product, 'id'>) => {
+  const handleSubmit = (productData: Omit<Product, 'id'>, additionalData?: any) => {
     // In a real app, this would be an API call
-    console.log("Adding new product:", productData)
+    console.log("Adding new product:", productData, additionalData)
     alert("Product added successfully!")
     router.push("/admin")
   }

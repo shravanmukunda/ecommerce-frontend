@@ -90,8 +90,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
   const [activeTab, setActiveTab] = useState("description")
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
-  const { addToCart, addToWishlist, wishlistItems, removeFromWishlist } = useStore() // Get functions and state from global store
-  const isWishlisted = wishlistItems.some((item) => item.id === product.id)
+  const { addToCart } = useStore() // Get functions and state from global store
 
   const nextImage = () => {
     setCurrentImage((prev) => (prev + 1) % product.images.length)
@@ -123,17 +122,6 @@ export function ProductDetail({ productId }: ProductDetailProps) {
 
     setIsAddingToCart(false)
     alert(`${quantity} x ${product.name} (Size: ${selectedSize}) added to cart!`)
-  }
-
-  const handleToggleWishlist = () => {
-    if (isWishlisted) {
-      removeFromWishlist(product.id)
-    } else {
-      addToWishlist({
-        ...product,
-        image: product.images[0] || "/placeholder.svg",
-      })
-    }
   }
 
   const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
@@ -343,15 +331,6 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                   </Button>
                 </Link>
                 <div className="flex space-x-4">
-                  <Button
-                    variant="ghost"
-                    onClick={handleToggleWishlist}
-                    className="flex-1 text-black hover:bg-gray-100 hover:scale-105 transition-all duration-300"
-                    aria-label={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-                  >
-                    <Heart className={`mr-2 h-5 w-5 ${isWishlisted ? "fill-current text-red-500" : ""}`} />
-                    {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
-                  </Button>
                   <Button
                     variant="ghost"
                     className="text-black hover:bg-gray-100 hover:scale-105 transition-all duration-300"

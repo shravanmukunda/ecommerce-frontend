@@ -25,9 +25,9 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     )
   }
 
-  const handleSubmit = (productData: Omit<Product, 'id'>) => {
+  const handleSubmit = (productData: Omit<Product, 'id'>, additionalData?: any) => {
     // In a real app, this would be an API call
-    console.log("Updating product:", { ...productData, id: product.id })
+    console.log("Updating product:", { ...productData, id: product.id }, additionalData)
     alert("Product updated successfully!")
     router.push("/admin")
   }

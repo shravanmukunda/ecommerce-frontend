@@ -45,12 +45,6 @@ export function Header() {
               <Link href="/shop" className="hover:text-gray-900">
                 Shop
               </Link>
-              <Link href="/lookbook" className="hover:text-gray-900">
-                Lookbook
-              </Link>
-              <Link href="/about" className="hover:text-gray-900">
-                About
-              </Link>
               {/* Blog link removed */}
               <Link href="/contact" className="hover:text-gray-900">
                 Contact
@@ -90,26 +84,16 @@ export function Header() {
         <Link href="/shop" className="hover:text-gray-900 transition-colors">
           Shop
         </Link>
-        <Link href="/lookbook" className="hover:text-gray-900 transition-colors">
-          Lookbook
-        </Link>
-        <Link href="/about" className="hover:text-gray-900 transition-colors">
-          About
-        </Link>
         {/* Blog link removed */}
         <Link href="/contact" className="hover:text-gray-900 transition-colors">
           Contact
         </Link>
       </nav>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon">
-          <ShoppingCart className="h-6 w-6" />
-          <span className="sr-only">Shopping Cart</span>
-        </Button>
-        <Link href="/wishlist">
+        <Link href="/cart">
           <Button variant="ghost" size="icon">
-            <Heart className="h-6 w-6" />
-            <span className="sr-only">Wishlist</span>
+            <ShoppingCart className="h-6 w-6" />
+            <span className="sr-only">Shopping Cart</span>
           </Button>
         </Link>
         {user ? (
