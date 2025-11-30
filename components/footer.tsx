@@ -14,16 +14,16 @@ export function Footer() {
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/images/sacred-mayhem-logo.png"
-              alt="Sacred Mayhem Logo"
+              src="/images/aura-gaze-logo.png"
+              alt="AuraGaze Logo"
               width={50}
               height={50}
               className="rounded-full"
             />
-            <span className="text-2xl font-black uppercase tracking-wider">Sacred Mayhem</span>
+            <span className="text-2xl font-black uppercase tracking-wider">AuraGaze</span>
           </Link>
           <p className="text-gray-400 text-sm">
-            Discover exclusive fashion that blends luxury with an edgy aesthetic. Sacred Mayhem offers unique designs
+            Discover exclusive fashion that blends luxury with an edgy aesthetic. AuraGaze offers unique designs
             for the modern individual.
           </p>
           <div className="flex space-x-4">
@@ -103,25 +103,9 @@ export function Footer() {
             </li>
           </ul>
         </div>
-
-        {/* Newsletter */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold uppercase tracking-wide">Newsletter</h3>
-          <p className="text-gray-400 text-sm">Subscribe to our newsletter for exclusive updates and offers.</p>
-          <form className="flex gap-2">
-            <Input
-              type="email"
-              placeholder="Your email"
-              className="flex-1 bg-gray-800 border-gray-700 text-white placeholder-gray-500 focus:border-white focus:ring-white"
-            />
-            <Button type="submit" className="bg-white text-black hover:bg-gray-200">
-              Subscribe
-            </Button>
-          </form>
-        </div>
       </div>
       <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm">
-        &copy; {new Date().getFullYear()} Sacred Mayhem. All rights reserved.
+        &copy; {new Date().getFullYear()} AuraGaze. All rights reserved.
       </div>
     </footer>
   )

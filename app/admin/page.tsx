@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { 
   Package, 
@@ -12,7 +12,6 @@ import {
   Eye,
   Tag
 } from "lucide-react"
-import { products as initialProducts } from "@/lib/data/products"
 import { Product } from "@/context/store-context"
 import Link from "next/link"
 import { OverviewCards } from "@/components/admin/overview-cards"
@@ -21,33 +20,97 @@ import { RevenueChart } from "@/components/admin/revenue-chart"
 import { RecentOrders } from "@/components/admin/recent-orders"
 import { ProductManagement } from "@/components/admin/product-management"
 import { PromoCodeManagement } from "@/components/admin/promo-code-management"
+import { useQuery } from "@apollo/client/react"
+import { gql } from "@apollo/client"
 
-// Mock data for demonstration
-const mockSalesData = [
-  { month: "Jan", sales: 4000, revenue: 2400 },
-  { month: "Feb", sales: 3000, revenue: 1398 },
-  { month: "Mar", sales: 2000, revenue: 9800 },
-  { month: "Apr", sales: 2780, revenue: 3908 },
-  { month: "May", sales: 1890, revenue: 4800 },
-  { month: "Jun", sales: 2390, revenue: 3800 },
-  { month: "Jul", sales: 3490, revenue: 4300 },
-]
+// Define TypeScript interfaces for our data
+interface ProductData {
+  id: string;
+  name: string;
+  basePrice: number;
+  isActive: boolean;
+}
 
-const mockOrders = [
-  { id: "#1001", customer: "John Doe", date: "2023-05-15", amount: 125.99, status: "Delivered" as const },
-  { id: "#1002", customer: "Sarah Smith", date: "2023-05-16", amount: 89.50, status: "Processing" as const },
-  { id: "#1003", customer: "Mike Johnson", date: "2023-05-17", amount: 210.75, status: "Shipped" as const },
-  { id: "#1004", customer: "Emma Wilson", date: "2023-05-18", amount: 65.25, status: "Pending" as const },
-  { id: "#1005", customer: "David Brown", date: "2023-05-19", amount: 199.99, status: "Delivered" as const },
-]
+interface OrderData {
+  id: string;
+  orderNumber: string;
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
+// GraphQL queries
+const GET_PRODUCTS = gql`
+  query GetProducts {
+    products {
+      id
+      name
+      basePrice
+      isActive
+    }
+  }
+`;
+
+const GET_ORDERS = gql`
+  query GetOrders {
+    orders {
+      id
+      orderNumber
+      total
+      status
+      createdAt
+    }
+  }
+`;
 
 export default function AdminDashboardPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [products, setProducts] = useState<Product[]>([])
+  const [orders, setOrders] = useState<any[]>([])
+  const [salesData, setSalesData] = useState<any[]>([])
   
-  // Calculate metrics
-  const totalSales = mockSalesData.reduce((sum, data) => sum + data.sales, 0)
-  const totalRevenue = mockSalesData.reduce((sum, data) => sum + data.revenue, 0)
-  const totalOrders = mockOrders.length
+  // Fetch products from API
+  const { data: productsData, loading: productsLoading, error: productsError } = useQuery<{ products: ProductData[] }>(GET_PRODUCTS)
+  
+  // Fetch orders from API
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<{ orders: OrderData[] }>(GET_ORDERS)
+  
+  // Update products state when data is fetched
+  useEffect(() => {
+    if (productsData && productsData.products) {
+      // Convert ProductData to Product interface
+      const convertedProducts: Product[] = productsData.products.map(product => ({
+        id: parseInt(product.id),
+        name: product.name,
+        price: product.basePrice,
+        image: "/placeholder.svg", // Default placeholder image
+        // Other properties will use defaults
+      }))
+      setProducts(convertedProducts)
+    }
+  }, [productsData])
+  
+  // Update orders state when data is fetched
+  useEffect(() => {
+    if (ordersData && ordersData.orders) {
+      setOrders(ordersData.orders)
+    }
+  }, [ordersData])
+  
+  // For now, we'll use empty arrays instead of mock data
+  // In a real application, this data would come from the API
+  const totalSales = salesData.reduce((sum, data) => sum + (data.sales || 0), 0)
+  const totalRevenue = salesData.reduce((sum, data) => sum + (data.revenue || 0), 0)
+  const totalOrders = orders.length
+  
+  // Handle loading states
+  if (productsLoading || ordersLoading) {
+    return <div>Loading dashboard data...</div>
+  }
+  
+  // Handle error states
+  if (productsError || ordersError) {
+    return <div>Error loading dashboard data. Please try again later.</div>
+  }
   
   return (
     <div className="space-y-8">
@@ -65,14 +128,14 @@ export default function AdminDashboardPage() {
         totalProducts={products.length}
       />
 
-      {/* Charts */}
+      {/* Charts - using empty data instead of mock data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <SalesChart data={mockSalesData.map(({ month, sales }) => ({ month, sales }))} />
-        <RevenueChart data={mockSalesData.map(({ month, revenue }) => ({ month, revenue }))} />
+        <SalesChart data={salesData.map(({ month, sales }) => ({ month, sales: sales || 0 }))} />
+        <RevenueChart data={salesData.map(({ month, revenue }) => ({ month, revenue: revenue || 0 }))} />
       </div>
 
       {/* Recent Orders */}
-      <RecentOrders orders={mockOrders} />
+      <RecentOrders orders={orders} />
 
       {/* Promo Code Management */}
       <PromoCodeManagement />

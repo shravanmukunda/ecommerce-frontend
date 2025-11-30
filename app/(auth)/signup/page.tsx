@@ -41,7 +41,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-black uppercase tracking-wider">Sign Up</CardTitle>
-          <p className="text-gray-600">Create your Sacred Mayhem account</p>
+          <p className="text-gray-600">Create your AuraGaze account</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">

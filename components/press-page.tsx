@@ -9,7 +9,7 @@ import { ScrollReveal } from "@/components/scroll-reveal"
 const pressReleases = [
   {
     id: 1,
-    title: "Sacred Mayhem Unveils Fall/Winter 2024 Collection: Urban Minimalism",
+    title: "AuraGaze Unveils Fall/Winter 2024 Collection: Urban Minimalism",
     date: "2024-09-15",
     source: "Vogue",
     link: "#",
@@ -17,7 +17,7 @@ const pressReleases = [
   },
   {
     id: 2,
-    title: "The Rise of Monochrome: Sacred Mayhem Leads the Trend",
+    title: "The Rise of Monochrome: AuraGaze Leads the Trend",
     date: "2024-08-20",
     source: "Hypebeast",
     link: "#",
@@ -25,7 +25,7 @@ const pressReleases = [
   },
   {
     id: 3,
-    title: "Sacred Mayhem Announces Sustainable Manufacturing Initiative",
+    title: "AuraGaze Announces Sustainable Manufacturing Initiative",
     date: "2024-07-10",
     source: "Fashion Revolution",
     link: "#",
@@ -33,7 +33,7 @@ const pressReleases = [
   },
   {
     id: 4,
-    title: "Exclusive Interview with Sacred Mayhem Creative Director",
+    title: "Exclusive Interview with AuraGaze Creative Director",
     date: "2024-06-01",
     source: "GQ",
     link: "#",
@@ -51,7 +51,7 @@ export function PressPage() {
             <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl">Press</h1>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={200}>
-            <p className="text-lg uppercase tracking-wide md:text-xl">Sacred Mayhem in the media</p>
+            <p className="text-lg uppercase tracking-wide md:text-xl">AuraGaze in the media</p>
           </ScrollReveal>
         </div>
       </section>
@@ -62,7 +62,7 @@ export function PressPage() {
           <div className="mb-16 max-w-3xl mx-auto text-center">
             <h2 className="mb-6 text-3xl font-black uppercase tracking-wider">Our Story, Told by Others</h2>
             <p className="text-lg leading-relaxed text-gray-700">
-              Welcome to the Sacred Mayhem press room. Here you'll find our latest news, press releases, and media
+              Welcome to the AuraGaze press room. Here you'll find our latest news, press releases, and media
               coverage. For all media inquiries, please contact us directly.
             </p>
           </div>

@@ -62,7 +62,7 @@ export function SustainabilityPage() {
           <div className="mb-16 max-w-4xl mx-auto text-center">
             <h2 className="mb-6 text-3xl font-black uppercase tracking-wider">Our Commitment to a Better Future</h2>
             <p className="text-lg leading-relaxed text-gray-700">
-              At Sacred Mayhem, sustainability is not just a buzzword; it's woven into the very fabric of our brand. We
+              At AuraGaze, sustainability is not just a buzzword; it's woven into the very fabric of our brand. We
               are dedicated to minimizing our environmental footprint and maximizing our positive social impact, from
               the raw materials we source to the hands that craft our garments.
             </p>

@@ -1,4 +1,4 @@
-import { ApolloClient, gql } from "@apollo/client";
+import { gql } from "@apollo/client";
 
 export const REGISTER_USER = gql`
   mutation Register($input: RegisterInput!) {
@@ -12,4 +12,3 @@ export const REGISTER_USER = gql`
     }
   }
 `;
-

@@ -31,12 +31,12 @@ export function Header() {
             <Link href="#" className="flex items-center gap-2 mb-6">
               <Image
                 src="/placeholder.svg?height=40&width=40"
-                alt="Sacred Mayhem Logo"
+                alt="AuraGaze Logo"
                 width={40}
                 height={40}
                 className="rounded-full"
               />
-              <span className="text-xl font-black uppercase tracking-wider">Sacred Mayhem</span>
+              <span className="text-xl font-black uppercase tracking-wider">AuraGaze</span>
             </Link>
             <nav className="grid gap-4 text-lg font-medium">
               <Link href="/" className="hover:text-gray-900">
@@ -68,13 +68,13 @@ export function Header() {
         </Sheet>
         <Link href="/" className="flex items-center gap-2">
           <Image
-            src="/images/sacred-mayhem-logo.png"
-            alt="Sacred Mayhem Logo"
+            src="/images/aura-gaze-logo.png"
+            alt="AuraGaze Logo"
             width={50}
             height={50}
             className="rounded-full"
           />
-          <span className="text-2xl font-black uppercase tracking-wider hidden md:block">Sacred Mayhem</span>
+          <span className="text-2xl font-black uppercase tracking-wider hidden md:block">AuraGaze</span>
         </Link>
       </div>
       <nav className="hidden lg:flex items-center gap-6 text-lg font-medium">

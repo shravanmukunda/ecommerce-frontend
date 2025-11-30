@@ -1,12 +1,3 @@
-import { gql } from '@apollo/client'
-
-export const GET_PRODUCTS = gql`
-  query {
-    products {
-      id
-      name
-      basePrice
-      designImageURL
-    }
-  }
-`;
+// This file is intentionally left empty
+// Product queries have been moved to product-queries.ts
+// Auth queries would be added here if they existed

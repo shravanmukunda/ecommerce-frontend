@@ -69,7 +69,7 @@ const faqData = [
     category: "Product Care",
     questions: [
       {
-        question: "How should I care for my Sacred Mayhem items?",
+        question: "How should I care for my AuraGaze items?",
         answer:
           "Follow the care instructions on each garment's label. Generally, we recommend washing in cold water, air drying, and avoiding bleach to maintain quality and color.",
       },

@@ -6,72 +6,120 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft } from "lucide-react"
+import { useQuery } from "@apollo/client/react"
+import { gql } from "@apollo/client"
 
-// Mock data for demonstration
-const mockOrderDetails = {
-  id: "#1001",
-  customer: {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567"
-  },
-  date: "2023-05-15",
-  time: "14:30",
-  status: "Delivered" as const,
-  shippingAddress: {
-    street: "123 Main Street",
-    city: "New York",
-    state: "NY",
-    zipCode: "10001",
-    country: "United States"
-  },
-  billingAddress: {
-    street: "123 Main Street",
-    city: "New York",
-    state: "NY",
-    zipCode: "10001",
-    country: "United States"
-  },
-  items: [
-    {
-      id: 1,
-      name: "Sacred Mayhem White Tee",
-      size: "M",
-      color: "White",
-      price: 45.00,
-      quantity: 2,
-      image: "/placeholder.svg?height=100&width=100"
-    },
-    {
-      id: 2,
-      name: "Black Oversized Hoodie",
-      size: "L",
-      color: "Black",
-      price: 95.00,
-      quantity: 1,
-      image: "/placeholder.svg?height=100&width=100"
-    }
-  ],
-  subtotal: 185.00,
-  shipping: 10.00,
-  tax: 15.00,
-  total: 210.00
+// Define TypeScript interfaces for our data
+interface Product {
+  id: string;
+  name: string;
+  designImageURL: string;
 }
+
+interface OrderItem {
+  product: Product;
+  quantity: number;
+  size: string;
+  color: string;
+  price: number;
+}
+
+interface Address {
+  fullName: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: number;
+  createdAt: string;
+  shippingAddress: Address;
+  billingAddress: Address;
+  items: OrderItem[];
+}
+
+// GraphQL query for order details
+const GET_ORDER = gql`
+  query GetOrder($id: ID!) {
+    order(id: $id) {
+      id
+      orderNumber
+      status
+      total
+      createdAt
+      shippingAddress {
+        fullName
+        address
+        city
+        state
+        zipCode
+        country
+      }
+      billingAddress {
+        fullName
+        address
+        city
+        state
+        zipCode
+        country
+      }
+      items {
+        product {
+          id
+          name
+          designImageURL
+        }
+        quantity
+        size
+        color
+        price
+      }
+    }
+  }
+`;
 
 export default function OrderDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [order, setOrder] = useState<any>(null)
+  const [order, setOrder] = useState<Order | null>(null)
+  
+  // Fetch order data from API
+  const { data, loading, error } = useQuery<{ order: Order }>(GET_ORDER, {
+    variables: { id: params.id },
+    skip: !params.id
+  })
 
   useEffect(() => {
-    // In a real app, this would fetch order data based on params.id
-    // For now, we'll use mock data
-    setOrder(mockOrderDetails)
-  }, [params.id])
+    if (data && data.order) {
+      setOrder(data.order)
+    }
+  }, [data])
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg font-semibold">Loading order details...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg font-semibold">Error loading order details.</p>
+      </div>
+    )
+  }
 
   if (!order) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-lg font-semibold">Loading order details...</p>
+        <p className="text-lg font-semibold">Order not found.</p>
       </div>
     )
   }
@@ -90,9 +138,9 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <CardTitle className="text-2xl">Order {order.id}</CardTitle>
+              <CardTitle className="text-2xl">Order {order.orderNumber}</CardTitle>
               <p className="text-gray-600 mt-1">
-                Placed on {order.date} at {order.time}
+                Placed on {new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}
               </p>
             </div>
             <Badge 
@@ -113,9 +161,8 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             <div className="lg:col-span-1">
               <h2 className="text-xl font-bold mb-4">Customer Information</h2>
               <div className="space-y-2">
-                <p className="font-medium">{order.customer.name}</p>
-                <p className="text-gray-600">{order.customer.email}</p>
-                <p className="text-gray-600">{order.customer.phone}</p>
+                <p className="font-medium">{order.shippingAddress.fullName}</p>
+                <p className="text-gray-600">{order.billingAddress.fullName}</p>
               </div>
             </div>
 
@@ -123,7 +170,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             <div className="lg:col-span-1">
               <h2 className="text-xl font-bold mb-4">Shipping Address</h2>
               <div className="space-y-1">
-                <p>{order.shippingAddress.street}</p>
+                <p>{order.shippingAddress.address}</p>
                 <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}</p>
                 <p>{order.shippingAddress.country}</p>
               </div>
@@ -133,7 +180,7 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
             <div className="lg:col-span-1">
               <h2 className="text-xl font-bold mb-4">Billing Address</h2>
               <div className="space-y-1">
-                <p>{order.billingAddress.street}</p>
+                <p>{order.billingAddress.address}</p>
                 <p>{order.billingAddress.city}, {order.billingAddress.state} {order.billingAddress.zipCode}</p>
                 <p>{order.billingAddress.country}</p>
               </div>
@@ -149,19 +196,19 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {order.items.map((item: any) => (
-              <div key={item.id} className="flex items-center border-b pb-4 last:border-0 last:pb-0">
+            {order.items.map((item: OrderItem) => (
+              <div key={item.product.id} className="flex items-center border-b pb-4 last:border-0 last:pb-0">
                 <div className="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-md overflow-hidden">
                   <img 
-                    src={item.image} 
-                    alt={item.name} 
+                    src={item.product.designImageURL || "/placeholder.svg"} 
+                    alt={item.product.name} 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="ml-4 flex-grow">
-                  <h3 className="font-medium">{item.name}</h3>
+                  <h3 className="font-medium">{item.product.name}</h3>
                   <p className="text-sm text-gray-600">
-                    Size: {item.size} | Color: {item.color}
+                    Size: {item.size || 'N/A'} | Color: {item.color || 'N/A'}
                   </p>
                 </div>
                 <div className="text-right">
@@ -183,15 +230,15 @@ export default function OrderDetailsPage({ params }: { params: { id: string } })
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span>${order.subtotal.toFixed(2)}</span>
+              <span>${order.total.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
-              <span>${order.shipping.toFixed(2)}</span>
+              <span>$0.00</span>
             </div>
             <div className="flex justify-between">
               <span>Tax</span>
-              <span>${order.tax.toFixed(2)}</span>
+              <span>$0.00</span>
             </div>
             <div className="flex justify-between pt-2 border-t font-bold text-lg">
               <span>Total</span>

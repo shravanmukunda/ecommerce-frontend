@@ -2,24 +2,57 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQuery } from "@apollo/client/react"
+import { gql } from "@apollo/client"
 
-const dummyReturnableItems = [
-  { id: "item-1", name: "ESSENTIAL TEE", orderId: "SM-2024-001", price: 85.0, reason: "" },
-  { id: "item-2", name: "CARGO PANTS", orderId: "SM-2024-001", price: 195.0, reason: "" },
-  { id: "item-3", name: "OVERSIZED HOODIE", orderId: "SM-2024-002", price: 165.0, reason: "" },
-]
+// Define TypeScript interfaces for our data
+interface ReturnableItem {
+  id: string;
+  name: string;
+  orderId: string;
+  price: number;
+  reason: string;
+}
+
+// GraphQL query for returnable items
+const GET_RETURNABLE_ITEMS = gql`
+  query GetReturnableItems {
+    # This would be implemented in a real application
+    # For now, we'll return an empty array
+    orders {
+      id
+      orderNumber
+      items {
+        product {
+          id
+          name
+        }
+        price
+      }
+    }
+  }
+`
 
 export default function ReturnsExchangePage() {
+  const [returnableItems, setReturnableItems] = useState<ReturnableItem[]>([])
   const [selectedItem, setSelectedItem] = useState<string>("")
   const [returnReason, setReturnReason] = useState("")
   const [returnType, setReturnType] = useState<"return" | "exchange">("return")
   const [message, setMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // In a real application, you would fetch returnable items from the API
+  // const { data, loading, error } = useQuery(GET_RETURNABLE_ITEMS)
+  
+  // For now, we'll initialize with an empty array
+  useEffect(() => {
+    setReturnableItems([])
+  }, [])
 
   const handleSubmitReturn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -75,7 +108,7 @@ export default function ReturnsExchangePage() {
                   <SelectValue placeholder="Choose an item from your past orders" />
                 </SelectTrigger>
                 <SelectContent>
-                  {dummyReturnableItems.map((item) => (
+                  {returnableItems.map((item) => (
                     <SelectItem key={item.id} value={item.name}>
                       {item.name} (Order: {item.orderId})
                     </SelectItem>

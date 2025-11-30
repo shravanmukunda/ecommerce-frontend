@@ -1,44 +1,61 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useQuery } from "@apollo/client/react"
+import { gql } from "@apollo/client"
 
-const dummyOrders = [
-  {
-    id: "SM-2024-001",
-    date: "2024-07-25",
-    total: 285.0,
-    status: "Delivered",
-    items: [
-      { name: "ESSENTIAL TEE", quantity: 1, price: 85.0, image: "/placeholder.svg?height=50&width=40&text=Tee" },
-      { name: "CARGO PANTS", quantity: 1, price: 195.0, image: "/placeholder.svg?height=50&width=40&text=Cargo" },
-    ],
-  },
-  {
-    id: "SM-2024-002",
-    date: "2024-07-10",
-    total: 165.0,
-    status: "Shipped",
-    items: [
-      { name: "OVERSIZED HOODIE", quantity: 1, price: 165.0, image: "/placeholder.svg?height=50&width=40&text=Hoodie" },
-    ],
-  },
-  {
-    id: "SM-2024-003",
-    date: "2024-06-01",
-    total: 570.0,
-    status: "Processing",
-    items: [
-      { name: "BOMBER JACKET", quantity: 2, price: 285.0, image: "/placeholder.svg?height=50&width=40&text=Bomber" },
-    ],
-  },
-]
+// Define TypeScript interfaces for our data
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+  image: string;
+}
+
+interface Order {
+  id: string;
+  date: string;
+  total: number;
+  status: string;
+  items: OrderItem[];
+}
+
+// GraphQL query for orders
+const GET_ORDERS = gql`
+  query GetOrders {
+    orders {
+      id
+      orderNumber
+      total
+      status
+      createdAt
+      items {
+        product {
+          name
+          designImageURL
+        }
+        quantity
+        price
+      }
+    }
+  }
+`
 
 export default function MyOrdersPage() {
-  const [selectedOrder, setSelectedOrder] = useState<(typeof dummyOrders)[0] | null>(null)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  
+  // In a real application, you would fetch orders from the API
+  // const { data, loading, error } = useQuery(GET_ORDERS)
+  
+  // For now, we'll initialize with an empty array
+  useEffect(() => {
+    setOrders([])
+  }, [])
 
   return (
     <div className="space-y-8">
@@ -111,10 +128,10 @@ export default function MyOrdersPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {dummyOrders.length === 0 ? (
+          {orders.length === 0 ? (
             <p className="text-gray-600">You have no past orders.</p>
           ) : (
-            dummyOrders.map((order) => (
+            orders.map((order) => (
               <Card key={order.id} className="hover:shadow-md transition-shadow duration-200">
                 <CardContent className="flex flex-col md:flex-row items-start md:items-center justify-between p-6">
                   <div>

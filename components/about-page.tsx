@@ -162,7 +162,7 @@ export function AboutPage() {
                   Our Mission
                 </h2>
                 <p className="mb-6 text-lg leading-relaxed text-gray-700">
-                  Sacred Mayhem was born from the belief that luxury should be accessible, sustainable, and
+                  AuraGaze was born from the belief that luxury should be accessible, sustainable, and
                   unapologetically bold. We create pieces that transcend trends, focusing on timeless design and
                   exceptional quality.
                 </p>
@@ -351,7 +351,7 @@ export function AboutPage() {
                 name: "SIDDARTH MURKERJI",
                 role: "Founder & Creative Director",
                 image: "/placeholder.svg?height=400&width=400&text=Siddarth+Murkerji",
-                bio: "The visionary force behind Sacred Mayhem, blending art, fashion, and sustainability.",
+                bio: "The visionary force behind AuraGaze, blending art, fashion, and sustainability.",
               },
             ].map((member, index) => (
               <ScrollReveal key={member.name} direction="up" delay={index * 200}>

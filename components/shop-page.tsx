@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ScrollReveal } from "@/components/scroll-reveal"
-import { products as allProducts } from "@/lib/data/products" // Import the new product data
+import { useQuery } from "@apollo/client/react"
+import { GET_PRODUCTS } from "@/graphql/product-queries"
 
 export function ShopPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -14,15 +15,31 @@ export function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [selectedSort, setSelectedSort] = useState("featured")
 
+  const { loading, error, data } = useQuery(GET_PRODUCTS, {
+    variables: { isActive: true }
+  })
+
+  if (loading) return <div className="py-16 text-center">Loading products...</div>
+  if (error) return <div className="py-16 text-center text-red-500">Error loading products: {error.message}</div>
+
+  // Transform GraphQL data to match the existing product structure
+  const allProducts = (data as any)?.products?.map((product: any) => ({
+    id: parseInt(product.id),
+    name: product.name,
+    price: product.basePrice,
+    image: product.designImageURL,
+    description: product.description,
+  })) || []
+
   const categories = ["All", "T-Shirts", "Hoodies", "Jeans", "Jackets", "Pants"] // Updated categories
 
-  const filteredProducts = allProducts.filter((product) => {
+  const filteredProducts = allProducts.filter((product: any) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory
     return matchesSearch && matchesCategory
   })
 
-  const sortedProducts = filteredProducts.sort((a, b) => {
+  const sortedProducts = filteredProducts.sort((a: any, b: any) => {
     if (selectedSort === "price-asc") {
       return a.price - b.price
     }
@@ -119,7 +136,7 @@ export function ShopPage() {
                   : "grid grid-cols-1 gap-8"
               }
             >
-              {sortedProducts.map((product) => (
+              {sortedProducts.map((product: any) => (
                 <ScrollReveal key={product.id} direction="up">
                   <ProductCard product={product} viewMode={viewMode} />
                 </ScrollReveal>

@@ -4,86 +4,29 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/product-card"
 import { ScrollReveal } from "@/components/scroll-reveal"
-
-const products = [
-  {
-    id: 1,
-    name: "ESSENTIAL TEE",
-    price: 85,
-    image: "/placeholder.svg?height=600&width=400&text=Essential+Tee+Front",
-    hoverImage: "/placeholder.svg?height=600&width=400&text=Essential+Tee+Back",
-    images: [
-      "/placeholder.svg?height=600&width=400&text=Essential+Tee+Front",
-      "/placeholder.svg?height=600&width=400&text=Essential+Tee+Back",
-      "/placeholder.svg?height=600&width=400&text=Essential+Tee+Detail",
-    ],
-  },
-  {
-    id: 2,
-    name: "OVERSIZED HOODIE",
-    price: 165,
-    image: "/placeholder.svg?height=600&width=400&text=Oversized+Hoodie+Front",
-    hoverImage: "/placeholder.svg?height=600&width=400&text=Oversized+Hoodie+Back",
-    images: [
-      "/placeholder.svg?height=600&width=400&text=Oversized+Hoodie+Front",
-      "/placeholder.svg?height=600&width=400&text=Oversized+Hoodie+Back",
-      "/placeholder.svg?height=600&width=400&text=Oversized+Hoodie+Detail",
-    ],
-  },
-  {
-    id: 3,
-    name: "CARGO PANTS",
-    price: 195,
-    image: "/placeholder.svg?height=600&width=400&text=Cargo+Pants+Front",
-    hoverImage: "/placeholder.svg?height=600&width=400&text=Cargo+Pants+Back",
-    images: [
-      "/placeholder.svg?height=600&width=400&text=Cargo+Pants+Front",
-      "/placeholder.svg?height=600&width=400&text=Cargo+Pants+Back",
-      "/placeholder.svg?height=600&width=400&text=Cargo+Pants+Detail",
-    ],
-  },
-  {
-    id: 4,
-    name: "BOMBER JACKET",
-    price: 285,
-    image: "/placeholder.svg?height=600&width=400&text=Bomber+Jacket+Front",
-    hoverImage: "/placeholder.svg?height=600&width=400&text=Bomber+Jacket+Back",
-    images: [
-      "/placeholder.svg?height=600&width=400&text=Bomber+Jacket+Front",
-      "/placeholder.svg?height=600&width=400&text=Bomber+Jacket+Back",
-      "/placeholder.svg?height=600&width=400&text=Bomber+Jacket+Detail",
-    ],
-  },
-  {
-    id: 5,
-    name: "TRACK SUIT",
-    price: 325,
-    image: "/placeholder.svg?height=600&width=400&text=Track+Suit+Front",
-    hoverImage: "/placeholder.svg?height=600&width=400&text=Track+Suit+Back",
-    images: [
-      "/placeholder.svg?height=600&width=400&text=Track+Suit+Front",
-      "/placeholder.svg?height=600&width=400&text=Track+Suit+Back",
-      "/placeholder.svg?height=600&width=400&text=Track+Suit+Detail",
-    ],
-  },
-  {
-    id: 6,
-    name: "MINIMAL SNEAKERS",
-    price: 245,
-    image: "/placeholder.svg?height=600&width=400&text=Minimal+Sneakers+Side",
-    hoverImage: "/placeholder.svg?height=600&width=400&text=Minimal+Sneakers+Top",
-    images: [
-      "/placeholder.svg?height=600&width=400&text=Minimal+Sneakers+Side",
-      "/placeholder.svg?height=600&width=400&text=Minimal+Sneakers+Top",
-      "/placeholder.svg?height=600&width=400&text=Minimal+Sneakers+Detail",
-    ],
-  },
-]
+import { useQuery } from "@apollo/client/react"
+import { GET_PRODUCTS } from "@/graphql/product-queries"
 
 const filters = ["All", "Tops", "Bottoms", "Outerwear"] // Removed "Footwear" and "Accessories"
 
 export function ProductGrid() {
   const [activeFilter, setActiveFilter] = useState("All")
+  
+  const { loading, error, data } = useQuery(GET_PRODUCTS, {
+    variables: { isActive: true }
+  })
+
+  if (loading) return <div className="py-16 text-center">Loading products...</div>
+  if (error) return <div className="py-16 text-center text-red-500">Error loading products: {error.message}</div>
+
+  // Transform GraphQL data to match the existing product structure
+  const products = (data as any)?.products?.map((product: any) => ({
+    id: parseInt(product.id),
+    name: product.name,
+    price: product.basePrice,
+    image: product.designImageURL,
+    description: product.description,
+  })) || []
 
   return (
     <section className="py-16 lg:py-24">
@@ -122,7 +65,7 @@ export function ProductGrid() {
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {products.map((product, index) => (
+          {products.map((product: any, index: number) => (
             <ScrollReveal key={product.id} direction="up" delay={index * 100}>
               <ProductCard product={product} />
             </ScrollReveal>

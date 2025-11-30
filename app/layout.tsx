@@ -6,11 +6,11 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Sacred Mayhem - Underground Luxury Fashion",
+  title: "AuraGaze - Underground Luxury Fashion",
   description:
-    "Discover Sacred Mayhem, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
+    "Discover AuraGaze, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
   keywords: [
-    "Sacred Mayhem",
+    "AuraGaze",
     "luxury streetwear",
     "black fashion",
     "minimalist clothing",
@@ -20,17 +20,17 @@ export const metadata: Metadata = {
     "premium apparel",
   ],
   openGraph: {
-    title: "Sacred Mayhem - Underground Luxury Fashion",
+    title: "AuraGaze - Underground Luxury Fashion",
     description:
-      "Discover Sacred Mayhem, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
-    url: "https://www.sacredmayhem.com",
-    siteName: "Sacred Mayhem",
+      "Discover AuraGaze, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
+    url: "https://www.auragaze.com",
+    siteName: "AuraGaze",
     images: [
       {
         url: "/placeholder.svg?height=630&width=1200&text=Sacred+Mayhem+OpenGraph",
         width: 1200,
         height: 630,
-        alt: "Sacred Mayhem - Underground Luxury Fashion",
+        alt: "AuraGaze - Underground Luxury Fashion",
       },
     ],
     locale: "en_US",
@@ -38,9 +38,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sacred Mayhem - Underground Luxury Fashion",
+    title: "AuraGaze - Underground Luxury Fashion",
     description:
-      "Discover Sacred Mayhem, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
+      "Discover AuraGaze, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
     images: ["/placeholder.svg?height=675&width=1200&text=Sacred+Mayhem+Twitter"],
   },
 }

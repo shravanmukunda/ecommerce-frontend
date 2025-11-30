@@ -2,11 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Edit, Trash2 } from "lucide-react"
+import { useQuery, useMutation } from "@apollo/client/react"
+import { gql } from "@apollo/client"
 
 interface Address {
   id: string
@@ -20,33 +22,68 @@ interface Address {
   isDefaultBilling: boolean
 }
 
-const dummyAddresses: Address[] = [
-  {
-    id: "addr-1",
-    name: "Home Address",
-    street: "123 Fashion Ave",
-    city: "Paris",
-    state: "Île-de-France",
-    zip: "75001",
-    country: "France",
-    isDefaultShipping: true,
-    isDefaultBilling: true,
-  },
-  {
-    id: "addr-2",
-    name: "Work Address",
-    street: "456 Design St",
-    city: "London",
-    state: "England",
-    zip: "SW1A 0AA",
-    country: "United Kingdom",
-    isDefaultShipping: false,
-    isDefaultBilling: false,
-  },
-]
+// GraphQL queries and mutations
+const GET_ADDRESSES = gql`
+  query GetAddresses {
+    # This would be implemented in a real application
+    # For now, we'll return an empty array
+    addresses {
+      id
+      name
+      street
+      city
+      state
+      zip
+      country
+      isDefaultShipping
+      isDefaultBilling
+    }
+  }
+`
+
+const ADD_ADDRESS = gql`
+  mutation AddAddress($input: AddressInput!) {
+    # This would be implemented in a real application
+    addAddress(input: $input) {
+      id
+      name
+      street
+      city
+      state
+      zip
+      country
+      isDefaultShipping
+      isDefaultBilling
+    }
+  }
+`
+
+const UPDATE_ADDRESS = gql`
+  mutation UpdateAddress($id: ID!, $input: AddressInput!) {
+    # This would be implemented in a real application
+    updateAddress(id: $id, input: $input) {
+      id
+      name
+      street
+      city
+      state
+      zip
+      country
+      isDefaultShipping
+      isDefaultBilling
+    }
+  }
+`
+
+const DELETE_ADDRESS = gql`
+  mutation DeleteAddress($id: ID!) {
+    # This would be implemented in a real application
+    deleteAddress(id: $id)
+  }
+`
 
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState<Address[]>(dummyAddresses)
+  const [addresses, setAddresses] = useState<Address[]>([])
   const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [formData, setFormData] = useState({
@@ -60,6 +97,14 @@ export default function AddressesPage() {
     isDefaultBilling: false,
   })
 
+  // In a real application, you would fetch addresses from the API
+  // const { data, loading, error } = useQuery(GET_ADDRESSES)
+  
+  // For now, we'll initialize with an empty array
+  useEffect(() => {
+    setAddresses([])
+  }, [])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target as HTMLInputElement
     setFormData((prev) => ({
@@ -71,11 +116,15 @@ export default function AddressesPage() {
   const handleSaveAddress = (e: React.FormEvent) => {
     e.preventDefault()
     if (editingAddress) {
+      // In a real application, you would call the update mutation
+      // updateAddress({ variables: { id: editingAddress.id, input: formData } })
       setAddresses(
         addresses.map((addr) => (addr.id === editingAddress.id ? ({ ...formData, id: addr.id } as Address) : addr)),
       )
       setEditingAddress(null)
     } else {
+      // In a real application, you would call the add mutation
+      // addAddress({ variables: { input: formData } })
       const newAddress: Address = { ...formData, id: `addr-${Date.now()}` } as Address
       setAddresses([...addresses, newAddress])
       setIsAddingNew(false)
@@ -93,6 +142,8 @@ export default function AddressesPage() {
   }
 
   const handleDeleteAddress = (id: string) => {
+    // In a real application, you would call the delete mutation
+    // deleteAddress({ variables: { id } })
     setAddresses(addresses.filter((addr) => addr.id !== id))
   }
 

@@ -7,26 +7,9 @@ import { ChevronLeft, ChevronRight, Heart, Share2, Truck, Shield, Ruler, Star } 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollReveal } from "@/components/scroll-reveal"
-import { useStore } from "@/context/store-context" // Import useStore and Product type alias
-
-// Placeholder data for a specific product for the ProductDetail page
-// In a real app, this would be fetched from a database based on productId
-const dummyProductData = {
-  id: 1, // This ID should match what's in your product data elsewhere for context to work
-  name: "ESSENTIAL TEE",
-  price: 85,
-  description:
-    "The perfect foundation for any wardrobe. Crafted from premium organic cotton with a relaxed fit that embodies effortless luxury. This essential piece features our signature minimalist design philosophy with attention to every detail.",
-  images: [
-    "/placeholder.svg?height=800&width=600&text=Essential+Tee+Front",
-    "/placeholder.svg?height=800&width=600&text=Essential+Tee+Back",
-    "/placeholder.svg?height=800&width=600&text=Essential+Tee+Detail",
-    "/placeholder.svg?height=800&width=600&text=Essential+Tee+Lifestyle",
-  ],
-  category: "Tops",
-  materials: ["100% Organic Cotton", "GOTS Certified", "Pre-shrunk fabric", "Weight: 180 GSM"],
-  careInstructions: ["Machine wash cold (30°C)", "Tumble dry low", "Do not bleach", "Iron on low heat if needed"],
-}
+import { useStore } from "@/context/store-context"
+import { useQuery } from "@apollo/client/react"
+import { GET_PRODUCT } from "@/graphql/product-queries"
 
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"]
 
@@ -54,35 +37,14 @@ const reviews = [
   },
 ]
 
-const relatedProducts = [
-  {
-    id: 2,
-    name: "OVERSIZED HOODIE",
-    price: 165,
-    image: "/placeholder.svg?height=400&width=300&text=Hoodie",
-  },
-  {
-    id: 3,
-    name: "CARGO PANTS",
-    price: 195,
-    image: "/placeholder.svg?height=400&width=300&text=Cargo",
-  },
-  {
-    id: 4,
-    name: "BOMBER JACKET",
-    price: 285,
-    image: "/placeholder.svg?height=400&width=300&text=Bomber",
-  },
-]
-
 interface ProductDetailProps {
-  productId: string // This will be the ID from the URL params
+  productId: string
 }
 
 export function ProductDetail({ productId }: ProductDetailProps) {
-  // In a real app, you'd fetch product data based on productId here
-  // For now, we'll use dummyProductData
-  const product = dummyProductData // Assuming productId maps to this dummy data
+  const { loading, error, data } = useQuery(GET_PRODUCT, {
+    variables: { id: productId }
+  })
 
   const [currentImage, setCurrentImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState("")
@@ -90,14 +52,32 @@ export function ProductDetail({ productId }: ProductDetailProps) {
   const [activeTab, setActiveTab] = useState("description")
   const [isAddingToCart, setIsAddingToCart] = useState(false)
 
-  const { addToCart } = useStore() // Get functions and state from global store
+  const { addToCart } = useStore()
+
+  if (loading) return <div className="py-16 text-center">Loading product...</div>
+  if (error) return <div className="py-16 text-center text-red-500">Error loading product: {error.message}</div>
+
+  const product = (data as any)?.product
+  if (!product) return <div className="py-16 text-center">Product not found</div>
+
+  // Transform GraphQL data to match component expectations
+  const productData = {
+    id: parseInt(product.id),
+    name: product.name,
+    price: product.basePrice,
+    description: product.description,
+    images: [product.designImageURL], // For now, just use the main image
+    category: "Tops", // Default category
+    materials: ["100% Organic Cotton", "GOTS Certified", "Pre-shrunk fabric", "Weight: 180 GSM"],
+    careInstructions: ["Machine wash cold (30°C)", "Tumble dry low", "Do not bleach", "Iron on low heat if needed"],
+  }
 
   const nextImage = () => {
-    setCurrentImage((prev) => (prev + 1) % product.images.length)
+    setCurrentImage((prev) => (prev + 1) % productData.images.length)
   }
 
   const prevImage = () => {
-    setCurrentImage((prev) => (prev - 1 + product.images.length) % product.images.length)
+    setCurrentImage((prev) => (prev - 1 + productData.images.length) % productData.images.length)
   }
 
   const handleAddToCart = async () => {
@@ -112,8 +92,8 @@ export function ProductDetail({ productId }: ProductDetailProps) {
     // Add product to global cart with selected size and quantity
     addToCart(
       {
-        ...product,
-        image: product.images[0] || "/placeholder.svg",
+        ...productData,
+        image: productData.images[0] || "/placeholder.svg",
         size: selectedSize,
         color: "Black", // Assuming default color for simplicity
       },
@@ -121,10 +101,32 @@ export function ProductDetail({ productId }: ProductDetailProps) {
     )
 
     setIsAddingToCart(false)
-    alert(`${quantity} x ${product.name} (Size: ${selectedSize}) added to cart!`)
+    alert(`${quantity} x ${productData.name} (Size: ${selectedSize}) added to cart!`)
   }
 
   const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+
+  // For related products, we'll use some dummy data for now
+  const relatedProducts = [
+    {
+      id: 2,
+      name: "OVERSIZED HOODIE",
+      price: 165,
+      image: "/placeholder.svg?height=400&width=300&text=Hoodie",
+    },
+    {
+      id: 3,
+      name: "CARGO PANTS",
+      price: 195,
+      image: "/placeholder.svg?height=400&width=300&text=Cargo",
+    },
+    {
+      id: 4,
+      name: "BOMBER JACKET",
+      price: 285,
+      image: "/placeholder.svg?height=400&width=300&text=Bomber",
+    },
+  ]
 
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
@@ -141,7 +143,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                 Shop
               </Link>
               <span className="text-gray-400">/</span>
-              <span className="font-semibold">{product.name}</span>
+              <span className="font-semibold">{productData.name}</span>
             </nav>
           </div>
         </div>
@@ -155,8 +157,8 @@ export function ProductDetail({ productId }: ProductDetailProps) {
               {/* Main Image */}
               <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
                 <Image
-                  src={product.images[currentImage] || "/placeholder.svg"}
-                  alt={`${product.name} - View ${currentImage + 1}`}
+                  src={productData.images[currentImage] || "/placeholder.svg"}
+                  alt={`${productData.name} - View ${currentImage + 1}`}
                   fill
                   className="object-cover"
                   priority={currentImage === 0} // Prioritize loading the first image
@@ -164,7 +166,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                 />
 
                 {/* Navigation Arrows */}
-                {product.images.length > 1 && (
+                {productData.images.length > 1 && (
                   <>
                     <Button
                       variant="ghost"
@@ -186,9 +188,9 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                 )}
 
                 {/* Image Indicators */}
-                {product.images.length > 1 && (
+                {productData.images.length > 1 && (
                   <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-2">
-                    {product.images.map((_, index) => (
+                    {productData.images.map((_: any, index: number) => (
                       <button
                         key={index}
                         onClick={() => setCurrentImage(index)}
@@ -203,11 +205,11 @@ export function ProductDetail({ productId }: ProductDetailProps) {
               </div>
 
               {/* Thumbnail Gallery */}
-              {product.images.length > 1 && (
+              {productData.images.length > 1 && (
                 <div className="flex space-x-2 overflow-x-auto p-1">
                   {" "}
                   {/* Added p-1 for slight padding for ring */}
-                  {product.images.map((image, index) => (
+                  {productData.images.map((image: string, index: number) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImage(index)}
@@ -237,9 +239,9 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                 <Badge variant="outline" className="mb-2">
                   New Arrival
                 </Badge>
-                <h1 className="text-3xl font-black uppercase tracking-wider md:text-4xl">{product.name}</h1>
+                <h1 className="text-3xl font-black uppercase tracking-wider md:text-4xl">{productData.name}</h1>
                 <div className="mt-2 flex items-center space-x-4">
-                  <p className="text-2xl font-bold">${product.price}</p>
+                  <p className="text-2xl font-bold">${productData.price}</p>
                   <div className="flex items-center space-x-1">
                     <div className="flex">
                       {[...Array(5)].map((_, i) => (
@@ -257,7 +259,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
               </div>
 
               <div>
-                <p className="text-gray-600 leading-relaxed">{product.description}</p>
+                <p className="text-gray-600 leading-relaxed">{productData.description}</p>
               </div>
 
               {/* Size Selection */}
@@ -384,7 +386,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
               {activeTab === "description" && (
                 <div className="prose max-w-none">
                   <h3 className="text-xl font-bold uppercase tracking-wide">Product Description</h3>
-                  <p className="mt-4 text-gray-700 leading-relaxed">{product.description}</p>
+                  <p className="mt-4 text-gray-700 leading-relaxed">{productData.description}</p>
                   <ul className="mt-4 space-y-2 text-gray-700">
                     <li>• Premium organic cotton construction</li>
                     <li>• Relaxed fit for ultimate comfort</li>
@@ -402,7 +404,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     <div>
                       <h4 className="font-semibold uppercase tracking-wide">Materials</h4>
                       <ul className="mt-2 space-y-1 text-gray-700">
-                        {product.materials.map((material, i) => (
+                        {productData.materials.map((material: string, i: number) => (
                           <li key={i}>• {material}</li>
                         ))}
                       </ul>
@@ -410,7 +412,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     <div>
                       <h4 className="font-semibold uppercase tracking-wide">Care Instructions</h4>
                       <ul className="mt-2 space-y-1 text-gray-700">
-                        {product.careInstructions.map((instruction, i) => (
+                        {productData.careInstructions.map((instruction: string, i: number) => (
                           <li key={i}>• {instruction}</li>
                         ))}
                       </ul>

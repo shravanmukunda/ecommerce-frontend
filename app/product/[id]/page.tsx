@@ -2,29 +2,53 @@ import { ProductDetail } from "@/components/product-detail"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import type { Metadata } from "next"
+import { client } from "@/lib/apolloClient"
+import { GET_PRODUCT } from "@/graphql/product-queries"
 
-const getProductData = (id: string) => {
-  return {
-    id: Number(id),
-    name: "ESSENTIAL TEE",
-    price: 85,
-    description:
-      "The perfect foundation for any wardrobe. Crafted from premium organic cotton with a relaxed fit that embodies effortless luxury. This essential piece features our signature minimalist design philosophy with attention to every detail.",
-    image: "/placeholder.svg?height=800&width=600&text=Essential+Tee+Front",
+// Update to fetch product data from GraphQL
+async function getProductData(id: string) {
+  try {
+    const { data } = await client.query({
+      query: GET_PRODUCT,
+      variables: { id },
+    })
+
+    const product = (data as any).product
+    if (!product) {
+      return null
+    }
+
+    return {
+      id: product.id,
+      name: product.name,
+      price: product.basePrice,
+      description: product.description,
+      image: product.designImageURL,
+      images: [product.designImageURL], // For now, just use the main image
+    }
+  } catch (error) {
+    console.error("Error fetching product:", error)
+    return null
   }
 }
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const product = getProductData(params.id)
+  const product = await getProductData(params.id)
+
+  if (!product) {
+    return {
+      title: "Product Not Found - AuraGaze",
+    }
+  }
 
   return {
-    title: `${product.name} - Sacred Mayhem`,
+    title: `${product.name} - AuraGaze`,
     description: product.description,
-    keywords: [`${product.name}`, "Sacred Mayhem", "luxury streetwear", "minimalist clothing"],
+    keywords: [`${product.name}`, "AuraGaze", "luxury streetwear", "minimalist clothing"],
     openGraph: {
-      title: `${product.name} - Sacred Mayhem`,
+      title: `${product.name} - AuraGaze`,
       description: product.description,
-      url: `https://www.sacredmayhem.com/product/${params.id}`,
+      url: `https://www.auragaze.com/product/${params.id}`,
       images: [
         {
           url: product.image,
@@ -37,14 +61,30 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     },
     twitter: {
       card: "summary_large_image",
-      title: `${product.name} - Sacred Mayhem`,
+      title: `${product.name} - AuraGaze`,
       description: product.description,
       images: [product.image],
     },
   }
 }
 
-export default function ProductPage({ params }: { params: { id: string } }) {
+export default async function ProductPage({ params }: { params: { id: string } }) {
+  const product = await getProductData(params.id)
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <main className="container mx-auto px-4 py-16 text-center">
+          <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
+          <p className="text-gray-600 mb-8">The product you're looking for doesn't exist or has been removed.</p>
+          <a href="/shop" className="text-blue-600 hover:underline">Back to Shop</a>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header />

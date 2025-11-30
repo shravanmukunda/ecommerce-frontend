@@ -89,7 +89,7 @@ export function ContactPage() {
                 <Mail className="mt-1 h-6 w-6 flex-shrink-0" />
                 <div>
                   <h3 className="mb-1 font-bold uppercase tracking-wide">Email</h3>
-                  <p className="text-gray-600">hello@sacredmayhem.com</p>
+                  <p className="text-gray-600">hello@auragaze.com</p>
                 </div>
               </div>
 

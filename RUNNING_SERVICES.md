@@ -20,7 +20,7 @@ All services are now running successfully:
 ### 3. Next.js Frontend Application
 - **Port**: 3001
 - **Endpoint**: http://localhost:3001
-- **Type**: Sacred Mayhem e-commerce website
+- **Type**: AuraGaze e-commerce website
 - **Started**: Yes
 
 ## How to Access

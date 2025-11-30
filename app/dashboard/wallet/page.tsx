@@ -12,11 +12,13 @@ import { Select } from "@/components/ui/select"
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Edit, Trash2, CreditCardIcon } from "lucide-react"
+import { useQuery } from "@apollo/client/react"
+import { gql } from "@apollo/client"
 
 interface PaymentMethod {
   id: string
@@ -26,13 +28,23 @@ interface PaymentMethod {
   isDefault: boolean
 }
 
-const dummyPaymentMethods: PaymentMethod[] = [
-  { id: "card-1", type: "Visa", last4: "1234", expiry: "12/26", isDefault: true },
-  { id: "card-2", type: "Mastercard", last4: "5678", expiry: "08/25", isDefault: false },
-]
+// GraphQL query for payment methods
+const GET_PAYMENT_METHODS = gql`
+  query GetPaymentMethods {
+    # This would be implemented in a real application
+    # For now, we'll return an empty array
+    paymentMethods {
+      id
+      type
+      last4
+      expiry
+      isDefault
+    }
+  }
+`
 
 export default function WalletPage() {
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(dummyPaymentMethods)
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null)
   const [isAddingNew, setIsAddingNew] = useState(false)
   const [formData, setFormData] = useState({
@@ -42,6 +54,14 @@ export default function WalletPage() {
     cvv: "",
     isDefault: false,
   })
+  
+  // In a real application, you would fetch payment methods from the API
+  // const { data, loading, error } = useQuery(GET_PAYMENT_METHODS)
+  
+  // For now, we'll initialize with an empty array
+  useEffect(() => {
+    setPaymentMethods([])
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const target = e.target as HTMLInputElement

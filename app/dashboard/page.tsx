@@ -36,7 +36,7 @@ export default function DashboardHomePage() {
       {/* Welcome Section */}
       <div className="bg-black text-white p-8 rounded-lg shadow-lg text-center">
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-2">Welcome, {user.name}!</h1>
-        <p className="text-lg text-gray-300">Your personal hub for managing everything Sacred Mayhem.</p>
+        <p className="text-lg text-gray-300">Your personal hub for managing everything AuraGaze.</p>
       </div>
 
       {/* Quick Actions Section */}
