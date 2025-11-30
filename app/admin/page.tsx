@@ -21,58 +21,73 @@ import { RecentOrders } from "@/components/admin/recent-orders"
 import { ProductManagement } from "@/components/admin/product-management"
 import { PromoCodeManagement } from "@/components/admin/promo-code-management"
 import { useQuery } from "@apollo/client/react"
-import { gql } from "@apollo/client"
+import { GET_PRODUCTS } from "@/graphql/product-queries"
+import { GET_ORDERS } from "@/graphql/orders"
 
 // Define TypeScript interfaces for our data
+interface ProductVariant {
+  id: string;
+  size: string;
+  color: string;
+  price: number;
+  inventory: {
+    availableQuantity: number;
+  };
+}
+
 interface ProductData {
   id: string;
   name: string;
+  description: string;
+  designImageURL: string;
   basePrice: number;
   isActive: boolean;
+  variants: ProductVariant[];
+}
+
+interface OrderItem {
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    image: string;
+  };
+  quantity: number;
+  size: string;
+  color: string;
 }
 
 interface OrderData {
   id: string;
-  orderNumber: string;
-  total: number;
   status: string;
+  totalAmount: number;
   createdAt: string;
+  items: OrderItem[];
 }
 
-// GraphQL queries
-const GET_PRODUCTS = gql`
-  query GetProducts {
-    products {
-      id
-      name
-      basePrice
-      isActive
-    }
-  }
-`;
+interface OrdersResponse {
+  allOrders: OrderData[];
+}
 
-const GET_ORDERS = gql`
-  query GetOrders {
-    orders {
-      id
-      orderNumber
-      total
-      status
-      createdAt
-    }
-  }
-`;
+// Transform OrderData to match RecentOrders component expectations
+interface TransformedOrder {
+  id: string;
+  customer: string;
+  date: string;
+  amount: number;
+  status: "Delivered" | "Processing" | "Shipped" | "Pending";
+}
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Product[]>([])
-  const [orders, setOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<TransformedOrder[]>([])
   const [salesData, setSalesData] = useState<any[]>([])
   
   // Fetch products from API
   const { data: productsData, loading: productsLoading, error: productsError } = useQuery<{ products: ProductData[] }>(GET_PRODUCTS)
   
   // Fetch orders from API
-  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<{ orders: OrderData[] }>(GET_ORDERS)
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<OrdersResponse>(GET_ORDERS)
   
   // Update products state when data is fetched
   useEffect(() => {
@@ -82,8 +97,8 @@ export default function AdminDashboardPage() {
         id: parseInt(product.id),
         name: product.name,
         price: product.basePrice,
-        image: "/placeholder.svg", // Default placeholder image
-        // Other properties will use defaults
+        image: product.designImageURL || "/placeholder.svg",
+        // Other properties will use defaults from the Product interface
       }))
       setProducts(convertedProducts)
     }
@@ -91,25 +106,47 @@ export default function AdminDashboardPage() {
   
   // Update orders state when data is fetched
   useEffect(() => {
-    if (ordersData && ordersData.orders) {
-      setOrders(ordersData.orders)
+    if (ordersData && ordersData.allOrders) {
+      // Transform orders to match component expectations
+      const transformedOrders: TransformedOrder[] = ordersData.allOrders.map(order => ({
+        id: order.id,
+        customer: "Customer Name", // Placeholder - would need user data to populate this
+        date: new Date(order.createdAt).toLocaleDateString(),
+        amount: order.totalAmount,
+        status: order.status as "Delivered" | "Processing" | "Shipped" | "Pending"
+      }))
+      setOrders(transformedOrders)
     }
   }, [ordersData])
   
-  // For now, we'll use empty arrays instead of mock data
-  // In a real application, this data would come from the API
-  const totalSales = salesData.reduce((sum, data) => sum + (data.sales || 0), 0)
-  const totalRevenue = salesData.reduce((sum, data) => sum + (data.revenue || 0), 0)
+  // Calculate stats from actual data
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.amount || 0), 0)
   const totalOrders = orders.length
+  const totalProducts = products.length
   
   // Handle loading states
   if (productsLoading || ordersLoading) {
-    return <div>Loading dashboard data...</div>
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg font-semibold">Loading dashboard data...</p>
+      </div>
+    )
   }
   
   // Handle error states
   if (productsError || ordersError) {
-    return <div>Error loading dashboard data. Please try again later.</div>
+    console.error('Products error:', productsError)
+    console.error('Orders error:', ordersError)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold">Error loading dashboard data.</p>
+          <p className="text-gray-600 mt-2">Please try again later.</p>
+          {productsError && <p className="text-red-500 mt-2">Products Error: {productsError.message}</p>}
+          {ordersError && <p className="text-red-500 mt-2">Orders Error: {ordersError.message}</p>}
+        </div>
+      </div>
+    )
   }
   
   return (
@@ -123,9 +160,9 @@ export default function AdminDashboardPage() {
       {/* Stats Cards */}
       <OverviewCards 
         totalRevenue={totalRevenue}
-        totalSales={totalSales}
+        totalSales={totalRevenue} // Using revenue as sales for now
         totalOrders={totalOrders}
-        totalProducts={products.length}
+        totalProducts={totalProducts}
       />
 
       {/* Charts - using empty data instead of mock data */}

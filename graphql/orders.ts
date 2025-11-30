@@ -1,64 +1,34 @@
 import { gql } from "@apollo/client";
 
-// Order Queries
+/**
+ * ✅ Correct query matching backend GraphQL schema
+ * OrderItem → Variant → Product
+ */
 export const GET_ORDERS = gql`
-  query GetOrders {
-    orders {
-      id
-      orderNumber
-      status
-      total
-      createdAt
-      items {
-        product {
-          id
-          name
-          price
-          image
-        }
-        quantity
-        size
-        color
-      }
-    }
-  }
-`;
+query GetOrders {
+  allOrders {
+    id
+    status
+    totalAmount
+    createdAt
 
-export const GET_ORDER = gql`
-  query GetOrder($id: ID!) {
-    order(id: $id) {
-      id
-      orderNumber
-      status
-      total
-      createdAt
-      items {
+    items {
+      quantity
+      unitPrice
+      subtotal
+
+      variant {
+        size
+        color
+        price
+
         product {
           id
           name
-          price
-          image
+          designImageURL
         }
-        quantity
-        size
-        color
-      }
-      shippingAddress {
-        fullName
-        address
-        city
-        state
-        zipCode
-        country
-      }
-      billingAddress {
-        fullName
-        address
-        city
-        state
-        zipCode
-        country
       }
     }
   }
+}
 `;
