@@ -50,14 +50,21 @@ export function Header() {
                 Contact
               </Link>
               {user ? (
-                <>
-                  <Link href="/dashboard" className="hover:text-gray-900">
-                    Dashboard
+                <div className="flex items-center gap-3">
+                  <span className="hidden md:block font-semibold">
+                    Hi, {user.name.split(" ")[0]}
+                  </span>
+
+                  <Link href="/dashboard">
+                    <Button variant="ghost" size="icon">
+                      <User className="h-6 w-6" />
+                    </Button>
                   </Link>
-                  <Button onClick={handleLogout} variant="ghost" className="justify-start px-0">
+
+                  <Button onClick={handleLogout} variant="ghost" className="hidden md:inline-flex">
                     Logout
                   </Button>
-                </>
+                </div>
               ) : (
                 <Link href="/login" className="hover:text-gray-900">
                   Login
