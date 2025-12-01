@@ -8,6 +8,10 @@ import { Lock, CreditCard, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollReveal } from "@/components/scroll-reveal"
+import { useCart } from "@/hooks/use-cart";
+import { useMutation } from "@apollo/client";
+import { CREATE_ORDER } from "@/graphql/order";
+import { useRouter } from "next/navigation";
 
 const orderItems = [
   {
@@ -415,4 +419,21 @@ export function CheckoutPage() {
       </div>
     </div>
   )
+}
+export default function CheckoutPage() {
+  const { cart } = useCart();
+  const router = useRouter();
+  const [createOrder] = useMutation(CREATE_ORDER);
+
+  const handleCheckout = async () => {
+    const res = await createOrder();
+    router.push("/order-success?orderId=" + res.data.createOrder.id);
+  };
+
+  return (
+    <div>
+      <h1>Checkout</h1>
+      <button onClick={handleCheckout}>Place Order</button>
+    </div>
+  );
 }

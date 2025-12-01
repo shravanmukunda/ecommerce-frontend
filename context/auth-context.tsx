@@ -4,12 +4,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { REGISTER_MUTATION, LOGIN_MUTATION } from "@/graphql/auth";
 import { gql } from "@apollo/client";
+import { useCart } from "@/src/hooks/use-cart";
 
 // Define types for our GraphQL responses
 type User = {
   id: string;
   email: string;
   name: string;
+  isAdmin?: boolean;
 };
 
 type RegisterResponse = {
@@ -43,6 +45,7 @@ query Me {
     id
     email
     name
+    isAdmin
   }
 }
 `;
@@ -53,6 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [registerMutation] = useMutation<RegisterResponse>(REGISTER_MUTATION);
   const [loginMutation] = useMutation<LoginResponse>(LOGIN_MUTATION);
+  
+  const { attachCartToUser } = useCart();
 
   const { data, refetch } = useQuery<{ me: User }>(ME_QUERY, {
     skip: typeof window === "undefined" || !localStorage.getItem("authToken"),
@@ -104,6 +109,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const token = res.data.login.token;
       localStorage.setItem("authToken", token);
+
+      // Attach guest cart to user after login
+      if (res.data.login.user?.id) {
+        await attachCartToUser(res.data.login.user.id);
+      }
 
       await refetch(); // ✅ Get user after login
       setLoading(false);

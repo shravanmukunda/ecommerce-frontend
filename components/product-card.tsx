@@ -5,7 +5,7 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { useStore, type Product } from "@/context/store-context"
+import type { Product } from "@/lib/types"
 
 interface ProductCardProps {
   product: Product

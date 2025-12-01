@@ -1,9 +1,5 @@
 import { gql } from "@apollo/client";
 
-// ===========================
-// CART QUERIES
-// ===========================
-
 export const GET_CART = gql`
   query GetCart($cartId: ID, $forUser: Boolean) {
     getCart(cartId: $cartId, forUser: $forUser) {
@@ -22,10 +18,6 @@ export const GET_CART = gql`
     }
   }
 `;
-
-// ===========================
-// CART MUTATIONS
-// ===========================
 
 export const ADD_TO_CART = gql`
   mutation AddToCart($input: AddToCartInput!) {
@@ -50,11 +42,8 @@ export const REMOVE_CART_ITEM = gql`
     removeCartItem(input: $input) {
       cart {
         id
+        items { id }
         totalAmount
-        items {
-          id
-          quantity
-        }
       }
     }
   }
@@ -63,9 +52,7 @@ export const REMOVE_CART_ITEM = gql`
 export const CLEAR_CART = gql`
   mutation ClearCart($input: ClearCartInput!) {
     clearCart(input: $input) {
-      cart {
-        id
-      }
+      cart { id }
     }
   }
 `;
@@ -75,11 +62,8 @@ export const ATTACH_CART_TO_USER = gql`
     attachCartToUser(input: $input) {
       cart {
         id
+        items { id }
         totalAmount
-        items {
-          id
-          quantity
-        }
       }
     }
   }

@@ -5,9 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Package, User, Heart, Repeat, MapPin, CreditCard } from "lucide-react"
+import { useQuery } from "@apollo/client/react"
+import { MY_ORDERS } from "@/graphql/orders"
+
+interface Order {
+  id: string
+  totalAmount: number
+  status: string
+  createdAt: string
+}
+
+interface MyOrdersResponse {
+  myOrders: Order[]
+}
 
 export default function DashboardHomePage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<MyOrdersResponse>(MY_ORDERS)
 
   if (!user) {
     return null // Should be redirected by DashboardLayout
@@ -67,6 +81,53 @@ export default function DashboardHomePage() {
         </div>
       </section>
 
+      {/* Recent Orders Section */}
+      <section className="space-y-6">
+        <h2 className="text-2xl font-black uppercase tracking-wider text-black">Recent Orders</h2>
+        <Card>
+          <CardContent className="pt-6">
+            {ordersLoading ? (
+              <p>Loading orders...</p>
+            ) : ordersError ? (
+              <p className="text-red-500">Error loading orders: {ordersError.message}</p>
+            ) : ordersData?.myOrders && ordersData.myOrders.length > 0 ? (
+              <div className="space-y-4">
+                {ordersData.myOrders.slice(0, 3).map((order) => (
+                  <div key={order.id} className="flex justify-between items-center border-b pb-4 last:border-0 last:pb-0">
+                    <div>
+                      <p className="font-semibold">Order #{order.id}</p>
+                      <p className="text-gray-600 text-sm">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">${order.totalAmount.toFixed(2)}</p>
+                      <p className="text-gray-600 text-sm">Status: {order.status}</p>
+                    </div>
+                  </div>
+                ))}
+                <Link href="/dashboard/orders">
+                  <Button variant="outline" className="w-full border-black text-black hover:bg-black hover:text-white">
+                    View All Orders
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <p>You haven't placed any orders yet.</p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Logout Button */}
+      <section className="flex justify-end">
+        <Button 
+          onClick={logout}
+          variant="outline" 
+          className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+        >
+          Logout
+        </Button>
+      </section>
+
       {/* Admin Panel Access (if applicable) */}
       {user.isAdmin && (
         <Card className="border-2 border-red-500 bg-red-50 shadow-lg">
@@ -79,7 +140,11 @@ export default function DashboardHomePage() {
             <p className="text-red-800 mb-4 text-lg">
               You are logged in as an administrator. Access special admin features and tools here.
             </p>
-            <Button className="bg-red-600 text-white hover:bg-red-700 text-lg px-6 py-3">Go to Admin Tools</Button>
+            <Link href="/admin">
+              <Button className="bg-red-600 text-white hover:bg-red-700 text-lg px-6 py-3">
+                Go to Admin Tools
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       )}

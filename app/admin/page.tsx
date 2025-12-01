@@ -1,18 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { 
-  Package, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  Package,
+  TrendingUp,
+  DollarSign,
+  Users,
   ShoppingCart,
   PlusCircle,
   Edit,
   Eye,
   Tag
 } from "lucide-react"
-import { Product } from "@/context/store-context"
+import type { Product } from "@/lib/types"
 import Link from "next/link"
 import { OverviewCards } from "@/components/admin/overview-cards"
 import { SalesChart } from "@/components/admin/sales-chart"
@@ -23,6 +23,10 @@ import { PromoCodeManagement } from "@/components/admin/promo-code-management"
 import { useQuery } from "@apollo/client/react"
 import { GET_PRODUCTS } from "@/graphql/product-queries"
 import { GET_ORDERS } from "@/graphql/orders"
+import { useCart } from "@/hooks/use-cart";
+import { useMutation } from "@apollo/client";
+import { CREATE_ORDER } from "@/graphql/order";
+import { useRouter } from "next/navigation";
 
 // Define TypeScript interfaces for our data
 interface ProductVariant {
@@ -181,4 +185,21 @@ export default function AdminDashboardPage() {
       <ProductManagement products={products} />
     </div>
   )
+}
+export default function CheckoutPage() {
+  const { cart } = useCart();
+  const router = useRouter();
+  const [createOrder] = useMutation(CREATE_ORDER);
+
+  const handleCheckout = async () => {
+    const res = await createOrder();
+    router.push("/order-success?orderId=" + res.data.createOrder.id);
+  };
+
+  return (
+    <div>
+      <h1>Checkout</h1>
+      <button onClick={handleCheckout}>Place Order</button>
+    </div>
+  );
 }

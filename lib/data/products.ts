@@ -1,3 +1,3 @@
-import type { Product } from "@/context/store-context"
+import type { Product } from "@/lib/types"
 
 export const products: Product[] = []

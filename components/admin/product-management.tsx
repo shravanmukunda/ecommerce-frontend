@@ -1,17 +1,10 @@
 "use client"
 
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Edit, PlusCircle } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Product } from "@/context/store-context"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PlusCircle, Edit, Eye } from "lucide-react"
+import type { Product } from "@/lib/types"
 import Link from "next/link"
 
 interface ProductManagementProps {
@@ -19,47 +12,54 @@ interface ProductManagementProps {
 }
 
 export function ProductManagement({ products }: ProductManagementProps) {
+  const [isCreating, setIsCreating] = useState(false)
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-          <CardTitle>Product Management</CardTitle>
-          <Link href="/admin/products/new">
-            <Button className="mt-4 md:mt-0 bg-black text-white hover:bg-gray-800">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add New Product
-            </Button>
-          </Link>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Product Management</CardTitle>
+            <CardDescription>Manage your product inventory</CardDescription>
+          </div>
+          <Button onClick={() => setIsCreating(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Product
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Product</TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell className="font-medium">{product.name}</TableCell>
-                <TableCell>{product.id}</TableCell>
-                <TableCell>${product.price.toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  <Link href={`/admin/products/${product.id}/edit`}>
-                    <Button variant="ghost" size="sm">
-                      <Edit className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((product) => (
+            <div key={product.id} className="border rounded-lg overflow-hidden">
+              <div className="aspect-square bg-gray-100 relative">
+                <img 
+                  src={product.image || "/placeholder.svg"} 
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
+                <p className="text-gray-600 mb-4">${product.price}</p>
+                <div className="flex justify-between">
+                  <Link href={`/product/${product.id}`}>
+                    <Button variant="outline" size="sm">
+                      <Eye className="mr-2 h-4 w-4" />
+                      View
                     </Button>
                   </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  <Link href={`/admin/products/${product.id}/edit`}>
+                    <Button variant="outline" size="sm">
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   )

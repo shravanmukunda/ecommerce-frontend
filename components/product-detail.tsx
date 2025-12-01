@@ -3,13 +3,11 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ChevronLeft, ChevronRight, Heart, Share2, Truck, Shield, Ruler, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollReveal } from "@/components/scroll-reveal"
-import { useStore } from "@/context/store-context"
-import { useQuery } from "@apollo/client/react"
-import { GET_PRODUCT } from "@/graphql/product-queries"
+import { ChevronLeft, ChevronRight, Star, Truck, Shield, Ruler, Share2 } from "lucide-react"
+import { useCart } from "@/src/hooks/use-cart"
 
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"]
 
@@ -37,40 +35,14 @@ const reviews = [
   },
 ]
 
-interface ProductDetailProps {
-  productId: string
-}
-
-export function ProductDetail({ productId }: ProductDetailProps) {
-  const { loading, error, data } = useQuery(GET_PRODUCT, {
-    variables: { id: productId }
-  })
-
+export function ProductDetail({ productData }: { productData: any }) {
   const [currentImage, setCurrentImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [activeTab, setActiveTab] = useState("description")
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-
-  const { addToCart } = useStore()
-
-  if (loading) return <div className="py-16 text-center">Loading product...</div>
-  if (error) return <div className="py-16 text-center text-red-500">Error loading product: {error.message}</div>
-
-  const product = (data as any)?.product
-  if (!product) return <div className="py-16 text-center">Product not found</div>
-
-  // Transform GraphQL data to match component expectations
-  const productData = {
-    id: parseInt(product.id),
-    name: product.name,
-    price: product.basePrice,
-    description: product.description,
-    images: [product.designImageURL], // For now, just use the main image
-    category: "Tops", // Default category
-    materials: ["100% Organic Cotton", "GOTS Certified", "Pre-shrunk fabric", "Weight: 180 GSM"],
-    careInstructions: ["Machine wash cold (30°C)", "Tumble dry low", "Do not bleach", "Iron on low heat if needed"],
-  }
+  
+  const { addToCart } = useCart()
 
   const nextImage = () => {
     setCurrentImage((prev) => (prev + 1) % productData.images.length)
@@ -89,14 +61,9 @@ export function ProductDetail({ productId }: ProductDetailProps) {
     // Simulate API call before adding to context if needed
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    // Add product to global cart with selected size and quantity
-    addToCart(
-      {
-        ...productData,
-        image: productData.images[0] || "/placeholder.svg",
-        size: selectedSize,
-        color: "Black", // Assuming default color for simplicity
-      },
+    // Add product to GraphQL cart with selected size and quantity
+    await addToCart(
+      productData.id, // Use product ID as variant ID for now
       quantity,
     )
 
@@ -488,7 +455,7 @@ export function ProductDetail({ productId }: ProductDetailProps) {
                     <h3 className="mb-1 text-lg font-bold uppercase tracking-wide group-hover:text-gray-600 transition-colors">
                       {relatedProduct.name}
                     </h3>
-                    <p className="text-gray-600">${relatedProduct.price}</p>
+                    <p className="text-lg font-semibold">${relatedProduct.price}</p>
                   </Link>
                 </ScrollReveal>
               ))}
