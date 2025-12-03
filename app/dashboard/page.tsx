@@ -1,12 +1,12 @@
 "use client"
 
-import { useAuth } from "@/context/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Package, User, Heart, Repeat, MapPin, CreditCard } from "lucide-react"
 import { useQuery } from "@apollo/client/react"
 import { MY_ORDERS } from "@/graphql/orders"
+import { useUser } from "@clerk/nextjs"
 
 interface Order {
   id: string
@@ -20,7 +20,7 @@ interface MyOrdersResponse {
 }
 
 export default function DashboardHomePage() {
-  const { user, logout } = useAuth()
+  const { user } = useUser()
   const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<MyOrdersResponse>(MY_ORDERS)
 
   if (!user) {
@@ -49,7 +49,7 @@ export default function DashboardHomePage() {
     <div className="space-y-10">
       {/* Welcome Section */}
       <div className="bg-black text-white p-8 rounded-lg shadow-lg text-center">
-        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-2">Welcome, {user.name}!</h1>
+        <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-2">Welcome, {user.firstName || user.username}!</h1>
         <p className="text-lg text-gray-300">Your personal hub for managing everything AuraGaze.</p>
       </div>
 
@@ -117,37 +117,7 @@ export default function DashboardHomePage() {
         </Card>
       </section>
 
-      {/* Logout Button */}
-      <section className="flex justify-end">
-        <Button 
-          onClick={logout}
-          variant="outline" 
-          className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-        >
-          Logout
-        </Button>
-      </section>
-
       {/* Admin Panel Access (if applicable) */}
-      {user.isAdmin && (
-        <Card className="border-2 border-red-500 bg-red-50 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-black uppercase tracking-wide text-red-700">
-              Administrator Access
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-red-800 mb-4 text-lg">
-              You are logged in as an administrator. Access special admin features and tools here.
-            </p>
-            <Link href="/admin">
-              <Button className="bg-red-600 text-white hover:bg-red-700 text-lg px-6 py-3">
-                Go to Admin Tools
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

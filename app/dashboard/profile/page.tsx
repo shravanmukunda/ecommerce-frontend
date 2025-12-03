@@ -2,37 +2,37 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/context/auth-context"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useUser } from "@clerk/nextjs"
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth()
-  const [name, setName] = useState(user?.name || "")
-  const [email, setEmail] = useState(user?.email || "")
+  const { user, isLoaded } = useUser()
+  const [name, setName] = useState(user?.firstName || "")
+  const [email, setEmail] = useState(user?.primaryEmailAddress?.emailAddress || "")
   const [isEditing, setIsEditing] = useState(false)
   const [message, setMessage] = useState("")
-
-  useEffect(() => {
-    if (user) {
-      setName(user.name)
-      setEmail(user.email)
-    }
-  }, [user])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setMessage("")
-    // Simulate API call to update profile
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    // In a real app, you'd send name/email to backend and update context user
-    setMessage("Profile updated successfully!")
-    setIsEditing(false)
+    
+    try {
+      if (user) {
+        await user.update({
+          firstName: name,
+        })
+      }
+      setMessage("Profile updated successfully!")
+      setIsEditing(false)
+    } catch (error) {
+      setMessage("Error updating profile. Please try again.")
+    }
   }
 
-  if (loading) {
+  if (!isLoaded) {
     return <p>Loading profile...</p>
   }
 
@@ -71,9 +71,10 @@ export default function ProfilePage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={!isEditing}
+                disabled={true} // Email is managed by Clerk
                 className="border-black focus:ring-black"
               />
+              <p className="text-sm text-gray-500 mt-1">Email can be managed in your Clerk account settings.</p>
             </div>
             {message && <p className="text-sm text-green-600">{message}</p>}
             <div className="flex space-x-4">
@@ -84,7 +85,10 @@ export default function ProfilePage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => {
+                      setName(user.firstName || "")
+                      setIsEditing(false)
+                    }}
                     className="border-black text-black hover:bg-black hover:text-white"
                   >
                     Cancel
@@ -106,7 +110,11 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <p className="text-gray-600 mb-4">Change your password to keep your account secure.</p>
-          <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white bg-transparent">
+          <Button 
+            onClick={() => window.open("https://dashboard.clerk.com", "_blank")}
+            variant="outline" 
+            className="border-black text-black hover:bg-black hover:text-white bg-transparent"
+          >
             Change Password
           </Button>
         </CardContent>

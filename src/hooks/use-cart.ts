@@ -38,8 +38,9 @@ interface AddToCartResponse {
 }
 
 export const useCart = () => {
-  const token = localStorage.getItem("authToken");
-  const guestCartId = localStorage.getItem("guest_cart_id");
+  // Only access localStorage on the client side
+  const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+  const guestCartId = typeof window !== "undefined" ? localStorage.getItem("guest_cart_id") : null;
 
   const { data, loading, refetch } = useQuery<GetCartResponse>(GET_CART, {
     variables: {
@@ -64,7 +65,7 @@ export const useCart = () => {
 
     const cart = (res.data as AddToCartResponse).addToCart.cart;
 
-    if (!token) {
+    if (typeof window !== "undefined" && !token) {
       localStorage.setItem("guest_cart_id", cart.id);
     }
 
@@ -86,6 +87,8 @@ export const useCart = () => {
 
   // ATTACH GUEST CART TO USER (AFTER LOGIN)
   const attachCartToUser = async (userID: string) => {
+    if (typeof window === "undefined") return;
+    
     const guestId = localStorage.getItem("guest_cart_id");
     if (!guestId) return;
 

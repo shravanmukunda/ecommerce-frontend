@@ -20,6 +20,7 @@
   "dependencies": {
     "@apollo/client": "^4.0.9",
     "@apollo/server": "^4.10.5",
+    "@clerk/nextjs": "^6.35.6",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",

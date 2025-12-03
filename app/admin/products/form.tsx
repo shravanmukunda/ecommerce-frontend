@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import type { Product } from "@/lib/types"
 import { Upload } from "lucide-react"
 
@@ -17,11 +18,12 @@ interface ProductFormProps {
 export function ProductForm({ product, onSubmit, onCancel, isLoading }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
+    description: product?.description || "",
     price: product?.price?.toString() || "",
     image: product?.image || ""
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -31,6 +33,7 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading }: ProductF
     onSubmit({
       ...product,
       name: formData.name,
+      description: formData.description,
       price: parseFloat(formData.price) || 0,
       image: formData.image
     })
@@ -47,6 +50,18 @@ export function ProductForm({ product, onSubmit, onCancel, isLoading }: ProductF
           onChange={handleChange}
           placeholder="Enter product name"
           required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          name="description"
+          value={formData.description}
+          onChange={handleChange}
+          placeholder="Enter product description"
+          rows={4}
         />
       </div>
 

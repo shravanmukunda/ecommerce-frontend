@@ -24,8 +24,8 @@ import { useQuery } from "@apollo/client/react"
 import { GET_PRODUCTS } from "@/graphql/product-queries"
 import { GET_ORDERS } from "@/graphql/orders"
 import { useCart } from "@/hooks/use-cart";
-import { useMutation } from "@apollo/client";
-import { CREATE_ORDER } from "@/graphql/order";
+import { useMutation } from "@apollo/client/react";
+import { CREATE_ORDER } from "@/graphql/orders";
 import { useRouter } from "next/navigation";
 
 // Define TypeScript interfaces for our data
@@ -185,21 +185,4 @@ export default function AdminDashboardPage() {
       <ProductManagement products={products} />
     </div>
   )
-}
-export default function CheckoutPage() {
-  const { cart } = useCart();
-  const router = useRouter();
-  const [createOrder] = useMutation(CREATE_ORDER);
-
-  const handleCheckout = async () => {
-    const res = await createOrder();
-    router.push("/order-success?orderId=" + res.data.createOrder.id);
-  };
-
-  return (
-    <div>
-      <h1>Checkout</h1>
-      <button onClick={handleCheckout}>Place Order</button>
-    </div>
-  );
 }

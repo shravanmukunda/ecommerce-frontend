@@ -7,7 +7,6 @@ export const GET_CURRENT_USER = gql`
       id
       email
       name
-      isAdmin
     }
   }
 `;
@@ -18,7 +17,6 @@ export const GET_USER_PROFILE = gql`
       id
       email
       name
-      isAdmin
       createdAt
     }
   }

@@ -5,19 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu, ShoppingCart, Heart, User } from "lucide-react"
 import Image from "next/image"
-import { useAuth } from "@/context/auth-context"
-import { useRouter } from "next/navigation"
 import { useCart } from "@/src/hooks/use-cart"
+import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 
 export function Header() {
-  const { user, logout } = useAuth()
+  const { user } = useUser()
   const { cart } = useCart()
   const router = useRouter()
-
-  const handleLogout = () => {
-    logout()
-    router.push("/login")
-  }
 
   const cartCount = cart?.items?.length || 0
 
@@ -56,7 +51,7 @@ export function Header() {
               {user ? (
                 <div className="flex items-center gap-3">
                   <span className="hidden md:block font-semibold">
-                    Hi, {user.name.split(" ")[0]}
+                    Hi, {user.firstName || user.username}
                   </span>
 
                   <Link href="/dashboard">
@@ -65,14 +60,16 @@ export function Header() {
                     </Button>
                   </Link>
 
-                  <Button onClick={handleLogout} variant="ghost" className="hidden md:inline-flex">
-                    Logout
-                  </Button>
+                  <SignOutButton>
+                    <Button variant="ghost" className="hidden md:inline-flex">
+                      Logout
+                    </Button>
+                  </SignOutButton>
                 </div>
               ) : (
-                <Link href="/login" className="hover:text-gray-900">
-                  Login
-                </Link>
+                <SignInButton mode="modal">
+                  <button className="text-left hover:text-gray-900">Login</button>
+                </SignInButton>
               )}
             </nav>
           </SheetContent>
@@ -120,16 +117,18 @@ export function Header() {
                 <span className="sr-only">Dashboard</span>
               </Button>
             </Link>
-            <Button onClick={handleLogout} variant="ghost" className="hidden md:inline-flex">
-              Logout
-            </Button>
+            <SignOutButton>
+              <Button variant="ghost" className="hidden md:inline-flex">
+                Logout
+              </Button>
+            </SignOutButton>
           </div>
         ) : (
-          <Link href="/login">
+          <SignInButton mode="modal">
             <Button variant="ghost" className="hidden md:inline-flex">
               Login
             </Button>
-          </Link>
+          </SignInButton>
         )}
       </div>
     </header>
