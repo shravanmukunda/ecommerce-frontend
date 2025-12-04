@@ -12,28 +12,11 @@ export default function NewProductPage() {
     refetchQueries: [{ query: GET_PRODUCTS, variables: { isActive: true } }],
   })
 
-  const handleSubmit = async (productData: any, additionalData?: any) => {
-    try {
-      // Map the frontend form data to the backend input format
-      const input = {
-        name: productData.name,
-        description: productData.description,
-        designImageURL: productData.image, // Using the main image as designImageURL
-        basePrice: productData.price,
-      }
-
-      await createProduct({
-        variables: {
-          input,
-        },
-      })
-
-      alert("Product added successfully!")
-      router.push("/admin")
-    } catch (err) {
-      console.error("Error creating product:", err)
-      alert("Failed to add product. Please try again.")
-    }
+  const handleSubmit = async () => {
+    // The actual form submission is handled by the ProductForm component
+    // This is just a callback that gets called when the form is successfully submitted
+    alert("Product added successfully!")
+    router.push("/admin")
   }
 
   return (
@@ -44,7 +27,7 @@ export default function NewProductPage() {
         {error && <p className="text-red-500 mt-2">Error: {error.message}</p>}
       </div>
       
-      <ProductForm onSubmit={handleSubmit} />
+      <ProductForm onSubmit={handleSubmit} onCancel={() => router.push("/admin")} />
     </div>
   )
 }
