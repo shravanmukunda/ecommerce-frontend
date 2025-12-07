@@ -1,17 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {
-  Package,
-  TrendingUp,
-  DollarSign,
-  Users,
-  ShoppingCart,
-  PlusCircle,
-  Edit,
-  Eye,
-  Tag
-} from "lucide-react"
+
 import type { Product } from "@/lib/types"
 import Link from "next/link"
 import { OverviewCards } from "@/components/admin/overview-cards"
@@ -23,10 +13,6 @@ import { PromoCodeManagement } from "@/components/admin/promo-code-management"
 import { useQuery } from "@apollo/client/react"
 import { GET_PRODUCTS } from "@/graphql/product-queries"
 import { GET_ORDERS } from "@/graphql/orders"
-import { useCart } from "@/hooks/use-cart";
-import { useMutation } from "@apollo/client/react";
-import { CREATE_ORDER } from "@/graphql/orders";
-import { useRouter } from "next/navigation";
 
 // Define TypeScript interfaces for our data
 interface ProductVariant {

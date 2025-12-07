@@ -103,13 +103,6 @@ export function Hero() {
                 size="lg"
                 className="border-white px-8 py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-white hover:text-black hover:scale-105 transition-all duration-300 bg-transparent"
               >
-                Lookbook
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-white px-8 py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-white hover:text-black hover:scale-105 transition-all duration-300 bg-transparent"
-              >
                 Subscribe
               </Button>
             </div>
@@ -137,4 +130,17 @@ export function Hero() {
       </div>
     </section>
   )
+}
+
+import { useAuth } from "@clerk/nextjs"
+
+export default function Debug() {
+  const { getToken } = useAuth()
+
+  async function test() {
+    const token = await getToken()
+    console.log("CLERK TOKEN:", token)
+  }
+
+  return <button onClick={test} className="px-4 py-2 text-white bg-black rounded-md">TEST TOKEN</button>
 }

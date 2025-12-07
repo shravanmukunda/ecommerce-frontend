@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { ClerkProvider } from "@clerk/nextjs";
+import ClerkApolloBridge from "@/components/clerk-apollo-bridge";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -55,7 +56,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ClerkProvider>
-          <Providers>{children}</Providers>
+          <ClerkApolloBridge />
+          <Providers>
+            {children}
+          </Providers >
         </ClerkProvider>
       </body>
     </html>
