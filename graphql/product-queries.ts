@@ -9,6 +9,15 @@ export const GET_PRODUCTS = gql`
       designImageURL
       basePrice
       isActive
+      material
+      neckline
+      sleeveType
+      fit
+      brand
+      category
+      careInstructions
+      weight
+      featured
       variants {
         id
         size
@@ -37,6 +46,15 @@ export const GET_PRODUCT = gql`
       designImageURL
       basePrice
       isActive
+      material
+      neckline
+      sleeveType
+      fit
+      brand
+      category
+      careInstructions
+      weight
+      featured
       variants {
         id
         size

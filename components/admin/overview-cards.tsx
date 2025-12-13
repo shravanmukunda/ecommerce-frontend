@@ -13,31 +13,37 @@ interface OverviewCardsProps {
   totalSales: number
   totalOrders: number
   totalProducts: number
+  revenueGrowth?: number
+  salesGrowth?: number
+  orderGrowth?: number
 }
 
 export function OverviewCards({
   totalRevenue,
   totalSales,
   totalOrders,
-  totalProducts
+  totalProducts,
+  revenueGrowth = 0,
+  salesGrowth = 0,
+  orderGrowth = 0
 }: OverviewCardsProps) {
   const stats = [
     {
       title: "Total Revenue",
-      value: `$${totalRevenue.toLocaleString()}`,
-      description: "+20.1% from last month",
+      value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      description: revenueGrowth ? `${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% from last month` : "No previous data",
       icon: DollarSign,
     },
     {
       title: "Total Sales",
       value: totalSales.toLocaleString(),
-      description: "+18.1% from last month",
+      description: salesGrowth ? `${salesGrowth > 0 ? '+' : ''}${salesGrowth.toFixed(1)}% from last month` : "No previous data",
       icon: TrendingUp,
     },
     {
       title: "Orders",
       value: totalOrders.toString(),
-      description: "+19% from last month",
+      description: orderGrowth ? `${orderGrowth > 0 ? '+' : ''}${orderGrowth.toFixed(1)}% from last month` : "No previous data",
       icon: ShoppingCart,
     },
     {

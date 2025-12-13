@@ -21,3 +21,9 @@ export * from './categories';
 
 // Search
 export * from './search';
+
+// Promo Codes
+export * from './promo';
+
+// Analytics
+export * from './analytics';

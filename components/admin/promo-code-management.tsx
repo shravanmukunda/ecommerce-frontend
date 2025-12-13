@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useQuery, useMutation } from "@apollo/client/react"
 import { 
   Table, 
   TableBody, 
@@ -13,25 +14,52 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, Edit, Trash2 } from "lucide-react"
+import { PlusCircle, Edit, Trash2, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { 
+  GET_PROMO_CODES, 
+  CREATE_PROMO_CODE, 
+  UPDATE_PROMO_CODE, 
+  DELETE_PROMO_CODE,
+  TOGGLE_PROMO_CODE_STATUS 
+} from "@/graphql/promo"
 
 interface PromoCode {
   id: string
   code: string
   discountType: "percentage" | "fixed"
   discountValue: number
-  validityDate: string
+  validFrom?: string
+  validUntil: string
   isActive: boolean
+  usageLimit?: number
+  usageCount?: number
+}
+
+interface GetPromoCodesResponse {
+  promoCodes: PromoCode[]
 }
 
 export function PromoCodeManagement() {
-  const [promoCodes, setPromoCodes] = useState<PromoCode[]>([
+  // Try to fetch promo codes from backend
+  const { data, loading, error, refetch } = useQuery<GetPromoCodesResponse>(GET_PROMO_CODES, {
+    variables: { isActive: null },
+    fetchPolicy: "network-only"
+  })
+  
+  const [createPromoCode, { loading: creating }] = useMutation(CREATE_PROMO_CODE)
+  const [updatePromoCode, { loading: updating }] = useMutation(UPDATE_PROMO_CODE)
+  const [deletePromoCode, { loading: deleting }] = useMutation(DELETE_PROMO_CODE)
+  const [toggleStatus] = useMutation(TOGGLE_PROMO_CODE_STATUS)
+  
+  // Fallback to local state if backend doesn't support promo codes yet
+  const [localPromoCodes, setLocalPromoCodes] = useState<PromoCode[]>([
     {
       id: "1",
       code: "WELCOME10",
       discountType: "percentage",
       discountValue: 10,
-      validityDate: "2024-12-31T23:59",
+      validUntil: "2024-12-31T23:59",
       isActive: true
     },
     {
@@ -39,7 +67,7 @@ export function PromoCodeManagement() {
       code: "SAVE20",
       discountType: "fixed",
       discountValue: 20,
-      validityDate: "2024-11-30T23:59",
+      validUntil: "2024-11-30T23:59",
       isActive: true
     }
   ])
@@ -48,60 +76,139 @@ export function PromoCodeManagement() {
     code: "",
     discountType: "percentage" as "percentage" | "fixed",
     discountValue: 0,
-    validityDate: ""
+    validUntil: ""
   })
   
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<Partial<PromoCode>>({})
+  
+  // Determine if we're using backend or local data
+  const useBackend = !error && data?.promoCodes
+  const promoCodes = useBackend ? data.promoCodes : localPromoCodes
 
-  const handleAddPromoCode = () => {
-    if (!newPromoCode.code || !newPromoCode.validityDate) return
+  const handleAddPromoCode = async () => {
+    if (!newPromoCode.code || !newPromoCode.validUntil) return
     
-    const promoCode: PromoCode = {
-      id: Date.now().toString(),
-      code: newPromoCode.code,
-      discountType: newPromoCode.discountType,
-      discountValue: newPromoCode.discountValue,
-      validityDate: newPromoCode.validityDate,
-      isActive: true
+    if (useBackend) {
+      try {
+        await createPromoCode({
+          variables: {
+            input: {
+              code: newPromoCode.code,
+              discountType: newPromoCode.discountType,
+              discountValue: newPromoCode.discountValue,
+              validUntil: newPromoCode.validUntil,
+              isActive: true
+            }
+          }
+        })
+        await refetch()
+        setNewPromoCode({
+          code: "",
+          discountType: "percentage",
+          discountValue: 0,
+          validUntil: ""
+        })
+      } catch (err) {
+        console.error("Failed to create promo code:", err)
+        alert("Failed to create promo code. Check console for details.")
+      }
+    } else {
+      // Fallback to local state
+      const promoCode: PromoCode = {
+        id: Date.now().toString(),
+        code: newPromoCode.code,
+        discountType: newPromoCode.discountType,
+        discountValue: newPromoCode.discountValue,
+        validUntil: newPromoCode.validUntil,
+        isActive: true
+      }
+      
+      setLocalPromoCodes([...localPromoCodes, promoCode])
+      setNewPromoCode({
+        code: "",
+        discountType: "percentage",
+        discountValue: 0,
+        validUntil: ""
+      })
     }
-    
-    setPromoCodes([...promoCodes, promoCode])
-    setNewPromoCode({
-      code: "",
-      discountType: "percentage",
-      discountValue: 0,
-      validityDate: ""
-    })
   }
   
   const handleEditPromoCode = (id: string) => {
     setEditingId(id)
-    const promoCode = promoCodes.find(code => code.id === id)
+    const promoCode = promoCodes.find((code: PromoCode) => code.id === id)
     if (promoCode) {
       setEditForm({ ...promoCode })
     }
   }
   
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingId) return
     
-    setPromoCodes(promoCodes.map(code => 
-      code.id === editingId ? { ...code, ...editForm } as PromoCode : code
-    ))
+    if (useBackend) {
+      try {
+        await updatePromoCode({
+          variables: {
+            id: editingId,
+            input: {
+              code: editForm.code!,
+              discountType: editForm.discountType!,
+              discountValue: editForm.discountValue!,
+              validUntil: editForm.validUntil!,
+              isActive: editForm.isActive
+            }
+          }
+        })
+        await refetch()
+        setEditingId(null)
+        setEditForm({})
+      } catch (err) {
+        console.error("Failed to update promo code:", err)
+        alert("Failed to update promo code. Check console for details.")
+      }
+    } else {
+      setLocalPromoCodes(localPromoCodes.map(code => 
+        code.id === editingId ? { ...code, ...editForm } as PromoCode : code
+      ))
+      setEditingId(null)
+      setEditForm({})
+    }
+  }
+  
+  const handleDeletePromoCode = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this promo code?")) return
     
-    setEditingId(null)
-    setEditForm({})
+    if (useBackend) {
+      try {
+        await deletePromoCode({
+          variables: { id }
+        })
+        await refetch()
+      } catch (err) {
+        console.error("Failed to delete promo code:", err)
+        alert("Failed to delete promo code. Check console for details.")
+      }
+    } else {
+      setLocalPromoCodes(localPromoCodes.filter(code => code.id !== id))
+    }
   }
   
-  const handleDeletePromoCode = (id: string) => {
-    setPromoCodes(promoCodes.filter(code => code.id !== id))
-  }
-  
-  const toggleActiveStatus = (id: string) => {
-    setPromoCodes(promoCodes.map(code => 
-      code.id === id ? { ...code, isActive: !code.isActive } : code
-    ))
+  const toggleActiveStatus = async (id: string) => {
+    if (useBackend) {
+      try {
+        await toggleStatus({
+          variables: { id }
+        })
+        await refetch()
+      } catch (err) {
+        console.error("Failed to toggle promo code status:", err)
+        alert("Failed to toggle status. Check console for details.")
+      }
+    } else {
+      setLocalPromoCodes(localPromoCodes.map(code => 
+        code.id === id ? { ...code, isActive: !code.isActive } : code
+      ))
+    }
   }
 
   return (
@@ -110,6 +217,22 @@ export function PromoCodeManagement() {
         <CardTitle>Promo Code Management</CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Backend status alert */}
+        {error && (
+          <Alert className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Backend promo code API not available. Using local mock data. 
+              Error: {error.message}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {loading && (
+          <div className="text-center py-8">
+            <p>Loading promo codes...</p>
+          </div>
+        )}
         {/* Add New Promo Code Form */}
         <div className="mb-8 p-4 border rounded-lg bg-gray-50">
           <h3 className="text-lg font-semibold mb-4">Add New Promo Code</h3>
@@ -149,26 +272,27 @@ export function PromoCodeManagement() {
             </div>
             
             <div>
-              <Label htmlFor="validityDate">Validity Date</Label>
+              <Label htmlFor="validUntil">Validity Date</Label>
               <Input
-                id="validityDate"
+                id="validUntil"
                 type="datetime-local"
-                value={newPromoCode.validityDate}
-                onChange={(e) => setNewPromoCode({...newPromoCode, validityDate: e.target.value})}
+                value={newPromoCode.validUntil}
+                onChange={(e) => setNewPromoCode({...newPromoCode, validUntil: e.target.value})}
               />
             </div>
             
             <div className="flex items-end">
-              <Button onClick={handleAddPromoCode} className="w-full">
+              <Button onClick={handleAddPromoCode} className="w-full" disabled={creating || loading}>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Add Code
+                {creating ? "Adding..." : "Add Code"}
               </Button>
             </div>
           </div>
         </div>
         
         {/* Promo Codes Table */}
-        <Table>
+        {!loading && (
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Code</TableHead>
@@ -179,7 +303,8 @@ export function PromoCodeManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {promoCodes.map((promoCode) => (
+            {promoCodes && promoCodes.length > 0 ? (
+              promoCodes.map((promoCode: PromoCode) => (
               <TableRow key={promoCode.id}>
                 {editingId === promoCode.id ? (
                   <>
@@ -210,8 +335,8 @@ export function PromoCodeManagement() {
                     <TableCell>
                       <Input
                         type="datetime-local"
-                        value={editForm.validityDate || ""}
-                        onChange={(e) => setEditForm({...editForm, validityDate: e.target.value})}
+                        value={editForm.validUntil || ""}
+                        onChange={(e) => setEditForm({...editForm, validUntil: e.target.value})}
                       />
                     </TableCell>
                     <TableCell>
@@ -242,7 +367,7 @@ export function PromoCodeManagement() {
                         : `$${promoCode.discountValue}`}
                     </TableCell>
                     <TableCell>
-                      {new Date(promoCode.validityDate).toLocaleString()}
+                      {new Date(promoCode.validUntil).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs ${
@@ -281,9 +406,17 @@ export function PromoCodeManagement() {
                   </>
                 )}
               </TableRow>
-            ))}
+            ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4 text-gray-500">
+                  No promo codes found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+      )}
       </CardContent>
     </Card>
   )

@@ -12,7 +12,7 @@ import { ProductManagement } from "@/components/admin/product-management"
 import { PromoCodeManagement } from "@/components/admin/promo-code-management"
 import { useQuery } from "@apollo/client/react"
 import { GET_PRODUCTS } from "@/graphql/product-queries"
-import { GET_ORDERS } from "@/graphql/orders"
+import { ALL_ORDERS } from "@/graphql/orders"
 
 // Define TypeScript interfaces for our data
 interface ProductVariant {
@@ -52,6 +52,7 @@ interface OrderData {
   status: string;
   totalAmount: number;
   createdAt: string;
+  shippingAddress: string;
   items: OrderItem[];
 }
 
@@ -74,10 +75,10 @@ export default function AdminDashboardPage() {
   const [salesData, setSalesData] = useState<any[]>([])
   
   // Fetch products from API
-  const { data: productsData, loading: productsLoading, error: productsError } = useQuery<{ products: ProductData[] }>(GET_PRODUCTS)
+  const { data: productsData, loading: productsLoading, error: productsError, refetch: refetchProducts } = useQuery<{ products: ProductData[] }>(GET_PRODUCTS)
   
   // Fetch orders from API
-  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<OrdersResponse>(GET_ORDERS)
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<OrdersResponse>(ALL_ORDERS)
   
   // Update products state when data is fetched
   useEffect(() => {
@@ -98,16 +99,67 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (ordersData && ordersData.allOrders) {
       // Transform orders to match component expectations
-      const transformedOrders: TransformedOrder[] = ordersData.allOrders.map(order => ({
-        id: order.id,
-        customer: "Customer Name", // Placeholder - would need user data to populate this
-        date: new Date(order.createdAt).toLocaleDateString(),
-        amount: order.totalAmount,
-        status: order.status as "Delivered" | "Processing" | "Shipped" | "Pending"
-      }))
+      const transformedOrders: TransformedOrder[] = ordersData.allOrders.map(order => {
+        // Extract customer name from shipping address or use placeholder
+        const customerName = order.shippingAddress || "Customer"
+        
+        return {
+          id: order.id,
+          customer: customerName,
+          date: new Date(order.createdAt).toLocaleDateString(),
+          amount: order.totalAmount,
+          status: mapOrderStatus(order.status)
+        }
+      })
       setOrders(transformedOrders)
+      
+      // Generate sales data from orders for charts
+      const salesByMonth = generateMonthlySalesData(ordersData.allOrders)
+      setSalesData(salesByMonth)
     }
   }, [ordersData])
+  
+  // Helper function to map backend status to component status
+  const mapOrderStatus = (status: string): "Delivered" | "Processing" | "Shipped" | "Pending" => {
+    const statusLower = status.toLowerCase()
+    if (statusLower === "delivered" || statusLower === "completed") return "Delivered"
+    if (statusLower === "processing" || statusLower === "confirmed") return "Processing"
+    if (statusLower === "shipped" || statusLower === "in_transit") return "Shipped"
+    return "Pending"
+  }
+  
+  // Generate monthly sales data from orders
+  const generateMonthlySalesData = (orders: OrderData[]) => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const monthlyData: { [key: string]: { sales: number, revenue: number, count: number } } = {}
+    
+    // Initialize last 6 months
+    const currentDate = new Date()
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
+      const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+      monthlyData[monthKey] = { sales: 0, revenue: 0, count: 0 }
+    }
+    
+    // Aggregate order data by month
+    orders.forEach(order => {
+      const orderDate = new Date(order.createdAt)
+      const monthKey = `${monthNames[orderDate.getMonth()]} ${orderDate.getFullYear()}`
+      
+      if (monthlyData[monthKey]) {
+        monthlyData[monthKey].revenue += order.totalAmount
+        monthlyData[monthKey].count += 1
+        monthlyData[monthKey].sales += order.totalAmount // Using revenue as sales for now
+      }
+    })
+    
+    // Convert to array format for charts
+    return Object.entries(monthlyData).map(([month, data]) => ({
+      month,
+      sales: data.count,
+      revenue: data.revenue
+    }))
+  }
   
   // Calculate stats from actual data
   const totalRevenue = orders.reduce((sum, order) => sum + (order.amount || 0), 0)
@@ -168,7 +220,10 @@ export default function AdminDashboardPage() {
       <PromoCodeManagement />
 
       {/* Products Management */}
-      <ProductManagement products={products} />
+      <ProductManagement 
+        products={products} 
+        onProductDeleted={() => refetchProducts()}
+      />
     </div>
   )
 }

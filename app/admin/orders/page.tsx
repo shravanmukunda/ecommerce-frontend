@@ -10,10 +10,11 @@ interface User {
 
 interface Order {
   id: string;
+  userID: string;
   totalAmount: number;
   status: string;
   createdAt: string;
-  user: User;
+  shippingAddress: string;
 }
 
 interface AllOrdersResponse {
@@ -37,8 +38,7 @@ export default function AdminOrders() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -49,8 +49,7 @@ export default function AdminOrders() {
                   data.allOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{order.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.user.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.user.email}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.userID}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(order.createdAt).toLocaleDateString()}
                       </td>
@@ -64,7 +63,7 @@ export default function AdminOrders() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
                       No orders found
                     </td>
                   </tr>
