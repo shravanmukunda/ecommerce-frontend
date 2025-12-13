@@ -18,3 +18,25 @@ export const MY_ORDERS = gql`
     }
   }
 `;
+
+export const ALL_ORDERS = gql`
+  query AllOrders {
+    allOrders {
+      id
+      totalAmount
+      status
+      createdAt
+    }
+  }
+`;
+
+export const GET_ORDERS = gql`
+  query GetOrders {
+    getOrders {
+      id
+      totalAmount
+      status
+      createdAt
+    }
+  }
+`;
