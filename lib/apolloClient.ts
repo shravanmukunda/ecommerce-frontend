@@ -4,10 +4,12 @@ import { setContext } from "@apollo/client/link/context";
 // Always read GraphQL URL from env
 const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ||
-  "http://localhost:8081/query"; // fallback for local dev
+  "http://localhost:8081/query"; // Updated fallback for local dev
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_URL,
+  // Add credentials to handle CORS properly
+  credentials: "include"
 });
 
 // Function will be assigned later by Providers

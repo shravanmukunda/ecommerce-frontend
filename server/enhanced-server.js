@@ -219,24 +219,51 @@ async function start() {
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
 
-  app.use(
-    "/graphql",
-    cors({ origin: ["http://localhost:3000"], credentials: true }),
-    bodyParser.json({ limit: "5mb" }),
-    expressMiddleware(server, {
-      context: async ({ req }) => {
-        return {
-          token: req.headers.authorization || "",
-          query: req.body.query,
-          variables: req.body.variables
-        };
-      }
-    })
-  );
+  // Enhanced CORS configuration to handle multiple environments
+const GO_BACKEND_URL =
+  process.env.GO_BACKEND_URL || "https://tshirt-ecommerce-api.onrender.com/query";
 
-  app.listen(8081, () => {
-    console.log("🚀 Gateway running at http://localhost:8081/graphql");
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8081",
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+app.use(
+  "/query",
+  cors(corsOptions),
+  bodyParser.json({ limit: "5mb" }),
+  expressMiddleware(server, {
+    context: async ({ req }) => ({
+      token: req.headers.authorization || "",
+      query: req.body.query,
+      variables: req.body.variables
+    }),
+  })
+);
+
+async function forward(query, variables, token) {
+  const cleanToken = token?.startsWith("Bearer ")
+    ? token
+    : token
+    ? `Bearer ${token}`
+    : "";
+
+  const response = await fetch(GO_BACKEND_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(cleanToken ? { Authorization: cleanToken } : {})
+    },
+    body: JSON.stringify({ query, variables })
   });
-}
 
-start();
+  return response.json();
+}
+}
