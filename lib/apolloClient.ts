@@ -1,8 +1,12 @@
 import { ApolloClient, InMemoryCache, HttpLink, from } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
+// const httpLink = new HttpLink({
+//   uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:8081/query",
+// });
+
 const httpLink = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_URL || "http://localhost:8081/query",
+  uri: "https://your-render-backend-url.onrender.com/query",
 });
 
 // Create a function that can be called to get the current token
