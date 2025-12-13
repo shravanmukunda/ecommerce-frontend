@@ -25,6 +25,8 @@ async function getProductData(id: string) {
       description: product.description,
       image: product.designImageURL,
       images: [product.designImageURL], // For now, just use the main image
+      materials: product.materials || ["Premium organic cotton", "Sustainable materials"],
+      careInstructions: product.careInstructions || ["Machine wash cold", "Tumble dry low", "Do not bleach"],
     }
   } catch (error) {
     console.error("Error fetching product:", error)
@@ -32,8 +34,9 @@ async function getProductData(id: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const product = await getProductData(params.id)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const resolvedParams = await params
+  const product = await getProductData(resolvedParams.id)
 
   if (!product) {
     return {
@@ -48,7 +51,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     openGraph: {
       title: `${product.name} - AuraGaze`,
       description: product.description,
-      url: `https://www.auragaze.com/product/${params.id}`,
+      url: `https://www.auragaze.com/product/${resolvedParams.id}`,
       images: [
         {
           url: product.image,
@@ -68,8 +71,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default async function ProductPage({ params }: { params: { id: string } }) {
-  const product = await getProductData(params.id)
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  const product = await getProductData(resolvedParams.id)
 
   if (!product) {
     return (
@@ -89,7 +93,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     <div className="min-h-screen bg-white">
       <Header />
       <main>
-        <ProductDetail productId={params.id} />
+        <ProductDetail productData={product} />
       </main>
       <Footer />
     </div>

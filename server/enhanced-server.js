@@ -39,12 +39,94 @@ const typeDefs = `#graphql
   type Query {
     me: User!
     getUser(id: ID!): User
+    getCart(cartId: ID, forUser: Boolean): Cart
+  }
+
+  type Product {
+    id: ID!
+    name: String!
+    basePrice: Float!
+    description: String!
+    designImageURL: String!
+  }
+
+  type CartItem {
+    id: ID!
+    productId: ID!
+    variantId: String
+    quantity: Int!
+    unitPrice: Float!
+    createdAt: String
+    updatedAt: String
+  }
+
+  type Cart {
+    id: ID!
+    userId: String
+    totalAmount: Float!
+    items: [CartItem!]!
+  }
+
+  input AddToCartInput {
+    productId: ID!
+    variantId: String!
+    quantity: Int!
+    cartId: String
+  }
+
+  type AddToCartPayload {
+    cart: Cart!
+  }
+
+  input RemoveCartItemInput {
+    cartItemID: String!
+    cartID: String!
+  }
+
+  type RemoveCartItemPayload {
+    cart: Cart!
+  }
+
+  input ClearCartInput {
+    cartID: String!
+  }
+
+  type ClearCartPayload {
+    cart: Cart!
+  }
+
+  input AttachCartToUserInput {
+    cartID: String!
+    userID: String!
+  }
+
+  type AttachCartToUserPayload {
+    cart: Cart!
+  }
+
+  type CreateOrderInput {
+    shippingAddress: String!
+  }
+
+  type Order {
+    id: ID!
+    shippingAddress: String!
+    createdAt: String!
+  }
+
+  type CreateOrderPayload {
+    id: ID!
   }
 
   type Mutation {
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
     updateProfile(name: String, phone: String, address: String): User!
+    addToCart(input: AddToCartInput!): AddToCartPayload!
+    removeCartItem(input: RemoveCartItemInput!): RemoveCartItemPayload!
+    clearCart(input: ClearCartInput!): ClearCartPayload!
+    attachCartToUser(input: AttachCartToUserInput!): AttachCartToUserPayload!
+    createOrder(input: CreateOrderInput!): CreateOrderPayload!
   }
 `;
 
@@ -72,6 +154,11 @@ const resolvers = {
       const r = await forward(ctx.query, ctx.variables, ctx.token);
       if (r.errors) throw new Error(r.errors[0].message);
       return r.data.getUser;
+    },
+    getCart: async (_, vars, ctx) => {
+      const r = await forward(ctx.query, ctx.variables, ctx.token);
+      if (r.errors) throw new Error(r.errors[0].message);
+      return r.data.getCart;
     }
   },
 
@@ -92,6 +179,36 @@ const resolvers = {
       const r = await forward(ctx.query, ctx.variables, ctx.token);
       if (r.errors) throw new Error(r.errors[0].message);
       return r.data.updateProfile;
+    },
+
+    addToCart: async (_, { input }, ctx) => {
+      const r = await forward(ctx.query, ctx.variables, ctx.token);
+      if (r.errors) throw new Error(r.errors[0].message);
+      return r.data.addToCart;
+    },
+
+    removeCartItem: async (_, { input }, ctx) => {
+      const r = await forward(ctx.query, ctx.variables, ctx.token);
+      if (r.errors) throw new Error(r.errors[0].message);
+      return r.data.removeCartItem;
+    },
+
+    clearCart: async (_, { input }, ctx) => {
+      const r = await forward(ctx.query, ctx.variables, ctx.token);
+      if (r.errors) throw new Error(r.errors[0].message);
+      return r.data.clearCart;
+    },
+
+    attachCartToUser: async (_, { input }, ctx) => {
+      const r = await forward(ctx.query, ctx.variables, ctx.token);
+      if (r.errors) throw new Error(r.errors[0].message);
+      return r.data.attachCartToUser;
+    },
+
+    createOrder: async (_, { input }, ctx) => {
+      const r = await forward(ctx.query, ctx.variables, ctx.token);
+      if (r.errors) throw new Error(r.errors[0].message);
+      return r.data.createOrder;
     }
   }
 };

@@ -63,8 +63,8 @@ export function ProductDetail({ productData }: { productData: any }) {
 
     // Add product to GraphQL cart with selected size and quantity
     await addToCart(
-      productData.id, // Use product ID as variant ID for now
-      quantity,
+      productData.id,
+      quantity
     )
 
     setIsAddingToCart(false)

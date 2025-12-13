@@ -11,9 +11,12 @@ import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
   const [step, setStep] = useState(1);
-  const { cart, clearCart } = useCart();
+  const { cart, loading: cartLoading, error: cartError, clearCart } = useCart();
   const router = useRouter();
   const [createOrder, { loading }] = useMutation(CREATE_ORDER);
+
+  // Log cart state for debugging
+  console.log("Cart state:", { cart, cartLoading, cartError });
 
   // Define the type for the createOrder response
   interface CreateOrderResponse {
@@ -68,10 +71,33 @@ export default function CheckoutPage() {
     }
   };
 
+  if (cartLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1 className="text-2xl font-bold">Loading cart...</h1>
+      </div>
+    );
+  }
+
+  if (cartError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error loading cart</h1>
+          <p className="text-gray-600 mb-4">{cartError.message}</p>
+          <Button onClick={() => router.push("/shop")}>Back to Shop</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!orderItems.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <h1 className="text-2xl font-bold">Your cart is empty.</h1>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Your cart is empty.</h1>
+          <Button onClick={() => router.push("/shop")}>Continue Shopping</Button>
+        </div>
       </div>
     );
   }
