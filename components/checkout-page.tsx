@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/src/hooks/use-cart";
 import { useMutation } from "@apollo/client/react";
 import { CREATE_ORDER } from "@/graphql/orders";
 import { useRouter } from "next/navigation";

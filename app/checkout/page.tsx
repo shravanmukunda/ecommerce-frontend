@@ -1,5 +1,5 @@
 "use client";
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/src/hooks/use-cart";
 import { useMutation } from "@apollo/client/react";
 import { CREATE_ORDER } from "@/graphql/orders";
 import { useRouter } from "next/navigation";
