@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { useQuery } from "@apollo/client/react"
 import { GET_PRODUCTS } from "@/graphql/product-queries"
+import { GooeyText } from "@/components/ui/gooey-text-morphing"
+import AnimatedShaderBackground from "@/components/ui/animated-shader-background"
 
 export function ShopPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -53,17 +55,19 @@ export function ShopPage() {
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
       {/* Hero Section */}
-      <section className="relative h-[40vh] bg-black text-white flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
-          style={{ backgroundImage: `url('/placeholder.svg?height=720&width=1280&text=Shop+Hero')` }}
-        />
-        <div className="relative z-10 text-center">
+      <section className="relative h-[70vh] bg-black text-white flex items-center justify-center overflow-hidden">
+        <AnimatedShaderBackground />
+        <div className="relative z-10 text-center w-full">
           <ScrollReveal direction="scale" delay={200}>
-            <h1 className="text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-7xl">Shop All</h1>
-          </ScrollReveal>
-          <ScrollReveal direction="up" delay={400}>
-            <p className="mt-4 text-lg uppercase tracking-wide md:text-xl">Discover our latest collection</p>
+            <div className="h-[200px] flex items-center justify-center w-full">
+              <GooeyText
+                texts={["Buy It.", "Love It."]}
+                morphTime={2}
+                cooldownTime={1}
+                className="font-black uppercase tracking-wider"
+                textClassName="text-white text-4xl md:text-6xl lg:text-7xl"
+              />
+            </div>
           </ScrollReveal>
         </div>
       </section>

@@ -1,29 +1,14 @@
 import { gql } from "@apollo/client";
 
+// Note: For create/update mutations we only request the fields that the UI
+// actually needs (the id). This avoids Apollo throwing a CombinedGraphQLError
+// when the backend returns null for nested non-nullable fields that we don't
+// use on the client anyway.
+
 export const CREATE_PRODUCT = gql`
   mutation CreateProduct($input: ProductInput!) {
     createProduct(input: $input) {
       id
-      name
-      description
-      designImageURL
-      basePrice
-      isActive
-      variants {
-        id
-        size
-        color
-        priceModifier
-        sku
-        price
-        inventory {
-          id
-          stockQuantity
-          reservedQuantity
-          availableQuantity
-        }
-      }
-      createdAt
     }
   }
 `;
@@ -32,22 +17,6 @@ export const CREATE_PRODUCT_VARIANT = gql`
   mutation CreateProductVariant($input: ProductVariantInput!) {
     createProductVariant(input: $input) {
       id
-      productID
-      size
-      color
-      priceModifier
-      sku
-      price
-      inventory {
-        id
-        stockQuantity
-        reservedQuantity
-        availableQuantity
-      }
-      product {
-        id
-        name
-      }
     }
   }
 `;
@@ -56,26 +25,6 @@ export const UPDATE_PRODUCT = gql`
   mutation UpdateProduct($id: ID!, $input: ProductInput!) {
     updateProduct(id: $id, input: $input) {
       id
-      name
-      description
-      designImageURL
-      basePrice
-      isActive
-      variants {
-        id
-        size
-        color
-        priceModifier
-        sku
-        price
-        inventory {
-          id
-          stockQuantity
-          reservedQuantity
-          availableQuantity
-        }
-      }
-      createdAt
     }
   }
 `;

@@ -9,9 +9,10 @@ import { ScrollReveal } from "@/components/scroll-reveal"
 import { useCart } from "@/src/hooks/use-cart" // Import useCart instead of useStore
 
 export function CartPage() {
-  const { cart, loading, removeItem, clearCart } = useCart() // Use cart items and actions from GraphQL cart
+  const { cart, loading, addToCart, removeItem, clearCart, updateQuantity } = useCart() // Use cart items and actions from GraphQL cart
   const [promoCode, setPromoCode] = useState("")
   const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
 
   // Handle loading state
   if (loading) {
@@ -119,18 +120,33 @@ export function CartPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => {
-                          // For decreasing quantity, we'll remove the item and re-add with new quantity
-                          // In a real implementation, you might have an updateQuantity mutation
-                          if (item.quantity > 1 && cart?.id) {
-                            removeItem(item.id, cart.id)
-                            // Then add back with decreased quantity
-                            // addToCart(item.variantId, item.quantity - 1)
+                        onClick={async () => {
+                          if (cart?.id && !updatingItems.has(item.id)) {
+                            setUpdatingItems(prev => new Set(prev).add(item.id))
+                            try {
+                              const newQuantity = item.quantity - 1
+                              if (newQuantity === 0) {
+                                // Remove item if quantity becomes 0
+                                await removeItem(item.id, cart.id)
+                              } else {
+                                // Update quantity to decreased value
+                                await updateQuantity(item.id, cart.id, newQuantity, item.productId, item.variantId || "")
+                              }
+                            } catch (error) {
+                              console.error("Error decreasing quantity:", error)
+                              alert("Failed to update quantity. Please try again.")
+                            } finally {
+                              setUpdatingItems(prev => {
+                                const next = new Set(prev)
+                                next.delete(item.id)
+                                return next
+                              })
+                            }
                           }
                         }}
                         className="h-8 w-8 border-black text-black hover:bg-black hover:text-white"
                         aria-label={`Decrease quantity of product ${item.productId}`}
-                        disabled={item.quantity <= 1}
+                        disabled={updatingItems.has(item.id)}
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
@@ -138,17 +154,27 @@ export function CartPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => {
-                          // For increasing quantity, we'll remove the item and re-add with new quantity
-                          // In a real implementation, you might have an updateQuantity mutation
-                          if (cart?.id) {
-                            removeItem(item.id, cart.id)
-                            // Then add back with increased quantity
-                            // addToCart(item.variantId, item.quantity + 1)
+                        onClick={async () => {
+                          if (cart?.id && !updatingItems.has(item.id)) {
+                            setUpdatingItems(prev => new Set(prev).add(item.id))
+                            try {
+                              // Use addToCart with quantity 1 - backend will increment existing item
+                              await addToCart(item.productId, item.variantId || "", 1)
+                            } catch (error) {
+                              console.error("Error increasing quantity:", error)
+                              alert("Failed to update quantity. Please try again.")
+                            } finally {
+                              setUpdatingItems(prev => {
+                                const next = new Set(prev)
+                                next.delete(item.id)
+                                return next
+                              })
+                            }
                           }
                         }}
                         className="h-8 w-8 border-black text-black hover:bg-black hover:text-white"
                         aria-label={`Increase quantity of product ${item.productId}`}
+                        disabled={updatingItems.has(item.id)}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
@@ -159,9 +185,26 @@ export function CartPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => cart?.id && removeItem(item.id, cart.id)}
+                        onClick={async () => {
+                          if (cart?.id && !updatingItems.has(item.id)) {
+                            setUpdatingItems(prev => new Set(prev).add(item.id))
+                            try {
+                              await removeItem(item.id, cart.id)
+                            } catch (error) {
+                              console.error("Error removing item:", error)
+                              alert("Failed to remove item. Please try again.")
+                            } finally {
+                              setUpdatingItems(prev => {
+                                const next = new Set(prev)
+                                next.delete(item.id)
+                                return next
+                              })
+                            }
+                          }
+                        }}
                         className="text-red-500 hover:bg-red-50 hover:text-red-700"
                         aria-label={`Remove product ${item.productId} from cart`}
+                        disabled={updatingItems.has(item.id)}
                       >
                         <X className="h-4 w-4" />
                       </Button>

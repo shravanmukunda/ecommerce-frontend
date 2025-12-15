@@ -25,6 +25,7 @@ async function getProductData(id: string) {
       description: product.description,
       image: product.designImageURL,
       images: [product.designImageURL], // For now, just use the main image
+      variants: product.variants || [],
       materials: product.materials || ["Premium organic cotton", "Sustainable materials"],
       careInstructions: product.careInstructions || ["Machine wash cold", "Tumble dry low", "Do not bleach"],
     }

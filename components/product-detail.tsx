@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { ChevronLeft, ChevronRight, Star, Truck, Shield, Ruler, Share2 } from "lucide-react"
 import { useCart } from "@/src/hooks/use-cart"
-
-const sizes = ["XS", "S", "M", "L", "XL", "XXL"]
 
 const reviews = [
   {
@@ -44,6 +42,29 @@ export function ProductDetail({ productData }: { productData: any }) {
   
   const { addToCart } = useCart()
 
+  // Extract available sizes from product variants
+  // Only show sizes that were added by admin in the dashboard
+  const availableSizes = useMemo(() => {
+    if (!productData?.variants || productData.variants.length === 0) {
+      return []
+    }
+    
+    // Get unique sizes from variants
+    const uniqueSizes = [...new Set(productData.variants.map((v: any) => v.size).filter(Boolean))] as string[]
+    
+    // Sort sizes in a logical order (XS, S, M, L, XL, XXL, XXXL)
+    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+    return uniqueSizes.sort((a: string, b: string) => {
+      const indexA = sizeOrder.indexOf(a)
+      const indexB = sizeOrder.indexOf(b)
+      // If size not in order list, put it at the end
+      if (indexA === -1 && indexB === -1) return a.localeCompare(b)
+      if (indexA === -1) return 1
+      if (indexB === -1) return -1
+      return indexA - indexB
+    })
+  }, [productData?.variants])
+
   const nextImage = () => {
     setCurrentImage((prev) => (prev + 1) % productData.images.length)
   }
@@ -57,18 +78,48 @@ export function ProductDetail({ productData }: { productData: any }) {
       alert("Please select a size first.")
       return
     }
-    setIsAddingToCart(true)
-    // Simulate API call before adding to context if needed
-    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    // Add product to GraphQL cart with selected size and quantity
-    await addToCart(
-      productData.id,
-      quantity
+    // Find matching variant by size
+    const matchingVariant = productData.variants?.find(
+      (v: any) => v.size === selectedSize
     )
 
-    setIsAddingToCart(false)
-    alert(`${quantity} x ${productData.name} (Size: ${selectedSize}) added to cart!`)
+    if (!matchingVariant) {
+      alert("Selected size is not available for this product.")
+      return
+    }
+
+    // Validate IDs before proceeding
+    const productId = productData?.id;
+    const variantId = matchingVariant?.id;
+
+    if (!productId) {
+      alert("Product ID is missing. Please refresh the page and try again.")
+      return
+    }
+
+    if (!variantId) {
+      alert("Variant ID is missing. Please select a different size.")
+      return
+    }
+
+    setIsAddingToCart(true)
+    
+    try {
+      // Add product to GraphQL cart with selected size and quantity
+      await addToCart(
+        String(productId),
+        String(variantId),
+        quantity
+      )
+
+      alert(`${quantity} x ${productData.name} (Size: ${selectedSize}) added to cart!`)
+    } catch (error: any) {
+      console.error("Error adding to cart:", error)
+      alert(`Failed to add item to cart: ${error.message || "Unknown error"}`)
+    } finally {
+      setIsAddingToCart(false)
+    }
   }
 
   const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
@@ -232,25 +283,31 @@ export function ProductDetail({ productData }: { productData: any }) {
               {/* Size Selection */}
               <div>
                 <h3 className="mb-3 text-lg font-semibold uppercase tracking-wide">Size</h3>
-                <div className="flex flex-wrap gap-2">
-                  {sizes.map((size) => (
-                    <Button
-                      key={size}
-                      variant={selectedSize === size ? "default" : "outline"}
-                      onClick={() => setSelectedSize(size)}
-                      className={`h-12 w-12 transition-all duration-300 ${
-                        selectedSize === size
-                          ? "bg-black text-white scale-105"
-                          : "border-black text-black hover:bg-black hover:text-white hover:scale-105"
-                      }`}
-                    >
-                      {size}
-                    </Button>
-                  ))}
-                </div>
-                <Link href="/size-guide" className="mt-2 inline-block text-sm text-gray-600 underline hover:text-black">
-                  Size Guide
-                </Link>
+                {availableSizes.length > 0 ? (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      {availableSizes.map((size) => (
+                        <Button
+                          key={size}
+                          variant={selectedSize === size ? "default" : "outline"}
+                          onClick={() => setSelectedSize(size)}
+                          className={`h-12 w-12 transition-all duration-300 ${
+                            selectedSize === size
+                              ? "bg-black text-white scale-105"
+                              : "border-black text-black hover:bg-black hover:text-white hover:scale-105"
+                          }`}
+                        >
+                          {size}
+                        </Button>
+                      ))}
+                    </div>
+                    <Link href="/size-guide" className="mt-2 inline-block text-sm text-gray-600 underline hover:text-black">
+                      Size Guide
+                    </Link>
+                  </>
+                ) : (
+                  <p className="text-gray-500 text-sm">No sizes available for this product.</p>
+                )}
               </div>
 
               {/* Quantity */}
@@ -330,7 +387,7 @@ export function ProductDetail({ productData }: { productData: any }) {
           </ScrollReveal>
         </div>
 
-        {/* Product Details Tabs */}
+        {/* Product Details Tabs
         <ScrollReveal direction="up" delay={200}>
           <div className="mt-16">
             <div className="border-b border-gray-200">
@@ -344,7 +401,7 @@ export function ProductDetail({ productData }: { productData: any }) {
                     }`}
                   >
                     {tab.charAt(0).toUpperCase() + tab.slice(1)} {/* Capitalize tab names for display */}
-                  </button>
+                  {/* </button>
                 ))}
               </nav>
             </div>
@@ -372,9 +429,9 @@ export function ProductDetail({ productData }: { productData: any }) {
                       <h4 className="font-semibold uppercase tracking-wide">Materials</h4>
                       <ul className="mt-2 space-y-1 text-gray-700">
                         {productData.materials.map((material: string, i: number) => (
-                          <li key={i}>• {material}</li>
-                        ))}
-                      </ul>
+                          <li key={i}>• {material}</li> */}
+                        ))
+                      {/* </ul>
                     </div>
                     <div>
                       <h4 className="font-semibold uppercase tracking-wide">Care Instructions</h4>
@@ -404,8 +461,8 @@ export function ProductDetail({ productData }: { productData: any }) {
                         ))}
                       </div>
                       <span className="font-semibold">{averageRating.toFixed(1)}</span>
-                      <span className="text-gray-600">({reviews.length} reviews)</span>
-                    </div>
+                      <span className="text-gray-600">({reviews.length} reviews)</span> */}
+                    {/* </div>
                   </div>
 
                   <div className="space-y-6">
@@ -433,35 +490,7 @@ export function ProductDetail({ productData }: { productData: any }) {
               )}
             </div>
           </div>
-        </ScrollReveal>
-
-        {/* Related Products */}
-        <ScrollReveal direction="up" delay={400}>
-          <section className="mt-24">
-            <h2 className="mb-8 text-center text-3xl font-black uppercase tracking-wider">You Might Also Like</h2>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {relatedProducts.map((relatedProduct, index) => (
-                <ScrollReveal key={relatedProduct.id} direction="up" delay={index * 100}>
-                  <Link href={`/product/${relatedProduct.id}`} className="group block">
-                    <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
-                      <Image
-                        src={relatedProduct.image || "/placeholder.svg"}
-                        alt={relatedProduct.name}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    </div>
-                    <h3 className="mb-1 text-lg font-bold uppercase tracking-wide group-hover:text-gray-600 transition-colors">
-                      {relatedProduct.name}
-                    </h3>
-                    <p className="text-lg font-semibold">${relatedProduct.price}</p>
-                  </Link>
-                </ScrollReveal>
-              ))}
-            </div>
-          </section>
-        </ScrollReveal>
+        </ScrollReveal> */}
       </div>
     </div>
   )

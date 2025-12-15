@@ -50,11 +50,6 @@ export const REMOVE_CART_ITEM = gql`
     removeCartItem(input: $input) {
       cart {
         id
-        totalAmount
-        items {
-          id
-          quantity
-        }
       }
     }
   }
@@ -75,10 +70,23 @@ export const ATTACH_CART_TO_USER = gql`
     attachCartToUser(input: $input) {
       cart {
         id
+      }
+    }
+  }
+`;
+
+export const UPDATE_CART_ITEM_QUANTITY = gql`
+  mutation UpdateCartItemQuantity($input: UpdateCartItemQuantityInput!) {
+    updateCartItemQuantity(input: $input) {
+      cart {
+        id
         totalAmount
         items {
           id
+          productId
+          variantId
           quantity
+          unitPrice
         }
       }
     }
