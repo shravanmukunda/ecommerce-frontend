@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PlusCircle, Edit, Trash2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
-  GET_PROMO_CODES, 
+  PROMO_CODES, 
   CREATE_PROMO_CODE, 
   UPDATE_PROMO_CODE, 
   DELETE_PROMO_CODE,
@@ -42,7 +42,7 @@ interface GetPromoCodesResponse {
 
 export function PromoCodeManagement() {
   // Try to fetch promo codes from backend
-  const { data, loading, error, refetch } = useQuery<GetPromoCodesResponse>(GET_PROMO_CODES, {
+  const { data, loading, error, refetch } = useQuery<GetPromoCodesResponse>(PROMO_CODES, {
     variables: { isActive: null },
     fetchPolicy: "network-only"
   })
