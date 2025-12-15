@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
-  PROMO_CODES,
+  GET_PROMO_CODES,
   CREATE_PROMO_CODE,
   DELETE_PROMO_CODE,
   TOGGLE_PROMO_CODE_STATUS,
@@ -37,7 +37,7 @@ export default function AdminPromoCodesPage() {
     usageLimit: '',
   });
 
-  const { data, loading, refetch } = useQuery<PromoCodesResponse>(PROMO_CODES);
+  const { data, loading, refetch } = useQuery<PromoCodesResponse>(GET_PROMO_CODES);
   
   const [createPromo] = useMutation(CREATE_PROMO_CODE, {
     onCompleted: () => {
