@@ -3,13 +3,15 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react"
+import { Minus, Plus, X, ShoppingBag, ArrowRight, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
-import { useCart } from "@/src/hooks/use-cart" // Import useCart instead of useStore
+import { useCart } from "@/src/hooks/use-cart"
+import { useRouter } from "next/navigation"
 
 export function CartPage() {
-  const { cart, loading, addToCart, removeItem, clearCart, updateQuantity } = useCart() // Use cart items and actions from GraphQL cart
+  const { cart, loading, addToCart, removeItem, clearCart, updateQuantity } = useCart()
+  const router = useRouter()
   const [promoCode, setPromoCode] = useState("")
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
@@ -17,9 +19,9 @@ export function CartPage() {
   // Handle loading state
   if (loading) {
     return (
-      <div className="min-h-screen pt-16 lg:pt-20">
+      <div className="min-h-screen pt-20 bg-[#0f0f0f]">
         <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
+          <div className="text-center text-[#e5e5e5]">
             <p>Loading cart...</p>
           </div>
         </div>
@@ -30,39 +32,43 @@ export function CartPage() {
   const cartItems = cart?.items || []
   
   const subtotal = cartItems.reduce((sum: number, item: any) => sum + item.unitPrice * item.quantity, 0)
-  const shipping = subtotal > 100 ? 0 : 15 // Example: Free shipping over $100
-  const tax = subtotal * 0.08 // Example: 8% tax
+  const shipping = subtotal > 100 ? 0 : 15
+  const tax = subtotal * 0.08
   const total = subtotal + shipping + tax
 
-  const handleCheckout = async () => {
-    setIsCheckingOut(true)
-    // Simulate checkout process
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    setIsCheckingOut(false)
-    if (cart?.id) {
-      clearCart(cart.id) // Clear cart after successful checkout simulation
-    }
-    alert("Redirecting to secure checkout! Your cart has been cleared.")
-    // In a real app, redirect to payment processor or confirmation page
+  const handleCheckout = () => {
+    router.push("/checkout")
   }
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen pt-16 lg:pt-20">
+      <div className="min-h-screen pt-20 bg-[#0f0f0f]">
         <div className="container mx-auto px-4 py-16">
           <ScrollReveal direction="up">
-            <div className="text-center">
-              <ShoppingBag className="mx-auto mb-8 h-24 w-24 text-gray-400" />
-              <h1 className="mb-4 text-3xl font-black uppercase tracking-wider">Your Cart is Empty</h1>
-              <p className="mb-8 text-lg text-gray-600">
+            <div className="text-center max-w-md mx-auto">
+              <div className="mb-8 flex justify-center">
+                <div className="relative">
+                  <ShoppingBag className="h-32 w-32 text-[#1a1a1a]" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[#00bfff]/20 to-[#0099ff]/20 flex items-center justify-center">
+                      <ShoppingBag className="h-10 w-10 text-[#00bfff]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h1 className="mb-4 text-3xl md:text-4xl font-black uppercase tracking-wider text-[#e5e5e5]">
+                Your Cart is Empty
+              </h1>
+              <p className="mb-8 text-lg text-[#999]">
                 Discover our latest collection and add some items to your cart.
               </p>
               <Link href="/shop">
                 <Button
                   size="lg"
-                  className="bg-black px-8 py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
+                  className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white px-8 py-6 text-lg font-bold uppercase tracking-wide hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_30px_rgba(0,191,255,0.5)] transition-all duration-300 border-0"
                 >
                   Continue Shopping
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
             </div>
@@ -73,240 +79,266 @@ export function CartPage() {
   }
 
   return (
-    <div className="min-h-screen pt-16 lg:pt-20">
-      {/* Hero Section */}
-      <section className="bg-black py-16 text-white">
-        <div className="container mx-auto px-4 text-center">
+    <div className="min-h-screen pt-20 bg-[#0f0f0f]">
+      {/* Header */}
+      <section className="bg-gradient-to-br from-[#0f0f0f] via-[#121212] to-[#0a0a0a] py-12 border-b border-[#1a1a1a]">
+        <div className="container mx-auto px-4">
           <ScrollReveal direction="up">
-            <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl">Shopping Cart</h1>
-          </ScrollReveal>
-          <ScrollReveal direction="up" delay={200}>
-            <p className="text-lg uppercase tracking-wide md:text-xl">Review your selected items</p>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black uppercase tracking-tight text-[#e5e5e5] mb-2">
+              Shopping Cart
+            </h1>
+            <p className="text-[#999] text-lg">
+              {cartItems.length} {cartItems.length === 1 ? "item" : "items"} in your cart
+            </p>
           </ScrollReveal>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 gap-16 lg:grid-cols-3">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Cart Items */}
-          <div className="lg:col-span-2">
-            <ScrollReveal direction="left">
-              <h2 className="mb-8 text-2xl font-black uppercase tracking-wider">Cart Items ({cartItems.length})</h2>
-            </ScrollReveal>
-
-            <div className="space-y-6">
-              {cartItems.map((item: any, index: number) => (
+          <div className="lg:col-span-2 space-y-4">
+            {cartItems.map((item: any, index: number) => {
+              const productName = item.product?.name || `Product #${item.productId}`
+              const productImage = item.product?.designImageURL || "/placeholder.svg"
+              const variantSize = item.variant?.size || "N/A"
+              const variantColor = item.variant?.color || null
+              
+              return (
                 <ScrollReveal key={item.id} direction="up" delay={index * 100}>
-                  <div className="flex items-center space-x-4 border-b border-gray-200 pb-6">
-                    <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden">
-                      <Image
-                        src="/placeholder.svg" // Placeholder since we don't have image data in cart items
-                        alt={`Product ${item.productId}`}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
-                    </div>
+                  <div className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 hover:border-[#1a1a1a]/80 transition-all duration-300">
+                    <div className="flex flex-col sm:flex-row gap-6">
+                      {/* Product Image */}
+                      <Link href={`/product/${item.productId}`} className="flex-shrink-0">
+                        <div className="relative h-32 w-32 sm:h-40 sm:w-40 rounded-lg overflow-hidden bg-[#0f0f0f] group">
+                          <Image
+                            src={productImage}
+                            alt={productName}
+                            fill
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            sizes="160px"
+                          />
+                        </div>
+                      </Link>
 
-                    <div className="flex-1">
-                      <h3 className="mb-1 text-lg font-bold uppercase tracking-wide">Product #{item.productId}</h3>
-                      <p className="mb-2 text-sm text-gray-600">
-                        Variant: {item.variantId} | Quantity: {item.quantity}
-                      </p>
-                      <p className="text-lg font-semibold">${item.unitPrice}</p>
-                    </div>
+                      {/* Product Details */}
+                      <div className="flex-1 flex flex-col sm:flex-row sm:justify-between gap-4">
+                        <div className="flex-1">
+                          <Link href={`/product/${item.productId}`}>
+                            <h3 className="text-lg font-bold uppercase tracking-wide text-[#e5e5e5] hover:text-[#00bfff] transition-colors mb-2">
+                              {productName}
+                            </h3>
+                          </Link>
+                          <div className="space-y-1 text-sm text-[#999] mb-4">
+                            {variantSize !== "N/A" && (
+                              <p>Size: <span className="text-[#e5e5e5]">{variantSize}</span></p>
+                            )}
+                            {variantColor && (
+                              <p>Color: <span className="text-[#e5e5e5]">{variantColor}</span></p>
+                            )}
+                          </div>
+                          <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
+                            ${item.unitPrice.toFixed(2)}
+                          </p>
+                        </div>
 
-                    <div className="flex items-center space-x-3">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={async () => {
-                          if (cart?.id && !updatingItems.has(item.id)) {
-                            setUpdatingItems(prev => new Set(prev).add(item.id))
-                            try {
-                              const newQuantity = item.quantity - 1
-                              if (newQuantity === 0) {
-                                // Remove item if quantity becomes 0
-                                await removeItem(item.id, cart.id)
-                              } else {
-                                // Update quantity to decreased value
-                                await updateQuantity(item.id, cart.id, newQuantity, item.productId, item.variantId || "")
-                              }
-                            } catch (error) {
-                              console.error("Error decreasing quantity:", error)
-                              alert("Failed to update quantity. Please try again.")
-                            } finally {
-                              setUpdatingItems(prev => {
-                                const next = new Set(prev)
-                                next.delete(item.id)
-                                return next
-                              })
-                            }
-                          }
-                        }}
-                        className="h-8 w-8 border-black text-black hover:bg-black hover:text-white"
-                        aria-label={`Decrease quantity of product ${item.productId}`}
-                        disabled={updatingItems.has(item.id)}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={async () => {
-                          if (cart?.id && !updatingItems.has(item.id)) {
-                            setUpdatingItems(prev => new Set(prev).add(item.id))
-                            try {
-                              // Use addToCart with quantity 1 - backend will increment existing item
-                              await addToCart(item.productId, item.variantId || "", 1)
-                            } catch (error) {
-                              console.error("Error increasing quantity:", error)
-                              alert("Failed to update quantity. Please try again.")
-                            } finally {
-                              setUpdatingItems(prev => {
-                                const next = new Set(prev)
-                                next.delete(item.id)
-                                return next
-                              })
-                            }
-                          }
-                        }}
-                        className="h-8 w-8 border-black text-black hover:bg-black hover:text-white"
-                        aria-label={`Increase quantity of product ${item.productId}`}
-                        disabled={updatingItems.has(item.id)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        {/* Quantity Controls & Actions */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                          {/* Quantity Selector */}
+                          <div className="flex items-center gap-3 bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg p-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={async () => {
+                                if (cart?.id && !updatingItems.has(item.id)) {
+                                  setUpdatingItems(prev => new Set(prev).add(item.id))
+                                  try {
+                                    const newQuantity = item.quantity - 1
+                                    if (newQuantity === 0) {
+                                      await removeItem(item.id, cart.id)
+                                    } else {
+                                      await updateQuantity(item.id, cart.id, newQuantity, item.productId, item.variantId || "")
+                                    }
+                                  } catch (error) {
+                                    console.error("Error decreasing quantity:", error)
+                                    alert("Failed to update quantity. Please try again.")
+                                  } finally {
+                                    setUpdatingItems(prev => {
+                                      const next = new Set(prev)
+                                      next.delete(item.id)
+                                      return next
+                                    })
+                                  }
+                                }
+                              }}
+                              className="h-8 w-8 text-[#e5e5e5] hover:text-[#00bfff] hover:bg-[#1a1a1a] disabled:opacity-50"
+                              disabled={updatingItems.has(item.id)}
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="w-8 text-center font-semibold text-[#e5e5e5]">{item.quantity}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={async () => {
+                                if (cart?.id && !updatingItems.has(item.id)) {
+                                  setUpdatingItems(prev => new Set(prev).add(item.id))
+                                  try {
+                                    await addToCart(item.productId, item.variantId || "", 1)
+                                  } catch (error) {
+                                    console.error("Error increasing quantity:", error)
+                                    alert("Failed to update quantity. Please try again.")
+                                  } finally {
+                                    setUpdatingItems(prev => {
+                                      const next = new Set(prev)
+                                      next.delete(item.id)
+                                      return next
+                                    })
+                                  }
+                                }
+                              }}
+                              className="h-8 w-8 text-[#e5e5e5] hover:text-[#00bfff] hover:bg-[#1a1a1a] disabled:opacity-50"
+                              disabled={updatingItems.has(item.id)}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
 
-                    <div className="text-right">
-                      <p className="mb-2 text-lg font-bold">${(item.unitPrice * item.quantity).toFixed(2)}</p>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={async () => {
-                          if (cart?.id && !updatingItems.has(item.id)) {
-                            setUpdatingItems(prev => new Set(prev).add(item.id))
-                            try {
-                              await removeItem(item.id, cart.id)
-                            } catch (error) {
-                              console.error("Error removing item:", error)
-                              alert("Failed to remove item. Please try again.")
-                            } finally {
-                              setUpdatingItems(prev => {
-                                const next = new Set(prev)
-                                next.delete(item.id)
-                                return next
-                              })
-                            }
-                          }
-                        }}
-                        className="text-red-500 hover:bg-red-50 hover:text-red-700"
-                        aria-label={`Remove product ${item.productId} from cart`}
-                        disabled={updatingItems.has(item.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                          {/* Item Total & Remove */}
+                          <div className="flex flex-col items-end sm:items-center gap-2">
+                            <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
+                              ${(item.unitPrice * item.quantity).toFixed(2)}
+                            </p>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={async () => {
+                                if (cart?.id && !updatingItems.has(item.id)) {
+                                  setUpdatingItems(prev => new Set(prev).add(item.id))
+                                  try {
+                                    await removeItem(item.id, cart.id)
+                                  } catch (error) {
+                                    console.error("Error removing item:", error)
+                                    alert("Failed to remove item. Please try again.")
+                                  } finally {
+                                    setUpdatingItems(prev => {
+                                      const next = new Set(prev)
+                                      next.delete(item.id)
+                                      return next
+                                    })
+                                  }
+                                }
+                              }}
+                              className="h-8 w-8 text-[#666] hover:text-red-400 hover:bg-red-400/10 disabled:opacity-50"
+                              disabled={updatingItems.has(item.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </ScrollReveal>
-              ))}
-            </div>
+              )
+            })}
 
-            <ScrollReveal direction="up" delay={300}>
-              <div className="mt-8 flex justify-between items-center">
-                <Link href="/shop">
-                  <Button
-                    variant="outline"
-                    className="border-black text-black hover:bg-black hover:text-white hover:scale-105 transition-all duration-300 bg-transparent"
-                  >
-                    <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
-                    Continue Shopping
-                  </Button>
-                </Link>
+            {/* Continue Shopping & Clear Cart */}
+            <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+              <Link href="/shop">
                 <Button
                   variant="outline"
-                  onClick={() => cart?.id && clearCart(cart.id)}
-                  className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-700 transition-all duration-300 bg-transparent"
+                  className="border-[#1a1a1a] text-[#e5e5e5] hover:border-[#00bfff]/50 hover:text-[#00bfff] hover:bg-[#00bfff]/10 bg-transparent"
                 >
-                  Clear Cart
+                  <ArrowRight className="mr-2 h-4 w-4 rotate-180" />
+                  Continue Shopping
                 </Button>
-              </div>
-            </ScrollReveal>
+              </Link>
+              <Button
+                variant="outline"
+                onClick={() => cart?.id && clearCart(cart.id)}
+                className="border-red-400/50 text-red-400 hover:bg-red-400/10 hover:border-red-400 bg-transparent"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Clear Cart
+              </Button>
+            </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary - Sticky Panel */}
           <div className="lg:col-span-1">
             <ScrollReveal direction="right">
-              <div className="sticky top-24 bg-gray-50 p-8">
-                <h2 className="mb-6 text-2xl font-black uppercase tracking-wider">Order Summary</h2>
+              <div className="sticky top-24 bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 backdrop-blur-xl">
+                <h2 className="mb-6 text-xl font-bold uppercase tracking-wide text-[#e5e5e5]">
+                  Order Summary
+                </h2>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between">
+                <div className="space-y-4 mb-6">
+                  <div className="flex justify-between text-[#999]">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span className="text-[#e5e5e5]">${subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-[#999]">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                    <span className="text-[#e5e5e5]">
+                      {shipping === 0 ? (
+                        <span className="text-[#00bfff]">Free</span>
+                      ) : (
+                        `$${shipping.toFixed(2)}`
+                      )}
+                    </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-[#999]">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span className="text-[#e5e5e5]">${tax.toFixed(2)}</span>
                   </div>
-                  <div className="border-t border-gray-300 pt-4">
-                    <div className="flex justify-between text-xl font-bold">
-                      <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
+                  <div className="border-t border-[#1a1a1a] pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-bold text-[#e5e5e5]">Total</span>
+                      <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
+                        ${total.toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Promo Code */}
-                <div className="mt-6">
-                  <label htmlFor="promoCode" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                <div className="mb-6">
+                  <label htmlFor="promoCode" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#999]">
                     Promo Code
                   </label>
-                  <div className="flex">
+                  <div className="flex gap-2">
                     <input
                       type="text"
                       id="promoCode"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
                       placeholder="Enter code"
-                      className="flex-1 border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                      className="flex-1 bg-[#0f0f0f] border border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00bfff] focus:border-[#00bfff]"
                     />
-                    <Button className="bg-black text-white hover:bg-gray-800">Apply</Button>
+                    <Button className="bg-[#1a1a1a] border border-[#1a1a1a] text-[#e5e5e5] hover:bg-[#00bfff] hover:text-white hover:border-[#00bfff] transition-all duration-300">
+                      Apply
+                    </Button>
                   </div>
                 </div>
 
                 {/* Checkout Button */}
-                <Link href="/checkout">
-                  <Button
-                    disabled={isCheckingOut || cartItems.length === 0}
-                    size="lg"
-                    className="mt-8 w-full bg-black py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
-                  >
-                    {isCheckingOut ? "Processing..." : "Order Now"}
-                  </Button>
-                </Link>
-
-                {/* Secure Checkout Button */}
                 <Button
                   onClick={handleCheckout}
                   disabled={isCheckingOut || cartItems.length === 0}
-                  variant="outline"
                   size="lg"
-                  className="mt-4 w-full border-black py-4 text-lg font-bold uppercase tracking-wide text-black hover:bg-black hover:text-white transition-all duration-300 bg-transparent"
+                  className="w-full bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white py-6 text-lg font-bold uppercase tracking-wide hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_30px_rgba(0,191,255,0.6)] transition-all duration-300 border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isCheckingOut ? "Processing..." : "Secure Checkout"}
+                  {isCheckingOut ? "Processing..." : "Proceed to Checkout"}
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
 
                 {/* Security Info */}
-                <div className="mt-4 text-center text-xs text-gray-500">
+                <div className="mt-6 text-center text-xs text-[#666] space-y-1">
                   <p>🔒 Secure SSL encrypted checkout</p>
-                  <p>Free shipping on orders over $100</p>
+                  {subtotal < 100 && (
+                    <p className="text-[#00bfff]">Free shipping on orders over $100</p>
+                  )}
                 </div>
               </div>
             </ScrollReveal>

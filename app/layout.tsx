@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { ClerkProvider } from "@clerk/nextjs";
 import ClerkApolloBridge from "@/components/clerk-apollo-bridge";
+import { CartSync } from "@/components/cart-sync";
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -58,6 +59,7 @@ export default function RootLayout({
         <ClerkProvider>
           <ClerkApolloBridge />
           <Providers>
+            <CartSync />
             {children}
           </Providers >
         </ClerkProvider>

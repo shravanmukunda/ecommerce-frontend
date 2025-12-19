@@ -45,13 +45,13 @@ export function PressPage() {
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
       {/* Hero Section */}
-      <section className="bg-black py-16 text-white">
+      <section className="bg-gradient-to-b from-black via-gray-900 to-black py-16 border-b border-[#1a1a1a]">
         <div className="container mx-auto px-4 text-center">
           <ScrollReveal direction="up">
-            <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl">Press</h1>
+            <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl text-[#e5e5e5]">Press</h1>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={200}>
-            <p className="text-lg uppercase tracking-wide md:text-xl">AuraGaze in the media</p>
+            <p className="text-lg uppercase tracking-wide md:text-xl text-[#999]">AuraGaze in the media</p>
           </ScrollReveal>
         </div>
       </section>
@@ -60,8 +60,8 @@ export function PressPage() {
         {/* Introduction */}
         <ScrollReveal direction="up">
           <div className="mb-16 max-w-3xl mx-auto text-center">
-            <h2 className="mb-6 text-3xl font-black uppercase tracking-wider">Our Story, Told by Others</h2>
-            <p className="text-lg leading-relaxed text-gray-700">
+            <h2 className="mb-6 text-3xl font-black uppercase tracking-wider text-[#e5e5e5]">Our Story, Told by Others</h2>
+            <p className="text-lg leading-relaxed text-[#999]">
               Welcome to the AuraGaze press room. Here you'll find our latest news, press releases, and media
               coverage. For all media inquiries, please contact us directly.
             </p>
@@ -71,12 +71,12 @@ export function PressPage() {
         {/* Press Releases */}
         <section className="mb-16">
           <ScrollReveal direction="up">
-            <h2 className="mb-12 text-center text-3xl font-black uppercase tracking-wider">Latest Coverage</h2>
+            <h2 className="mb-12 text-center text-3xl font-black uppercase tracking-wider text-[#e5e5e5]">Latest Coverage</h2>
           </ScrollReveal>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {pressReleases.map((release, index) => (
               <ScrollReveal key={release.id} direction="up" delay={index * 100}>
-                <div className="group bg-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                <div className="group bg-[#121212] border border-[#1a1a1a] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_rgba(0,191,255,0.2)] transition-all duration-300 hover:-translate-y-2 overflow-hidden">
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
                       src={release.image || "/placeholder.svg"}
@@ -87,14 +87,14 @@ export function PressPage() {
                     />
                   </div>
                   <div className="p-6">
-                    <p className="text-sm text-gray-500 mb-2">
+                    <p className="text-sm text-[#666] mb-2">
                       {release.date} | {release.source}
                     </p>
-                    <h3 className="mb-4 text-xl font-bold uppercase tracking-wide line-clamp-2">{release.title}</h3>
+                    <h3 className="mb-4 text-xl font-bold uppercase tracking-wide line-clamp-2 text-[#e5e5e5]">{release.title}</h3>
                     <Link href={release.link} target="_blank" rel="noopener noreferrer">
                       <Button
                         variant="outline"
-                        className="border-black text-black hover:bg-black hover:text-white hover:scale-105 transition-all duration-300 bg-transparent"
+                        className="border-[#1a1a1a] text-[#e5e5e5] hover:border-[#00bfff]/50 hover:bg-[#00bfff]/10 hover:text-[#00bfff] hover:scale-105 transition-all duration-300 bg-transparent"
                       >
                         Read Article
                         <ExternalLink className="ml-2 h-4 w-4" />
@@ -108,19 +108,19 @@ export function PressPage() {
         </section>
 
         {/* Media Kit */}
-        <section className="bg-gray-50 p-12 text-center">
+        <section className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-12 text-center">
           <ScrollReveal direction="scale">
-            <h2 className="mb-4 text-3xl font-black uppercase tracking-wider md:text-4xl">Media Kit</h2>
+            <h2 className="mb-4 text-3xl font-black uppercase tracking-wider md:text-4xl text-[#e5e5e5]">Media Kit</h2>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={200}>
-            <p className="mb-8 text-lg text-gray-700">
+            <p className="mb-8 text-lg text-[#999]">
               Download our official press kit, including high-resolution images, brand guidelines, and company facts.
             </p>
           </ScrollReveal>
           <ScrollReveal direction="up" delay={400}>
             <Button
               size="lg"
-              className="bg-black px-8 py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
+              className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] hover:scale-105 transition-all duration-300 border-0"
             >
               Download Press Kit
               <Download className="ml-2 h-5 w-5" />

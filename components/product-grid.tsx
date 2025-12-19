@@ -16,8 +16,8 @@ export function ProductGrid() {
     variables: { isActive: true }
   })
 
-  if (loading) return <div className="py-16 text-center">Loading products...</div>
-  if (error) return <div className="py-16 text-center text-red-500">Error loading products: {error.message}</div>
+  if (loading) return <div className="py-16 text-center text-[#999] bg-gradient-to-b from-black via-gray-900 to-black">Loading products...</div>
+  if (error) return <div className="py-16 text-center text-[#666] bg-gradient-to-b from-black via-gray-900 to-black">Error loading products: {error.message}</div>
 
   // Transform GraphQL data to match the existing product structure
   const products = (data as any)?.products?.map((product: any) => ({
@@ -29,15 +29,15 @@ export function ProductGrid() {
   })) || []
 
   return (
-    <section className="py-16 lg:py-24">
+    <section className="py-16 lg:py-24 bg-gradient-to-b from-black via-gray-900 to-black relative">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <ScrollReveal direction="up">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-black uppercase tracking-wider md:text-4xl lg:text-5xl">
+          <div className="mb-12 text-center border-b border-[#383737] pb-8">
+            <h2 className="mb-4 text-3xl font-light uppercase tracking-wider md:text-4xl lg:text-5xl text-[#e5e5e5]">
               Featured Collection
             </h2>
-            <p className="text-lg uppercase tracking-wide text-gray-600">
+            <p className="text-xs uppercase tracking-widest text-[#666]">
               Curated essentials for the modern minimalist
             </p>
           </div>
@@ -49,12 +49,12 @@ export function ProductGrid() {
             {filters.map((filter) => (
               <Button
                 key={filter}
-                variant={activeFilter === filter ? "default" : "outline"}
+                variant="outline"
                 onClick={() => setActiveFilter(filter)}
-                className={`px-6 py-2 font-semibold uppercase tracking-wide ${
+                className={`px-6 py-2 text-xs font-light uppercase tracking-widest border border-[#333] transition-all duration-300 ${
                   activeFilter === filter
-                    ? "bg-black text-white hover:bg-gray-800"
-                    : "border-black text-black hover:bg-black hover:text-white"
+                    ? "bg-[#e5e5e5] text-[#0f0f0f] border-[#e5e5e5]"
+                    : "bg-transparent text-[#999] hover:text-[#e5e5e5] hover:border-[#666]"
                 }`}
               >
                 {filter}
@@ -71,19 +71,6 @@ export function ProductGrid() {
             </ScrollReveal>
           ))}
         </div>
-
-        {/* Load More */}
-        <ScrollReveal direction="up" delay={200}>
-          <div className="mt-16 text-center">
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-black px-8 py-4 text-lg font-bold uppercase tracking-wide text-black hover:bg-black hover:text-white bg-transparent"
-            >
-              Load More
-            </Button>
-          </div>
-        </ScrollReveal>
       </div>
     </section>
   )

@@ -92,12 +92,12 @@ export function FAQPage() {
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
       {/* Hero Section */}
-      <section className="bg-black py-16 text-white">
+      <section className="bg-gradient-to-b from-black via-gray-900 to-black py-16 border-b border-[#1a1a1a]">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl animate-fade-in-up">
+          <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl animate-fade-in-up text-[#e5e5e5]">
             FAQ
           </h1>
-          <p className="text-lg uppercase tracking-wide md:text-xl animate-fade-in-up animation-delay-300">
+          <p className="text-lg uppercase tracking-wide md:text-xl animate-fade-in-up animation-delay-300 text-[#999]">
             Everything you need to know
           </p>
         </div>
@@ -110,7 +110,7 @@ export function FAQPage() {
             <input
               type="text"
               placeholder="Search FAQs..."
-              className="w-full border border-black px-4 py-3 text-center font-semibold uppercase tracking-wide focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full bg-[#0f0f0f] border border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] px-4 py-3 text-center font-semibold uppercase tracking-wide rounded-lg focus:outline-none focus:border-[#00bfff] focus:ring-2 focus:ring-[#00bfff]/20 transition-all duration-300"
             />
           </div>
         </div>
@@ -123,7 +123,7 @@ export function FAQPage() {
               className="animate-fade-in-up"
               style={{ animationDelay: `${categoryIndex * 200}ms` }}
             >
-              <h2 className="mb-8 text-2xl font-black uppercase tracking-wider md:text-3xl">{category.category}</h2>
+              <h2 className="mb-8 text-2xl font-black uppercase tracking-wider md:text-3xl text-[#e5e5e5]">{category.category}</h2>
 
               <div className="space-y-4">
                 {category.questions.map((faq, questionIndex) => {
@@ -133,14 +133,14 @@ export function FAQPage() {
                   return (
                     <div
                       key={questionIndex}
-                      className="border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
+                      className="border border-[#1a1a1a] bg-[#121212] rounded-lg hover:border-[#1a1a1a]/80 transition-all duration-300"
                     >
                       <button
                         onClick={() => toggleItem(itemId)}
-                        className="flex w-full items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors duration-200"
+                        className="flex w-full items-center justify-between p-6 text-left hover:bg-[#1a1a1a] transition-colors duration-200 rounded-lg"
                       >
-                        <h3 className="text-lg font-bold uppercase tracking-wide">{faq.question}</h3>
-                        <div className={`transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}>
+                        <h3 className="text-lg font-bold uppercase tracking-wide text-[#e5e5e5]">{faq.question}</h3>
+                        <div className={`transition-transform duration-300 text-[#999] ${isOpen ? "rotate-180 text-[#00bfff]" : ""}`}>
                           <ChevronDown className="h-5 w-5" />
                         </div>
                       </button>
@@ -150,8 +150,8 @@ export function FAQPage() {
                           isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                         }`}
                       >
-                        <div className="border-t border-gray-200 p-6 pt-4">
-                          <p className="leading-relaxed text-gray-700">{faq.answer}</p>
+                        <div className="border-t border-[#1a1a1a] p-6 pt-4">
+                          <p className="leading-relaxed text-[#999]">{faq.answer}</p>
                         </div>
                       </div>
                     </div>
@@ -163,20 +163,20 @@ export function FAQPage() {
         </div>
 
         {/* Contact Section */}
-        <section className="mt-24 bg-gray-50 p-12 text-center">
-          <h2 className="mb-4 text-3xl font-black uppercase tracking-wider md:text-4xl">Still Have Questions?</h2>
-          <p className="mb-8 text-lg text-gray-600">Our customer service team is here to help you 24/7.</p>
+        <section className="mt-24 bg-[#121212] border border-[#1a1a1a] rounded-xl p-12 text-center">
+          <h2 className="mb-4 text-3xl font-black uppercase tracking-wider md:text-4xl text-[#e5e5e5]">Still Have Questions?</h2>
+          <p className="mb-8 text-lg text-[#999]">Our customer service team is here to help you 24/7.</p>
           <div className="flex flex-col space-y-4 sm:flex-row sm:justify-center sm:space-x-4 sm:space-y-0">
             <Button
               size="lg"
-              className="bg-black px-8 py-4 text-lg font-bold uppercase tracking-wide text-white hover:bg-gray-800 hover:scale-105 transition-all duration-300"
+              className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] hover:scale-105 transition-all duration-300 border-0"
             >
               Live Chat
             </Button>
             <Button
               variant="outline"
               size="lg"
-              className="border-black px-8 py-4 text-lg font-bold uppercase tracking-wide text-black hover:bg-black hover:text-white hover:scale-105 transition-all duration-300 bg-transparent"
+              className="border-[#1a1a1a] px-8 py-4 text-lg font-bold uppercase tracking-wide text-[#e5e5e5] hover:border-[#00bfff]/50 hover:bg-[#00bfff]/10 hover:text-[#00bfff] hover:scale-105 transition-all duration-300 bg-transparent"
             >
               Email Support
             </Button>

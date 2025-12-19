@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation } from "@apollo/client/react";
+import { useQuery, useMutation, useApolloClient } from "@apollo/client/react";
 import {
   GET_CART,
   ADD_TO_CART,
@@ -9,8 +9,22 @@ import {
   ATTACH_CART_TO_USER,
   UPDATE_CART_ITEM_QUANTITY,
 } from "@/graphql/cart";
+import { GET_PRODUCT } from "@/graphql/product-queries";
+import { useEffect, useMemo, useState } from "react";
 
 // Define types for our GraphQL responses
+interface Product {
+  id: string;
+  name: string;
+  designImageURL: string;
+}
+
+interface Variant {
+  id: string;
+  size: string;
+  color?: string | null;
+}
+
 interface CartItem {
   id: string;
   productId: string;
@@ -19,6 +33,8 @@ interface CartItem {
   unitPrice: number;
   createdAt: string;
   updatedAt: string;
+  product?: Product | null;
+  variant?: Variant | null;
 }
 
 interface Cart {
@@ -56,6 +72,21 @@ interface UpdateCartItemQuantityResponse {
   };
 }
 
+interface ProductData {
+  id: string;
+  name: string;
+  designImageURL: string;
+  variants: Array<{
+    id: string;
+    size: string;
+    color?: string | null;
+  }>;
+}
+
+interface GetProductResponse {
+  product: ProductData | null;
+}
+
 export const useCart = () => {
   // Only access localStorage on the client side
   const token =
@@ -63,13 +94,102 @@ export const useCart = () => {
   const guestCartId =
     typeof window !== "undefined" ? localStorage.getItem("guest_cart_id") : null;
 
-  const { data, loading, refetch } = useQuery<GetCartResponse>(GET_CART, {
+  const apolloClient = useApolloClient();
+
+  const { data, loading, refetch, error } = useQuery<GetCartResponse>(GET_CART, {
     variables: {
-      cartId: guestCartId,
+      cartId: guestCartId || undefined,
       forUser: Boolean(token),
     },
-    fetchPolicy: "network-only",
+    fetchPolicy: "cache-and-network",
+    errorPolicy: "all",
+    skip: typeof window === "undefined", // Skip on server side
   });
+
+  // Get unique product IDs from cart items
+  const productIds = useMemo(() => {
+    if (!data?.getCart?.items) return [];
+    const ids = new Set(data.getCart.items.map((item) => item.productId));
+    return Array.from(ids);
+  }, [data?.getCart?.items]);
+
+  // Store fetched product data
+  const [productMap, setProductMap] = useState<Map<string, ProductData>>(new Map());
+  const [productsLoading, setProductsLoading] = useState(false);
+
+  // Fetch product details for all products in cart
+  useEffect(() => {
+    if (productIds.length === 0 || typeof window === "undefined") {
+      setProductMap(new Map());
+      setProductsLoading(false);
+      return;
+    }
+
+    const fetchProducts = async () => {
+      setProductsLoading(true);
+      const map = new Map<string, ProductData>();
+      
+      try {
+        // Fetch all products in parallel using Apollo client
+        const queries = productIds.map((productId) =>
+          apolloClient.query<GetProductResponse>({
+            query: GET_PRODUCT,
+            variables: { id: productId },
+            fetchPolicy: "cache-first",
+          })
+        );
+        
+        const results = await Promise.allSettled(queries);
+        results.forEach((result, index) => {
+          if (result.status === "fulfilled" && result.value.data?.product) {
+            map.set(productIds[index], result.value.data.product);
+          } else if (result.status === "rejected") {
+            console.error(`Failed to fetch product ${productIds[index]}:`, result.reason);
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setProductMap(map);
+        setProductsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [productIds, apolloClient]);
+
+  // Enrich cart items with product and variant data
+  const enrichedCart = useMemo(() => {
+    if (!data?.getCart) return null;
+
+    const enrichedItems = data.getCart.items.map((item) => {
+      const product = productMap.get(item.productId);
+      const variant = product?.variants?.find((v) => v.id === item.variantId);
+
+      return {
+        ...item,
+        product: product
+          ? {
+              id: product.id,
+              name: product.name,
+              designImageURL: product.designImageURL,
+            }
+          : null,
+        variant: variant
+          ? {
+              id: variant.id,
+              size: variant.size,
+              color: variant.color || null,
+            }
+          : null,
+      };
+    });
+
+    return {
+      ...data.getCart,
+      items: enrichedItems,
+    };
+  }, [data?.getCart, productMap]);
 
   const [addToCartMutation] = useMutation<AddToCartResponse>(ADD_TO_CART);
   const [removeMutation] = useMutation<RemoveCartItemResponse>(REMOVE_CART_ITEM);
@@ -332,8 +452,9 @@ export const useCart = () => {
   };
 
   return {
-    cart: data?.getCart,
-    loading,
+    cart: enrichedCart || data?.getCart,
+    loading: loading || productsLoading,
+    error,
     addToCart,
     removeItem,
     clearCart,

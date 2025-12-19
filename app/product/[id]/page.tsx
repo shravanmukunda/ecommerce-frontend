@@ -78,12 +78,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
         <Header />
         <main className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-gray-600 mb-8">The product you're looking for doesn't exist or has been removed.</p>
-          <a href="/shop" className="text-blue-600 hover:underline">Back to Shop</a>
+          <h1 className="text-3xl font-bold mb-4 text-[#e5e5e5]">Product Not Found</h1>
+          <p className="text-[#999] mb-8">The product you're looking for doesn't exist or has been removed.</p>
+          <a href="/shop" className="text-[#00bfff] hover:text-[#0099ff] hover:underline transition-colors">Back to Shop</a>
         </main>
         <Footer />
       </div>
@@ -91,7 +91,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
       <Header />
       <main>
         <ProductDetail productData={product} />

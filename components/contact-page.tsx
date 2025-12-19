@@ -43,7 +43,7 @@ export function ContactPage() {
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
       {/* Hero Section */}
-      <section className="bg-black py-16 text-white">
+      <section className="bg-gradient-to-b from-black via-gray-900 to-black py-16 text-white">
         <div className="container mx-auto px-4 text-center">
           <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl animate-fade-in-up">
             Contact Us
