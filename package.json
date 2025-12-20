@@ -8,7 +8,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "graphql": "node server/server.cjs",
+    "graphql": "node server/server.js",
     "graphql:enhanced": "node server/enhanced-server.js",
     "test-queries": "node test-queries.js",
     "test-auth-queries": "node test-auth-queries.js",

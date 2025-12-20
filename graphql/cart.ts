@@ -10,6 +10,8 @@ export const GET_CART = gql`
       id
       userId
       totalAmount
+      createdAt
+      updatedAt
       items {
         id
         productId

@@ -11,6 +11,7 @@ import {
 } from "@/graphql/cart";
 import { GET_PRODUCT } from "@/graphql/product-queries";
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 
 // Define types for our GraphQL responses
 interface Product {
@@ -88,9 +89,8 @@ interface GetProductResponse {
 }
 
 export const useCart = () => {
-  // Only access localStorage on the client side
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+  // Use Clerk authentication - NO localStorage tokens!
+  const { isSignedIn } = useAuth();
   const guestCartId =
     typeof window !== "undefined" ? localStorage.getItem("guest_cart_id") : null;
 
@@ -99,7 +99,7 @@ export const useCart = () => {
   const { data, loading, refetch, error } = useQuery<GetCartResponse>(GET_CART, {
     variables: {
       cartId: guestCartId || undefined,
-      forUser: Boolean(token),
+      forUser: isSignedIn, // Use Clerk's isSignedIn instead of localStorage token
     },
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",
@@ -228,9 +228,9 @@ export const useCart = () => {
       throw new Error("Variant ID is required and cannot be empty");
     }
 
-    // Prepare cartId if needed
+    // Prepare cartId if needed (only for guest carts, not authenticated users)
     let cartIdStr: string | undefined;
-    if (!token && guestCartId) {
+    if (!isSignedIn && guestCartId) {
       const trimmed = `${guestCartId}`.trim();
       if (trimmed && trimmed !== "null" && trimmed !== "undefined" && trimmed.length > 0) {
         cartIdStr = trimmed;
@@ -257,7 +257,7 @@ export const useCart = () => {
 
     try {
       // Debug: Log what we're sending (remove in production if needed)
-      console.log("Adding to cart with input:", {
+      console.log("🛒 Adding to cart with input:", {
         productId: graphQLInput.productId,
         variantId: graphQLInput.variantId,
         quantity: graphQLInput.quantity,
@@ -269,10 +269,16 @@ export const useCart = () => {
         }
       });
 
+      console.log("📤 Calling addToCartMutation...");
       const res = await addToCartMutation({ 
         variables: { 
           input: graphQLInput
         } 
+      });
+      console.log("✅ Mutation response received:", {
+        hasData: !!res.data,
+        hasError: !!res.error,
+        error: res.error ? res.error.message : null
       });
 
       if (!res.data?.addToCart?.cart) {
@@ -281,7 +287,9 @@ export const useCart = () => {
 
       const cart = (res.data as AddToCartResponse).addToCart.cart;
 
-      if (typeof window !== "undefined" && !token) {
+      // Only store guest cart ID if user is not signed in
+      // Authenticated users' carts are managed by the backend via JWT
+      if (typeof window !== "undefined" && !isSignedIn) {
         localStorage.setItem("guest_cart_id", cart.id);
       }
 

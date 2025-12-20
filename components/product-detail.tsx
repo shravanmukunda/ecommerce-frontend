@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { ChevronLeft, ChevronRight, Truck, Shield, Ruler, Share2 } from "lucide-react"
 import { useCart } from "@/src/hooks/use-cart"
+import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 export function ProductDetail({ productData }: { productData: any }) {
   const [currentImage, setCurrentImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-  
+  const router = useRouter()
   const { addToCart } = useCart()
 
   // Extract available sizes from product variants
@@ -47,54 +49,44 @@ export function ProductDetail({ productData }: { productData: any }) {
     setCurrentImage((prev) => (prev - 1 + productData.images.length) % productData.images.length)
   }
 
+  const { isSignedIn } = useAuth();
+  
   const handleAddToCart = async () => {
-    if (!selectedSize) {
-      alert("Please select a size first.")
-      return
+    if (!isSignedIn) {
+      router.push(`/login?redirect=/product/${productData.id}`);
+      return;
     }
-
-    // Find matching variant by size
+  
+    if (!selectedSize) {
+      alert("Please select a size first.");
+      return;
+    }
+  
     const matchingVariant = productData.variants?.find(
       (v: any) => v.size === selectedSize
-    )
-
+    );
+  
     if (!matchingVariant) {
-      alert("Selected size is not available for this product.")
-      return
+      alert("Selected size is not available.");
+      return;
     }
-
-    // Validate IDs before proceeding
-    const productId = productData?.id;
-    const variantId = matchingVariant?.id;
-
-    if (!productId) {
-      alert("Product ID is missing. Please refresh the page and try again.")
-      return
-    }
-
-    if (!variantId) {
-      alert("Variant ID is missing. Please select a different size.")
-      return
-    }
-
-    setIsAddingToCart(true)
-    
+  
+    setIsAddingToCart(true);
+  
     try {
-      // Add product to GraphQL cart with selected size and quantity
       await addToCart(
-        String(productId),
-        String(variantId),
+        String(productData.id),
+        String(matchingVariant.id),
         quantity
-      )
-
-      alert(`${quantity} x ${productData.name} (Size: ${selectedSize}) added to cart!`)
-    } catch (error: any) {
-      console.error("Error adding to cart:", error)
-      alert(`Failed to add item to cart: ${error.message || "Unknown error"}`)
+      );
+  
+      alert("Added to cart!");
     } finally {
-      setIsAddingToCart(false)
+      setIsAddingToCart(false);
     }
-  }
+  };
+  
+  
 
   return (
     <div className="min-h-screen pt-16 lg:pt-20 bg-gradient-to-b from-black via-gray-900 to-black">
