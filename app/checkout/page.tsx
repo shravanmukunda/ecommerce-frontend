@@ -551,7 +551,7 @@ export default function CheckoutPage() {
                         </p>
                         <p className="text-xs text-[#999]">Qty: {item.quantity}</p>
                         <p className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
-                          ${(item.unitPrice * item.quantity).toFixed(2)}
+                          ₹{(item.unitPrice * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -602,29 +602,29 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-[#999]">
                   <span>Subtotal</span>
-                  <span className="text-[#e5e5e5]">${subtotal.toFixed(2)}</span>
+                  <span className="text-[#e5e5e5]">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-[#999]">
                   <span>Shipping</span>
                   <span className="text-[#e5e5e5]">
-                    {shipping === 0 ? <span className="text-[#00bfff]">Free</span> : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? <span className="text-[#00bfff]">Free</span> : `₹${shipping.toFixed(2)}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-[#999]">
                   <span>Tax</span>
-                  <span className="text-[#e5e5e5]">${tax.toFixed(2)}</span>
+                  <span className="text-[#e5e5e5]">₹{tax.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
                   <div className="flex justify-between text-[#00bfff]">
                     <span>Discount ({appliedPromo})</span>
-                    <span>-${discount.toFixed(2)}</span>
+                    <span>-₹{discount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="border-t border-[#1a1a1a] pt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-[#e5e5e5]">Total</span>
                     <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
-                      ${finalTotal.toFixed(2)}
+                      ₹{finalTotal.toFixed(2)}
                     </span>
                   </div>
                 </div>

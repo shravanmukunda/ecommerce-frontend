@@ -85,7 +85,7 @@ export default function MyOrdersPage() {
               </div>
               <div>
                 <p className="font-semibold">Total:</p>
-                <p>${selectedOrder.total.toFixed(2)}</p>
+                <p>₹{selectedOrder.total.toFixed(2)}</p>
               </div>
               <div>
                 <p className="font-semibold">Shipping Address:</p>
@@ -118,7 +118,7 @@ export default function MyOrdersPage() {
                       <span>{item.name}</span>
                     </TableCell>
                     <TableCell>{item.quantity}</TableCell>
-                    <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">₹{item.price.toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -140,7 +140,7 @@ export default function MyOrdersPage() {
                     <p className="text-sm text-gray-600">Status: {order.status}</p>
                   </div>
                   <div className="mt-4 md:mt-0 text-right">
-                    <p className="text-xl font-bold">${order.total.toFixed(2)}</p>
+                    <p className="text-xl font-bold">₹{order.total.toFixed(2)}</p>
                     <Button
                       onClick={() => setSelectedOrder(order)}
                       className="mt-2 bg-black text-white hover:bg-gray-800"

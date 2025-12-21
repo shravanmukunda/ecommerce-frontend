@@ -2,6 +2,7 @@
 
 import { SignUp } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
+import React from "react";
 
 export default function SignupPage() {
   const searchParams = useSearchParams();

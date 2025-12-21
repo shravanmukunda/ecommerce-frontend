@@ -13,16 +13,13 @@ export function Footer() {
         {/* Company Info */}
         <div className="space-y-4">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00bfff] to-[#0099ff] flex items-center justify-center transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,191,255,0.5)]">
-              <Image
-                src="/images/aura-gaze-logo.png"
-                alt="AuraGaze Logo"
-                width={40}
-                height={40}
-                className="rounded-full"
-              />
-            </div>
-            <span className="text-2xl font-black uppercase tracking-wider group-hover:text-[#00bfff] transition-colors">AuraGaze</span>
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={350}
+            height={150}
+            className="h-[9rem] w-auto transition-all duration-300 group-hover:scale-105"
+          />
           </Link>
           <p className="text-[#999] text-sm">
             Discover exclusive fashion that blends luxury with an edgy aesthetic. AuraGaze offers unique designs
@@ -34,9 +31,6 @@ export function Footer() {
             </Link>
             <Link href="#" aria-label="Instagram" className="text-[#999] hover:text-[#00bfff] transition-colors">
               <Instagram className="h-6 w-6" />
-            </Link>
-            <Link href="#" aria-label="Twitter" className="text-[#999] hover:text-[#00bfff] transition-colors">
-              <Twitter className="h-6 w-6" />
             </Link>
             <Link href="#" aria-label="Youtube" className="text-[#999] hover:text-[#00bfff] transition-colors">
               <Youtube className="h-6 w-6" />
@@ -97,7 +91,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-[#1a1a1a] mt-8 pt-8 text-center text-[#666] text-sm">
-        &copy; {new Date().getFullYear()} AuraGaze. All rights reserved.
+        &copy; {new Date().getFullYear()} All rights reserved.
       </div>
     </footer>
   )

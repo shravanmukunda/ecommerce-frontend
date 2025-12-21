@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -8,32 +7,16 @@ import { Menu, ShoppingCart, User } from "lucide-react"
 import Image from "next/image"
 import { useCart } from "@/src/hooks/use-cart"
 import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
 
 export function Header() {
   const { user } = useUser()
   const { cart } = useCart()
-  const router = useRouter()
-  const [isScrolled, setIsScrolled] = useState(false)
 
   const cartCount = cart?.items?.length || 0
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 flex h-20 w-full items-center justify-between px-4 md:px-6 lg:px-8 transition-all duration-300 ${
-        isScrolled
-          ? "bg-[#0f0f0f]/95 backdrop-blur-md border-b border-[#1a1a1a] shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
-          : "bg-[#0f0f0f]/80 backdrop-blur-sm border-b border-[#1a1a1a]/50"
-      }`}
+      className="relative z-50 flex h-20 w-full items-center justify-between px-4 md:px-6 lg:px-8 bg-gradient-to-b from-black via-gray-900 to-black border-b border-[#1a1a1a]"
     >
       {/* Logo Section - Left */}
       <div className="flex items-center gap-4">
@@ -50,16 +33,17 @@ export function Header() {
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="w-80 bg-[#121212] border-r border-[#1a1a1a] p-6 backdrop-blur-xl [&>button]:text-[#e5e5e5] [&>button]:hover:text-[#00bfff] [&>button]:hover:bg-[#1a1a1a] [&>button]:rounded-lg"
+            className="w-80 bg-gradient-to-b from-black via-gray-900 to-black border-r border-[#1a1a1a] p-6 backdrop-blur-xl [&>button]:text-[#e5e5e5] [&>button]:hover:text-[#00bfff] [&>button]:hover:bg-[#1a1a1a] [&>button]:rounded-lg"
           >
             <div className="flex items-center justify-between mb-8">
               <Link href="/" className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00bfff] to-[#0099ff] flex items-center justify-center">
-                  {/* Space for SVG logo - user will add later */}
-                </div>
-                <span className="text-xl font-bold uppercase tracking-wider text-[#e5e5e5]">
-                  AuraGaze
-                </span>
+                <Image
+                  src="/logo-h.png"
+                  alt="Logo"
+                  width={200}
+                  height={67}
+                  className="h-16 w-auto"
+                />
               </Link>
             </div>
             <nav className="grid gap-2">
@@ -120,19 +104,13 @@ export function Header() {
           </SheetContent>
         </Sheet>
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00bfff] to-[#0099ff] flex items-center justify-center transition-all duration-300 group-hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] group-hover:scale-105">
-            {/* Space for SVG logo - user will add later */}
-            <Image
-              src="/images/aura-gaze-logo.png"
-              alt="AuraGaze Logo"
-              width={40}
-              height={40}
-              className="rounded-full"
-            />
-          </div>
-          <span className="text-2xl font-bold uppercase tracking-wider text-[#e5e5e5] hidden md:block transition-colors group-hover:text-[#00bfff]">
-            AuraGaze
-          </span>
+          <Image
+            src="/logo-h.png"
+            alt="Logo"
+            width={200}
+            height={67}
+            className="h-16 w-auto transition-all duration-300 group-hover:scale-105"
+          />
         </Link>
       </div>
 

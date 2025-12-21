@@ -35,8 +35,8 @@ export function ShippingReturnsPage() {
                 <Truck className="mx-auto mb-6 h-12 w-12 text-[#00bfff]" />
                 <h3 className="mb-4 text-xl font-bold uppercase tracking-wide text-[#e5e5e5]">Domestic Shipping</h3>
                 <p className="text-[#999]">
-                  Free standard shipping (5-7 business days) on all orders over $100. Express shipping (2-3 business
-                  days) available for $15.
+                  Free standard shipping (5-7 business days) on all orders over ₹100. Express shipping (2-3 business
+                  days) available for ₹15.
                 </p>
               </div>
             </ScrollReveal>

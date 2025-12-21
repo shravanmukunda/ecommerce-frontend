@@ -28,7 +28,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
               tickLine={false}
               axisLine={false}
               tickMargin={8}
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => `₹${value}`}
             />
             <Tooltip
               cursor={{ fill: "#f1f5f9" }}
@@ -42,7 +42,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                             Revenue
                           </span>
                           <span className="font-bold">
-                            ${payload[0].value?.toLocaleString()}
+                            ₹{payload[0].value?.toLocaleString()}
                           </span>
                         </div>
                       </div>

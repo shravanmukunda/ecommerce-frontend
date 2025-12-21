@@ -87,7 +87,7 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
               </h3>
             </Link>
             <p className="mb-4 text-2xl font-light text-[#e5e5e5]">
-              ${product.price}
+              ₹{product.price}
             </p>
             <p className="text-[#666] text-sm">Premium quality streetwear piece crafted with attention to detail.</p>
           </div>
@@ -150,7 +150,7 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
           </h3>
         </Link>
         <p className="text-xl font-light text-[#e5e5e5] mb-4">
-          ${product.price}
+          ₹{product.price}
         </p>
 
         {/* Add to Cart Button - Appears on hover */}

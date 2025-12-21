@@ -50,7 +50,7 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
                 <TableCell className="font-medium">{order.id}</TableCell>
                 <TableCell>{order.customer}</TableCell>
                 <TableCell>{order.date}</TableCell>
-                <TableCell>${order.amount.toFixed(2)}</TableCell>
+                <TableCell>₹{order.amount.toFixed(2)}</TableCell>
                 <TableCell>
                   <Badge 
                     variant={

@@ -322,7 +322,7 @@ export function PromoCodeManagement() {
                           className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-black"
                         >
                           <option value="percentage">%</option>
-                          <option value="fixed">$</option>
+                          <option value="fixed">₹</option>
                         </select>
                         <Input
                           type="number"
@@ -364,7 +364,7 @@ export function PromoCodeManagement() {
                     <TableCell>
                       {promoCode.discountType === "percentage" 
                         ? `${promoCode.discountValue}%` 
-                        : `$${promoCode.discountValue}`}
+                        : `₹${promoCode.discountValue}`}
                     </TableCell>
                     <TableCell>
                       {new Date(promoCode.validUntil).toLocaleString()}

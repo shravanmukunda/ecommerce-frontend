@@ -11,7 +11,7 @@ const faqData = [
       {
         question: "How long does shipping take?",
         answer:
-          "We offer free standard shipping (5-7 business days) on orders over $100. Express shipping (2-3 business days) is available for $15. International shipping varies by location.",
+          "We offer free standard shipping (5-7 business days) on orders over ₹100. Express shipping (2-3 business days) is available for ₹15. International shipping varies by location.",
       },
       {
         question: "Can I track my order?",

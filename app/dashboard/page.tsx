@@ -101,7 +101,7 @@ export default function DashboardHomePage() {
                       <p className="text-gray-400 text-sm">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-white">${order.totalAmount.toFixed(2)}</p>
+                      <p className="font-semibold text-white">₹{order.totalAmount.toFixed(2)}</p>
                       <p className="text-gray-400 text-sm">Status: {order.status}</p>
                     </div>
                   </div>

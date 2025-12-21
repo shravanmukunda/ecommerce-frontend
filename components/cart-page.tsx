@@ -138,7 +138,7 @@ export function CartPage() {
                             )}
                           </div>
                           <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
-                            ${item.unitPrice.toFixed(2)}
+                            ₹{item.unitPrice.toFixed(2)}
                           </p>
                         </div>
 
@@ -207,7 +207,7 @@ export function CartPage() {
                           {/* Item Total & Remove */}
                           <div className="flex flex-col items-end sm:items-center gap-2">
                             <p className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
-                              ${(item.unitPrice * item.quantity).toFixed(2)}
+                              ₹{(item.unitPrice * item.quantity).toFixed(2)}
                             </p>
                             <Button
                               variant="ghost"
@@ -276,7 +276,7 @@ export function CartPage() {
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-[#999]">
                     <span>Subtotal</span>
-                    <span className="text-[#e5e5e5]">${subtotal.toFixed(2)}</span>
+                    <span className="text-[#e5e5e5]">₹{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-[#999]">
                     <span>Shipping</span>
@@ -284,19 +284,19 @@ export function CartPage() {
                       {shipping === 0 ? (
                         <span className="text-[#00bfff]">Free</span>
                       ) : (
-                        `$${shipping.toFixed(2)}`
+                        `₹${shipping.toFixed(2)}`
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between text-[#999]">
                     <span>Tax</span>
-                    <span className="text-[#e5e5e5]">${tax.toFixed(2)}</span>
+                    <span className="text-[#e5e5e5]">₹{tax.toFixed(2)}</span>
                   </div>
                   <div className="border-t border-[#1a1a1a] pt-4">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-[#e5e5e5]">Total</span>
                       <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
-                        ${total.toFixed(2)}
+                        ₹{total.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -337,7 +337,7 @@ export function CartPage() {
                 <div className="mt-6 text-center text-xs text-[#666] space-y-1">
                   <p>🔒 Secure SSL encrypted checkout</p>
                   {subtotal < 100 && (
-                    <p className="text-[#00bfff]">Free shipping on orders over $100</p>
+                    <p className="text-[#00bfff]">Free shipping on orders over ₹100</p>
                   )}
                 </div>
               </div>

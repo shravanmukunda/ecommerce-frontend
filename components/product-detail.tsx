@@ -195,7 +195,7 @@ export function ProductDetail({ productData }: { productData: any }) {
             <div className="space-y-8">
               <div>
                 <h1 className="text-3xl font-light uppercase tracking-wider md:text-4xl text-[#e5e5e5] mb-4">{productData.name}</h1>
-                <p className="text-2xl font-light text-[#e5e5e5]">${productData.price}</p>
+                <p className="text-2xl font-light text-[#e5e5e5]">₹{productData.price}</p>
               </div>
 
               <div className="border-t border-[#1a1a1a] pt-6">
@@ -290,7 +290,7 @@ export function ProductDetail({ productData }: { productData: any }) {
               <div className="space-y-4 border-t border-[#1a1a1a] pt-6">
                 <div className="flex items-center space-x-3">
                   <Truck className="h-4 w-4 text-[#666]" />
-                  <span className="text-xs text-[#666]">Free shipping on orders over $100</span>
+                  <span className="text-xs text-[#666]">Free shipping on orders over ₹100</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Shield className="h-4 w-4 text-[#666]" />

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { SignIn } from "@clerk/nextjs";
 import { useSearchParams } from "next/navigation";
 
@@ -14,4 +15,4 @@ export default function LoginPage() {
       afterSignInUrl={redirect}
     />
   );
-}
+} 

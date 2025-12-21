@@ -1,6 +1,7 @@
 "use client"
 
-import { MinimalistHero } from "@/components/ui/minimalist-hero"
+// import { MinimalistHero } from "@/components/ui/minimalist-hero"
+import { Header } from "@/components/header"
 import { ProductGrid } from "@/components/product-grid"
 import { Footer } from "@/components/footer"
 import { Facebook, Instagram, Twitter, Linkedin } from "lucide-react"
@@ -35,6 +36,7 @@ export default function HomePage() {
         socialLinks={socialLinks}
         locationText="Bangalore, BLR"
       /> */}
+      <Header />
       <HeroScroll/>
       <ProductGrid />
       <Footer />

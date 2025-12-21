@@ -76,7 +76,7 @@ export function ProductManagement({ products, onProductDeleted }: ProductManagem
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-                <p className="text-gray-600 mb-4">${product.price?.toFixed(2) || '0.00'}</p>
+                <p className="text-gray-600 mb-4">₹{product.price?.toFixed(2) || '0.00'}</p>
                 <div className="flex gap-2">
                   <Link href={`/product/${product.id}`}>
                     <Button variant="outline" size="sm">

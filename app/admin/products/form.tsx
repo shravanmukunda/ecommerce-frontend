@@ -497,7 +497,7 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="basePrice">Base Price ($) *</Label>
+            <Label htmlFor="basePrice">Base Price (₹) *</Label>
             <Input
               id="basePrice"
               name="basePrice"
@@ -957,7 +957,7 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
                           />
                         </td>
                         <td className="px-4 py-3 font-medium">
-                          ${((parseFloat(formData.basePrice) || 0) + variant.priceModifier).toFixed(2)}
+                          ₹{((parseFloat(formData.basePrice) || 0) + variant.priceModifier).toFixed(2)}
                         </td>
                       </tr>
                     )
@@ -968,9 +968,9 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
             <p className="text-sm text-blue-800">
-              <strong>Base price:</strong> ${formData.basePrice || "0.00"}
+              <strong>Base price:</strong> ₹{formData.basePrice || "0.00"}
               <span className="mx-2">|</span>
-              <strong>Tip:</strong> Price modifier adds/subtracts from base price. Use positive values for larger sizes (+$2) or negative for discounts (-$5).
+              <strong>Tip:</strong> Price modifier adds/subtracts from base price. Use positive values for larger sizes (+₹2) or negative for discounts (-₹5).
             </p>
           </div>
         </div>

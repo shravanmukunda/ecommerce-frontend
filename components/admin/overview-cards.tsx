@@ -30,7 +30,7 @@ export function OverviewCards({
   const stats = [
     {
       title: "Total Revenue",
-      value: `$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: `₹${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       description: revenueGrowth ? `${revenueGrowth > 0 ? '+' : ''}${revenueGrowth.toFixed(1)}% from last month` : "No previous data",
       icon: DollarSign,
     },
