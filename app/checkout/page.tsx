@@ -1,7 +1,7 @@
 "use client";
 import { useCart } from "@/src/hooks/use-cart";
 import { useMutation, useLazyQuery } from "@apollo/client/react";
-import { CREATE_ORDER } from "@/graphql/orders";
+import { CREATE_ORDER, CREATE_RAZORPAY_ORDER } from "@/graphql/orders";
 import { VALIDATE_PROMO_CODE } from "@/graphql/promo";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -129,26 +129,88 @@ export default function CheckoutPage() {
 
   const handleCheckout = async () => {
     try {
-      const items = cart?.items.map((item) => ({
-        variantId: item.variantId,
-        quantity: item.quantity,
-      })) || [];
+      const shippingAddress = `${shippingData.firstName} ${shippingData.lastName}, ${shippingData.address}, ${shippingData.city}, ${shippingData.state} ${shippingData.postalCode}, ${shippingData.country}`;
 
+      // 1. Create order in backend
       const res = await createOrder({
         variables: {
           input: {
-            items,
-            promoCode: appliedPromo,
+            shippingAddress,
+            promoCode: appliedPromo || undefined,
           },
         },
       });
 
-      if (res.data?.createOrder.id) {
-        router.push("/order-success?orderId=" + res.data.createOrder.id);
+      if (!res.data?.createOrder.id) {
+        throw new Error("Failed to create order");
       }
+
+      const orderId = res.data.createOrder.id;
+
+      // 2. Create Razorpay order
+      const rpRes = await createRazorpayOrder({
+        variables: { orderID: orderId },
+      });
+
+      const rpOrder = (rpRes.data as any).createRazorpayOrder;
+
+      // 3. Open Razorpay checkout
+      // NOTE: We do NOT rely on handler callback for success confirmation
+      // Backend will confirm payment via webhook
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: rpOrder.amount,
+        currency: rpOrder.currency,
+        order_id: rpOrder.id,
+        name: "AuraGaze",
+        description: "Order Payment",
+        prefill: {
+          email: shippingData.email,
+          contact: "",
+        },
+        handler: function (response: any) {
+          // This callback is NOT guaranteed to execute in SPAs
+          // It's only a UX helper, not a success signal
+          console.log("Payment response received (best-effort):", response);
+          // Do NOT redirect here - let backend webhook confirm payment
+        },
+        modal: {
+          ondismiss: function () {
+            // User closed the modal
+            // Check payment status via backend instead of assuming failure
+            console.log("Razorpay modal closed - checking payment status via backend");
+            checkPaymentStatus(orderId);
+          },
+        },
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.open();
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Failed to create order. Please try again.");
+    }
+  };
+
+  const checkPaymentStatus = async (orderId: string) => {
+    try {
+      // Query backend to check if payment was confirmed
+      // This should call an API endpoint that checks Razorpay webhook status
+      const response = await fetch(`/api/orders/${orderId}/status`);
+      const data = await response.json();
+
+      if (data.paymentStatus === "completed") {
+        router.push("/order-success?orderId=" + orderId);
+      } else if (data.paymentStatus === "pending") {
+        alert("Payment is being processed. Please wait...");
+        // Optionally poll again after a delay
+        setTimeout(() => checkPaymentStatus(orderId), 3000);
+      } else {
+        alert("Payment was not completed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+      alert("Could not verify payment status. Please contact support.");
     }
   };
 

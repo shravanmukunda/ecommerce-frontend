@@ -8,6 +8,7 @@ import {
   setGetCurrentToken,
 } from "@/lib/apolloClient";
 
+// Create client once at module level
 const client = createApolloClient();
 
 /**
@@ -15,15 +16,18 @@ const client = createApolloClient();
  * so Apollo can send Authorization headers
  */
 function ApolloAuthBridge({ children }: { children: ReactNode }) {
-  const { session } = useSession();
+  const { session, isLoaded } = useSession();
 
   useEffect(() => {
+    if (!isLoaded) return;
+    
+    // Set the token getter function whenever session changes
     setGetCurrentToken(async () => {
-      // ✅ IMPORTANT: NO template
       return await session?.getToken() ?? null;
     });
-  }, [session]);
+  }, [session, isLoaded]);
 
+  // Provide Apollo context even if session isn't loaded yet
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }
 

@@ -11,6 +11,7 @@ async function getProductData(id: string) {
     const { data } = await client.query({
       query: GET_PRODUCT,
       variables: { id },
+      fetchPolicy: "network-only",
     })
 
     const product = (data as any).product
