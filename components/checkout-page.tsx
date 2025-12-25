@@ -1,20 +1,25 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@apollo/client/react";
 import { Lock } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCart } from "@/src/hooks/use-cart";
-import { useMutation } from "@apollo/client/react";
+
+import { useCart } from "@/hooks/use-cart";
+import { useRazorpay } from "@/hooks/use-razorpay";
+
 import {
   CREATE_ORDER,
   CREATE_RAZORPAY_ORDER,
   VERIFY_PAYMENT,
 } from "@/graphql/orders";
-import { useRouter } from "next/navigation";
-import { useRazorpay } from "@/hooks/use-razorpay";
 
-/* ---------------- TYPES ---------------- */
+/* =======================
+   GraphQL Response Types
+   ======================= */
 
 interface CreateOrderResponse {
   createOrder: {
@@ -30,22 +35,38 @@ interface CreateRazorpayOrderResponse {
   };
 }
 
-/* ---------------- COMPONENT ---------------- */
+interface VerifyPaymentResponse {
+  verifyPayment: boolean;
+}
 
 export default function CheckoutPage() {
+  const router = useRouter();
+  const { cart, loading: cartLoading, clearCart } = useCart();
+  const { openRazorpay } = useRazorpay();
+
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { cart, loading: cartLoading, error: cartError, clearCart } = useCart();
-  const router = useRouter();
-  const { openRazorpay } = useRazorpay();
+  /* =======================
+     GraphQL Mutations
+     ======================= */
 
-  const [createOrder] = useMutation(CREATE_ORDER);
-  const [createRazorpayOrder] = useMutation(CREATE_RAZORPAY_ORDER);
-  const [verifyPayment] = useMutation(VERIFY_PAYMENT);
+  const [createOrder] =
+    useMutation<CreateOrderResponse>(CREATE_ORDER);
+
+  const [createRazorpayOrder] =
+    useMutation<CreateRazorpayOrderResponse>(CREATE_RAZORPAY_ORDER);
+
+  const [verifyPayment] =
+    useMutation<VerifyPaymentResponse>(VERIFY_PAYMENT);
+
+  /* =======================
+     Form State (phone added)
+     ======================= */
 
   const [formData, setFormData] = useState({
     email: "",
+    phone: "",
     firstName: "",
     lastName: "",
     address: "",
@@ -54,27 +75,28 @@ export default function CheckoutPage() {
     country: "",
   });
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const orderItems = cart?.items || [];
 
   const subtotal = orderItems.reduce(
     (sum: number, item: any) => sum + item.unitPrice * item.quantity,
     0
   );
-
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  /* ---------------- CHECKOUT FLOW ---------------- */
+  /* =======================
+     Checkout Handler
+     ======================= */
 
   const handleCheckout = async () => {
     try {
       setIsProcessing(true);
 
-      /* 1️⃣ Create DB Order (PENDING) */
+      // 1️⃣ Create DB Order (PENDING)
       const orderRes = await createOrder({
         variables: {
           input: {
@@ -83,73 +105,73 @@ export default function CheckoutPage() {
         },
       });
 
-      const orderId = (orderRes.data as CreateOrderResponse).createOrder.id;
+      const orderId = orderRes.data!.createOrder.id;
 
-      /* 2️⃣ Create Razorpay Order */
-      const razorpayRes = await createRazorpayOrder({
+      // 2️⃣ Create Razorpay Order
+      const rpRes = await createRazorpayOrder({
         variables: { orderID: orderId },
       });
 
-      const razorpayOrder = (
-        razorpayRes.data as CreateRazorpayOrderResponse
-      ).createRazorpayOrder;
+      const razorpayOrder = rpRes.data!.createRazorpayOrder;
 
-      /* 3️⃣ Open Razorpay Checkout */
+      // 3️⃣ Open Razorpay Checkout
       openRazorpay({
-                  key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-                  amount: razorpayOrder.amount,
-                  currency: razorpayOrder.currency,
-                  order_id: razorpayOrder.id,
-                  name: "AuraGaze",
-                  description: "Order Payment",
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        order_id: razorpayOrder.id,
+        name: "AuraGaze",
+        description: "Order Payment",
 
-            // 👇👇👇 PUT IT EXACTLY HERE
         handler: async function (response: any) {
-          console.log("🔥 Razorpay handler called");
-          console.log("🔥 Razorpay response:", response);
+          try {
+            await verifyPayment({
+              variables: {
+                input: {
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature,
+                },
+              },
+            });
 
-        try {
-           await verifyPayment({
-            variables: {
-            input: {
-            razorpayOrderId: response.razorpay_order_id,
-            razorpayPaymentId: response.razorpay_payment_id,
-            razorpaySignature: response.razorpay_signature,
-            },
-          },
-        });
+            if (cart?.id) {
+              clearCart(cart.id);
+            }
 
-      console.log("✅ verifyPayment success");
-
-      router.push(`/order-success?orderId=${orderId}`);
-    } catch (err) {
-      console.error("❌ verifyPayment failed", err);
-      alert("Payment verification failed");
-    }
-  },
+            router.push(`/order-success?orderId=${orderId}`);
+          } catch (err) {
+            console.error("Payment verification failed", err);
+            alert("Payment verification failed");
+          }
+        },
 
         modal: {
-          ondismiss: () => setIsProcessing(false),
+          ondismiss: () => {
+            setIsProcessing(false);
+          },
         },
 
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
-          contact: "9999999999",
+          contact: formData.phone,
         },
 
         theme: {
           color: "#000000",
         },
       });
-    } catch (err) {
-      console.error("Checkout failed", err);
+    } catch (error) {
+      console.error("Checkout failed", error);
       alert("Checkout failed. Please try again.");
       setIsProcessing(false);
     }
   };
 
-  /* ---------------- UI STATES ---------------- */
+  /* =======================
+     UI States
+     ======================= */
 
   if (cartLoading) {
     return (
@@ -159,32 +181,17 @@ export default function CheckoutPage() {
     );
   }
 
-  if (cartError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Error loading cart</h1>
-          <p className="text-gray-600 mb-4">{cartError.message}</p>
-          <Button onClick={() => router.push("/shop")}>Back to Shop</Button>
-        </div>
-      </div>
-    );
-  }
-
   if (!orderItems.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty.</h1>
-          <Button onClick={() => router.push("/shop")}>
-            Continue Shopping
-          </Button>
-        </div>
+        <h1 className="text-2xl font-bold">Your cart is empty</h1>
       </div>
     );
   }
 
-  /* ---------------- UI ---------------- */
+  /* =======================
+     UI
+     ======================= */
 
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
@@ -193,8 +200,7 @@ export default function CheckoutPage() {
           Secure Checkout
         </h1>
         <div className="mt-2 flex justify-center items-center gap-2 text-sm">
-          <Lock className="h-4 w-4" />
-          SSL Encrypted
+          <Lock className="h-4 w-4" /> SSL Encrypted
         </div>
       </section>
 
@@ -206,22 +212,16 @@ export default function CheckoutPage() {
               <h2 className="mb-4 text-2xl font-black uppercase">
                 Contact Information
               </h2>
+              <Input name="email" placeholder="Email" onChange={handleInputChange} />
               <Input
-                name="email"
-                placeholder="Email"
+                name="phone"
+                placeholder="Phone Number"
+                className="mt-4"
                 onChange={handleInputChange}
               />
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <Input
-                  name="firstName"
-                  placeholder="First Name"
-                  onChange={handleInputChange}
-                />
-                <Input
-                  name="lastName"
-                  placeholder="Last Name"
-                  onChange={handleInputChange}
-                />
+                <Input name="firstName" placeholder="First Name" onChange={handleInputChange} />
+                <Input name="lastName" placeholder="Last Name" onChange={handleInputChange} />
               </div>
               <Button className="mt-6" onClick={() => setStep(2)}>
                 Continue
@@ -234,22 +234,10 @@ export default function CheckoutPage() {
               <h2 className="mb-4 text-2xl font-black uppercase">
                 Shipping Address
               </h2>
-              <Input
-                name="address"
-                placeholder="Address"
-                onChange={handleInputChange}
-              />
+              <Input name="address" placeholder="Address" onChange={handleInputChange} />
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <Input
-                  name="city"
-                  placeholder="City"
-                  onChange={handleInputChange}
-                />
-                <Input
-                  name="postalCode"
-                  placeholder="Postal Code"
-                  onChange={handleInputChange}
-                />
+                <Input name="city" placeholder="City" onChange={handleInputChange} />
+                <Input name="postalCode" placeholder="Postal Code" onChange={handleInputChange} />
               </div>
               <Input
                 name="country"
@@ -257,7 +245,6 @@ export default function CheckoutPage() {
                 className="mt-4"
                 onChange={handleInputChange}
               />
-
               <div className="flex justify-between mt-6">
                 <Button variant="outline" onClick={() => setStep(1)}>
                   Back
@@ -277,7 +264,7 @@ export default function CheckoutPage() {
                 onClick={handleCheckout}
                 className="bg-black text-white w-full"
               >
-                {isProcessing ? "Processing Payment..." : "Pay Now"}
+                {isProcessing ? "Processing..." : "Pay Now"}
               </Button>
             </>
           )}
@@ -286,14 +273,13 @@ export default function CheckoutPage() {
         {/* RIGHT */}
         <div className="bg-gray-50 p-8 rounded">
           <h2 className="mb-6 text-xl font-bold">Order Summary</h2>
+
           {orderItems.map((item: any) => (
             <div key={item.id} className="flex justify-between mb-2 text-sm">
               <span>
-                {item.product?.name || "Item"} × {item.quantity}
+                {item.product?.name} × {item.quantity}
               </span>
-              <span>
-                ₹{(item.quantity * item.unitPrice).toFixed(2)}
-              </span>
+              <span>₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
             </div>
           ))}
 

@@ -38,8 +38,8 @@ interface AddToCartResponse {
 }
 
 export const useCart = () => {
-  const token = localStorage.getItem("authToken");
-  const guestCartId = localStorage.getItem("guest_cart_id");
+  const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
+  const guestCartId = typeof window !== "undefined" ? localStorage.getItem("guest_cart_id") : null;
 
   const { data, loading, refetch } = useQuery<GetCartResponse>(GET_CART, {
     variables: {

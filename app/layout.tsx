@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "AuraGaze - Underground Luxury Fashion",
@@ -43,20 +43,18 @@ export const metadata: Metadata = {
       "Discover AuraGaze, the leading luxury streetwear brand. Minimalist designs, premium quality, and exclusive collections. Where darkness meets elegance.",
     images: ["/placeholder.svg?height=675&width=1200&text=Sacred+Mayhem+Twitter"],
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
-  )
+  );
 }
