@@ -12,3 +12,12 @@ export const REGISTER_USER = gql`
     }
   }
 `;
+
+export const VERIFY_PAYMENT = gql`
+  mutation VerifyPayment($input: VerifyPaymentInput!) {
+    verifyPayment(input: $input) {
+      id
+      status
+    }
+  }
+`;

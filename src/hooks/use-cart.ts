@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useApolloClient } from "@apollo/client/react";
+import { useQuery, useMutation } from "@apollo/client/react";
 import {
   GET_CART,
   ADD_TO_CART,
@@ -12,6 +12,7 @@ import {
 import { GET_PRODUCT } from "@/graphql/product-queries";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { client as apolloClientInstance } from "@/lib/apolloClient";
 
 // Define types for our GraphQL responses
 interface Product {
@@ -89,21 +90,23 @@ interface GetProductResponse {
 }
 
 export const useCart = () => {
-  // Use Clerk authentication - NO localStorage tokens!
+  // Use Clerk authentication
   const { isSignedIn } = useAuth();
   const guestCartId =
     typeof window !== "undefined" ? localStorage.getItem("guest_cart_id") : null;
 
-  const apolloClient = useApolloClient();
+  // Use the imported Apollo client instance directly
+  const apolloClient = apolloClientInstance;
 
   const { data, loading, refetch, error } = useQuery<GetCartResponse>(GET_CART, {
     variables: {
       cartId: guestCartId || undefined,
-      forUser: isSignedIn, // Use Clerk's isSignedIn instead of localStorage token
+      forUser: isSignedIn,
     },
     fetchPolicy: "cache-and-network",
     errorPolicy: "all",
-    skip: typeof window === "undefined", // Skip on server side
+    // Allow both signed-in and guest users to fetch cart
+    skip: typeof window === "undefined", // Only skip on server-side
   });
 
   // Get unique product IDs from cart items
@@ -119,7 +122,7 @@ export const useCart = () => {
 
   // Fetch product details for all products in cart
   useEffect(() => {
-    if (productIds.length === 0 || typeof window === "undefined") {
+    if (productIds.length === 0 || typeof window === "undefined" || !apolloClient) {
       setProductMap(new Map());
       setProductsLoading(false);
       return;
@@ -215,8 +218,6 @@ export const useCart = () => {
     }
 
     // Ensure IDs are primitive strings (not String objects) and trim whitespace
-    // GraphQL expects String! for variantId and ID! for productId
-    // Use template literals to ensure primitive strings
     const productIdStr = `${productId}`.trim();
     const variantIdStr = `${variantId}`.trim();
     
@@ -238,7 +239,6 @@ export const useCart = () => {
     }
 
     // Create a plain object with primitive values only
-    // Use object literal to ensure we have a clean, plain object
     const graphQLInput: {
       productId: string;
       variantId: string;
@@ -256,12 +256,12 @@ export const useCart = () => {
     }
 
     try {
-      // Debug: Log what we're sending (remove in production if needed)
       console.log("🛒 Adding to cart with input:", {
         productId: graphQLInput.productId,
         variantId: graphQLInput.variantId,
         quantity: graphQLInput.quantity,
         cartId: graphQLInput.cartId,
+        isSignedIn,
         types: {
           productId: typeof graphQLInput.productId,
           variantId: typeof graphQLInput.variantId,
@@ -269,26 +269,31 @@ export const useCart = () => {
         }
       });
 
-      console.log("📤 Calling addToCartMutation...");
+      console.log("📤 Calling addToCartMutation with variables:", JSON.stringify({ input: graphQLInput }, null, 2));
       const res = await addToCartMutation({ 
         variables: { 
           input: graphQLInput
         } 
       });
+      
       console.log("✅ Mutation response received:", {
         hasData: !!res.data,
         hasError: !!res.error,
-        error: res.error ? res.error.message : null
+        error: res.error ? res.error.message : null,
       });
 
+      if (res.error) {
+        console.error("❌ GraphQL Error:", res.error);
+        throw res.error;
+      }
+
       if (!res.data?.addToCart?.cart) {
-        throw new Error("Failed to add item to cart");
+        throw new Error("Failed to add item to cart - no cart returned");
       }
 
       const cart = (res.data as AddToCartResponse).addToCart.cart;
 
       // Only store guest cart ID if user is not signed in
-      // Authenticated users' carts are managed by the backend via JWT
       if (typeof window !== "undefined" && !isSignedIn) {
         localStorage.setItem("guest_cart_id", cart.id);
       }
@@ -296,7 +301,16 @@ export const useCart = () => {
       await refetch();
       return cart;
     } catch (error: any) {
-      console.error("Error adding to cart:", error);
+      console.error("❌ Error adding to cart:", error);
+      console.error("Error details:", {
+        message: error?.message,
+        graphQLErrors: error?.graphQLErrors,
+        networkError: error?.networkError,
+        statusCode: error?.networkError?.statusCode,
+        response: error?.networkError?.response,
+        toString: error?.toString(),
+        type: typeof error,
+      });
       throw error;
     }
   };

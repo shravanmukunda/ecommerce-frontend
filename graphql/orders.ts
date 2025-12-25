@@ -147,3 +147,22 @@ export const CANCEL_ORDER = gql`
     }
   }
 `;
+
+export const CREATE_RAZORPAY_ORDER = gql`
+  mutation CreateRazorpayOrder($orderID: ID!) {
+    createRazorpayOrder(orderID: $orderID) {
+      id
+      amount
+      currency
+    }
+  }
+`;
+
+export const VERIFY_PAYMENT = gql`
+  mutation VerifyPayment($input: VerifyPaymentInput!) {
+    verifyPayment(input: $input) {
+      id
+      status
+    }
+  }
+`;

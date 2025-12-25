@@ -2,7 +2,8 @@
 
 import { useEffect } from "react"
 import { useUser } from "@clerk/nextjs"
-import { useCart } from "@/src/hooks/use-cart"
+import { useApolloClient } from "@apollo/client/react"
+import { GET_CART } from "@/graphql/cart"
 
 /**
  * Component that syncs guest cart to user cart when user logs in
@@ -10,34 +11,25 @@ import { useCart } from "@/src/hooks/use-cart"
  */
 export function CartSync() {
   const { user, isLoaded } = useUser()
-  const { attachCartToUser, refetch } = useCart()
+  const apolloClient = useApolloClient()
 
   useEffect(() => {
+    // Only run after user state is loaded
     if (!isLoaded) return
 
-    // Only run if user is authenticated and we have a guest cart
-    if (user?.id) {
-      const guestCartId = typeof window !== "undefined" 
-        ? localStorage.getItem("guest_cart_id") 
-        : null
+    // Only run if user is authenticated
+    if (!user?.id) return
 
-      if (guestCartId) {
-        // Attach guest cart to user
-        attachCartToUser(user.id)
-          .then(() => {
-            console.log("Guest cart attached to user successfully")
-            // Refetch to get updated cart
-            refetch()
-          })
-          .catch((error) => {
-            console.error("Error attaching cart to user:", error)
-          })
-      } else {
-        // If no guest cart, just refetch to get user's cart
-        refetch()
-      }
+    // Just refetch the cart when user logs in
+    try {
+      apolloClient.refetchQueries({
+        include: [GET_CART],
+      })
+      console.log("✅ Cart refetched for authenticated user")
+    } catch (error) {
+      console.error("❌ Error refetching cart:", error)
     }
-  }, [user?.id, isLoaded, attachCartToUser, refetch])
+  }, [user?.id, isLoaded, apolloClient])
 
   return null
 }
