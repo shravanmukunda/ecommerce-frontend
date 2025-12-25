@@ -124,26 +124,11 @@ export default function CheckoutPage() {
         description: "Order Payment",
 
         handler: async function (response: any) {
-          try {
-            await verifyPayment({
-              variables: {
-                input: {
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature,
-                },
-              },
-            });
-
-            if (cart?.id) {
-              clearCart(cart.id);
-            }
-
-            router.push(`/order-success?orderId=${orderId}`);
-          } catch (err) {
-            console.error("Payment verification failed", err);
-            alert("Payment verification failed");
+          console.log("Razorpay payment successful");
+          if (cart?.id) {
+            clearCart(cart.id).catch(err => console.error("Cart clear failed", err));
           }
+          router.push(`/order-success?orderId=${orderId}`);
         },
 
         modal: {

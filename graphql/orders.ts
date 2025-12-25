@@ -160,6 +160,9 @@ export const CREATE_RAZORPAY_ORDER = gql`
 
 export const VERIFY_PAYMENT = gql`
   mutation VerifyPayment($input: VerifyPaymentInput!) {
-    verifyPayment(input: $input)
+    verifyPayment(input: $input) {
+      id
+      status
+    }
   }
 `;

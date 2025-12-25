@@ -92,7 +92,10 @@ async function handlePaymentSuccess(payment: any) {
     
     const mutation = `
       mutation VerifyPayment($input: VerifyPaymentInput!) {
-        verifyPayment(input: $input)
+        verifyPayment(input: $input) {
+          id
+          status
+        }
       }
     `;
 
@@ -141,7 +144,10 @@ async function handlePaymentFailure(payment: any) {
     
     const mutation = `
       mutation VerifyPayment($input: VerifyPaymentInput!) {
-        verifyPayment(input: $input)
+        verifyPayment(input: $input) {
+          id
+          status
+        }
       }
     `;
 

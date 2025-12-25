@@ -24,6 +24,8 @@ export async function GET(
     // Query Go backend for order status
     const graphqlUrl = process.env.GRAPHQL_BACKEND_URL || "http://localhost:8080/query";
     
+    console.log(`Fetching order status for orderId: ${orderId} from ${graphqlUrl}`);
+    
     const query = `
       query GetOrder($id: ID!) {
         order(id: $id) {
@@ -53,8 +55,9 @@ export async function GET(
 
     if (result.errors) {
       console.error("GraphQL error fetching order:", result.errors);
+      console.error("GraphQL response:", result);
       return NextResponse.json(
-        { error: "Failed to fetch order status" },
+        { error: "Failed to fetch order status", details: result.errors },
         { status: 500 }
       );
     }

@@ -14,14 +14,9 @@ import { useRazorpay } from "@/hooks/use-razorpay";
 import {
   CREATE_ORDER,
   CREATE_RAZORPAY_ORDER,
-  VERIFY_PAYMENT,
 } from "@/graphql/orders";
-console.log('CREATE_RAZORPAY_ORDER:', CREATE_RAZORPAY_ORDER);
-export const dynamic = "force-dynamic";
 
-/* =======================
-   GraphQL Response Types
-   ======================= */
+export const dynamic = "force-dynamic";
 
 interface CreateOrderResponse {
   createOrder: {
@@ -37,10 +32,6 @@ interface CreateRazorpayOrderResponse {
   };
 }
 
-interface VerifyPaymentResponse {
-  verifyPayment: boolean;
-}
-
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart, loading: cartLoading, clearCart } = useCart();
@@ -49,22 +40,8 @@ export default function CheckoutPage() {
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  /* =======================
-     GraphQL Mutations
-     ======================= */
-
-  const [createOrder] =
-    useMutation<CreateOrderResponse>(CREATE_ORDER);
-
-  const [createRazorpayOrder] =
-    useMutation<CreateRazorpayOrderResponse>(CREATE_RAZORPAY_ORDER);
-
-  const [verifyPayment] =
-    useMutation<VerifyPaymentResponse>(VERIFY_PAYMENT);
-
-  /* =======================
-     Form State (phone added)
-     ======================= */
+  const [createOrder] = useMutation<CreateOrderResponse>(CREATE_ORDER);
+  const [createRazorpayOrder] = useMutation<CreateRazorpayOrderResponse>(CREATE_RAZORPAY_ORDER);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -82,7 +59,6 @@ export default function CheckoutPage() {
   };
 
   const orderItems = cart?.items || [];
-
   const subtotal = orderItems.reduce(
     (sum: number, item: any) => sum + item.unitPrice * item.quantity,
     0
@@ -90,15 +66,10 @@ export default function CheckoutPage() {
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
-  /* =======================
-     Checkout Handler
-     ======================= */
-
   const handleCheckout = async () => {
     try {
       setIsProcessing(true);
 
-      // 1️⃣ Create DB Order (PENDING)
       const orderRes = await createOrder({
         variables: {
           input: {
@@ -109,14 +80,12 @@ export default function CheckoutPage() {
 
       const orderId = orderRes.data!.createOrder.id;
 
-      // 2️⃣ Create Razorpay Order
       const rpRes = await createRazorpayOrder({
         variables: { orderID: orderId },
       });
 
       const razorpayOrder = rpRes.data!.createRazorpayOrder;
 
-      // 3️⃣ Open Razorpay Checkout
       openRazorpay({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: razorpayOrder.amount,
@@ -126,26 +95,11 @@ export default function CheckoutPage() {
         description: "Order Payment",
 
         handler: async function (response: any) {
-          try {
-            await verifyPayment({
-              variables: {
-                input: {
-                  razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id,
-                  razorpaySignature: response.razorpay_signature,
-                },
-              },
-            });
-
-            if (cart?.id) {
-              clearCart(cart.id);
-            }
-
-            router.push(`/order-success?orderId=${orderId}`);
-          } catch (err) {
-            console.error("Payment verification failed", err);
-            alert("Payment verification failed");
+          console.log("Razorpay payment successful");
+          if (cart?.id) {
+            clearCart(cart.id).catch(err => console.error("Cart clear failed", err));
           }
+          router.push(`/order-success?orderId=${orderId}`);
         },
 
         modal: {
@@ -171,10 +125,6 @@ export default function CheckoutPage() {
     }
   };
 
-  /* =======================
-     UI States
-     ======================= */
-
   if (cartLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -191,10 +141,6 @@ export default function CheckoutPage() {
     );
   }
 
-  /* =======================
-     UI
-     ======================= */
-
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
       <section className="bg-black py-8 text-white text-center">
@@ -207,7 +153,6 @@ export default function CheckoutPage() {
       </section>
 
       <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* LEFT */}
         <div className="lg:col-span-2">
           {step === 1 && (
             <>
@@ -272,7 +217,6 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* RIGHT */}
         <div className="bg-gray-50 p-8 rounded">
           <h2 className="mb-6 text-xl font-bold">Order Summary</h2>
 
