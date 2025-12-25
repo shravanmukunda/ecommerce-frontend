@@ -40,11 +40,10 @@ export function HeroScroll() {
       >
         <video
           autoPlay
-          loop
           muted
           playsInline
-          className="w-full h-full object-fill"
-          style={{ pointerEvents: "none" }}
+          className="w-full h-full object-contain md:object-cover"
+          style={{ pointerEvents: "none", display: "block" }}
         >
           <source src="/hero.mp4" type="video/mp4" />
           Your browser does not support the video tag.

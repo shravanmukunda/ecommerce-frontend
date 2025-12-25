@@ -23,13 +23,23 @@ export function ShopPage() {
   if (error) return <div className="min-h-screen pt-16 lg:pt-20 bg-gradient-to-b from-black via-gray-900 to-black py-16 text-center text-[#666]">Error loading products: {error.message}</div>
 
   // Transform GraphQL data to match the existing product structure
-  const allProducts = (data as any)?.products?.map((product: any) => ({
-    id: parseInt(product.id),
-    name: product.name,
-    price: product.basePrice,
-    image: product.designImageURL,
-    description: product.description,
-  })) || []
+  // Support both new imageURLs array and legacy designImageURL
+  const allProducts = (data as any)?.products?.map((product: any) => {
+    const images = product.imageURLs && product.imageURLs.length > 0 
+      ? product.imageURLs 
+      : (product.designImageURL ? [product.designImageURL] : [])
+    
+    return {
+      id: parseInt(product.id),
+      name: product.name,
+      price: product.basePrice,
+      image: images[0] || product.designImageURL || "",
+      hoverImage: images[1] || null, // Use second image as hover image if available
+      images: images,
+      description: product.description,
+      category: product.category,
+    }
+  }) || []
 
   const categories = ["All", "T-Shirts", "Hoodies", "Jeans", "Jackets", "Pants"] // Updated categories
 

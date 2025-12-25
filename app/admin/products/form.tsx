@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Upload, X, Image as ImageIcon, Loader2, PlusCircle } from "lucide-react"
+import { Upload, X, Image as ImageIcon, Loader2, PlusCircle, ChevronLeft, ChevronRight } from "lucide-react"
 import { GET_PRODUCT } from "@/graphql/product-queries"
 import { CREATE_PRODUCT, UPDATE_PRODUCT, CREATE_PRODUCT_VARIANT } from "@/graphql/product-mutations"
 import { gql } from "@apollo/client"
@@ -51,6 +51,7 @@ interface Product {
   name: string
   description: string
   designImageURL: string
+  imageURLs?: string[]
   basePrice: number
   isActive: boolean
   brand: string
@@ -133,6 +134,7 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
     name: "",
     description: "",
     designImageURL: "",
+    imageURLs: [] as string[],
     basePrice: "",
     brand: "",
     category: "",
@@ -157,10 +159,16 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
   useEffect(() => {
     if (productData?.product) {
       const p = productData.product
+      // Support both old single image and new multiple images
+      const images = p.imageURLs && p.imageURLs.length > 0 
+        ? p.imageURLs 
+        : (p.designImageURL ? [p.designImageURL] : [])
+      
       setFormData({
         name: p.name || "",
         description: p.description || "",
         designImageURL: p.designImageURL || "",
+        imageURLs: images,
         basePrice: p.basePrice?.toString() || "",
         brand: p.brand || "",
         category: p.category || "",
@@ -308,26 +316,75 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
       file.type.startsWith('image/')
     )
     
-    if (files.length > 0 && files[0]) {
-      // For now, just set the first image URL
-      // In production, upload to cloud storage first
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, designImageURL: reader.result as string }))
-      }
-      reader.readAsDataURL(files[0])
+    if (files.length > 0) {
+      // Handle multiple files
+      const readers = files.map(file => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            resolve(reader.result as string)
+          }
+          reader.readAsDataURL(file)
+        })
+      })
+      
+      Promise.all(readers).then((imageDataUrls) => {
+        setFormData(prev => ({
+          ...prev,
+          imageURLs: [...prev.imageURLs, ...imageDataUrls],
+          designImageURL: prev.designImageURL || imageDataUrls[0] // Keep first as main for backward compatibility
+        }))
+      })
     }
   }, [])
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, designImageURL: reader.result as string }))
-      }
-      reader.readAsDataURL(files[0])
+      // Handle multiple files
+      const fileArray = Array.from(files)
+      const readers = fileArray.map(file => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => {
+            resolve(reader.result as string)
+          }
+          reader.readAsDataURL(file)
+        })
+      })
+      
+      Promise.all(readers).then((imageDataUrls) => {
+        setFormData(prev => ({
+          ...prev,
+          imageURLs: [...prev.imageURLs, ...imageDataUrls],
+          designImageURL: prev.designImageURL || imageDataUrls[0] // Keep first as main for backward compatibility
+        }))
+      })
     }
+  }
+  
+  const removeImage = (index: number) => {
+    setFormData(prev => {
+      const newImageURLs = prev.imageURLs.filter((_, i) => i !== index)
+      return {
+        ...prev,
+        imageURLs: newImageURLs,
+        designImageURL: newImageURLs.length > 0 ? newImageURLs[0] : ""
+      }
+    })
+  }
+  
+  const reorderImages = (fromIndex: number, toIndex: number) => {
+    setFormData(prev => {
+      const newImageURLs = [...prev.imageURLs]
+      const [removed] = newImageURLs.splice(fromIndex, 1)
+      newImageURLs.splice(toIndex, 0, removed)
+      return {
+        ...prev,
+        imageURLs: newImageURLs,
+        designImageURL: newImageURLs[0] || ""
+      }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -335,8 +392,8 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
     
     try {
       // Validate required fields
-      if (!formData.name || !formData.designImageURL || !formData.basePrice) {
-        alert("Please fill in all required fields: Product Name, Image, and Base Price")
+      if (!formData.name || (formData.imageURLs.length === 0 && !formData.designImageURL) || !formData.basePrice) {
+        alert("Please fill in all required fields: Product Name, At least one Image, and Base Price")
         return
       }
 
@@ -346,10 +403,14 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
       }
 
       // Prepare product input - only include non-empty optional fields
+      // Use imageURLs if available, otherwise fall back to designImageURL for backward compatibility
+      const images = formData.imageURLs.length > 0 ? formData.imageURLs : (formData.designImageURL ? [formData.designImageURL] : [])
+      
       const productInput: any = {
         name: formData.name,
         description: formData.description || "",
-        designImageURL: formData.designImageURL,
+        designImageURL: images[0] || formData.designImageURL, // Keep for backward compatibility
+        imageURLs: images, // New field for multiple images
         basePrice: parseFloat(formData.basePrice),
         featured: formData.featured || false
       }
@@ -673,10 +734,70 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
         </div>
       </div>
 
-      {/* Product Image */}
+      {/* Product Images */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Product Image *</h3>
+        <h3 className="text-lg font-semibold">Product Images *</h3>
+        <p className="text-sm text-muted-foreground">Upload multiple images to create a slideshow on the product page</p>
         
+        {/* Image Gallery */}
+        {formData.imageURLs.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {formData.imageURLs.map((imageUrl, index) => (
+              <div key={index} className="relative group">
+                <div className="relative aspect-square overflow-hidden rounded-lg border-2 border-gray-300">
+                  <img
+                    src={imageUrl}
+                    alt={`Product image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  {index === 0 && (
+                    <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      Main
+                    </div>
+                  )}
+                </div>
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-lg">
+                  {index > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => reorderImages(index, index - 1)}
+                      className="text-white hover:bg-white/20"
+                      title="Move left"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => removeImage(index)}
+                    className="text-white"
+                    title="Remove image"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  {index < formData.imageURLs.length - 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => reorderImages(index, index + 1)}
+                      className="text-white hover:bg-white/20"
+                      title="Move right"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Upload Area */}
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             isDragging
@@ -688,49 +809,33 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
-          {formData.designImageURL ? (
-            <div className="relative">
-              <img
-                src={formData.designImageURL}
-                alt="Product preview"
-                className="max-h-64 mx-auto rounded-lg"
-              />
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                className="mt-4"
-                onClick={() => setFormData(prev => ({ ...prev, designImageURL: "" }))}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Remove Image
-              </Button>
-            </div>
-          ) : (
-            <>
-              <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Drag and drop an image here, or click to select
-                </p>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Select Image
-                </Button>
-              </div>
-            </>
-          )}
+          <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Drag and drop images here, or click to select multiple images
+            </p>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="file-upload"
+              multiple
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => document.getElementById('file-upload')?.click()}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {formData.imageURLs.length > 0 ? "Add More Images" : "Select Images"}
+            </Button>
+            {formData.imageURLs.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {formData.imageURLs.length} image{formData.imageURLs.length !== 1 ? 's' : ''} uploaded. First image will be used as the main product image.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

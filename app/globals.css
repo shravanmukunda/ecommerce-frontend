@@ -458,3 +458,94 @@ html {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* Admin Dashboard Specific Styles */
+/* Fix input, button, and date components to work on white background */
+/* High specificity to override hardcoded dark theme colors */
+.admin-dashboard input[type="text"],
+.admin-dashboard input[type="number"],
+.admin-dashboard input[type="email"],
+.admin-dashboard input[type="password"],
+.admin-dashboard input[type="datetime-local"],
+.admin-dashboard input[type="date"],
+.admin-dashboard input[type="time"],
+.admin-dashboard input[type="color"],
+.admin-dashboard input[type="url"],
+.admin-dashboard input[type="search"],
+.admin-dashboard input[type="tel"],
+.admin-dashboard input {
+  background-color: white !important;
+  background: white !important;
+  border-color: #d1d5db !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
+}
+
+.admin-dashboard textarea {
+  background-color: white !important;
+  background: white !important;
+  border-color: #d1d5db !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
+}
+
+.admin-dashboard select {
+  background-color: white !important;
+  background: white !important;
+  border-color: #d1d5db !important;
+  border: 1px solid #d1d5db !important;
+  color: #111827 !important;
+}
+
+.admin-dashboard input::placeholder,
+.admin-dashboard textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+.admin-dashboard input:focus,
+.admin-dashboard input:focus-visible,
+.admin-dashboard textarea:focus,
+.admin-dashboard textarea:focus-visible,
+.admin-dashboard select:focus,
+.admin-dashboard select:focus-visible {
+  border-color: #3b82f6 !important;
+  border: 1px solid #3b82f6 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Button styling for admin dashboard */
+.admin-dashboard button {
+  color: inherit !important;
+}
+
+/* Default button variant - target buttons without outline/ghost variants */
+.admin-dashboard button:not([class*="outline"]):not([class*="ghost"]):not([class*="destructive"]):not([class*="secondary"]):not([class*="link"]) {
+  background-color: #111827 !important;
+  color: white !important;
+}
+
+.admin-dashboard button:not([class*="outline"]):not([class*="ghost"]):not([class*="destructive"]):not([class*="secondary"]):not([class*="link"]):hover {
+  background-color: #1f2937 !important;
+}
+
+/* Outline button variant */
+.admin-dashboard button[class*="outline"] {
+  background-color: white !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
+.admin-dashboard button[class*="outline"]:hover {
+  background-color: #f9fafb !important;
+}
+
+/* Ghost button variant */
+.admin-dashboard button[class*="ghost"] {
+  background-color: transparent !important;
+  color: #111827 !important;
+}
+
+.admin-dashboard button[class*="ghost"]:hover {
+  background-color: #f3f4f6 !important;
+}

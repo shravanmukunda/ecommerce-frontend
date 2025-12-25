@@ -7,6 +7,7 @@ export const GET_PRODUCTS = gql`
       name
       description
       designImageURL
+      imageURLs
       basePrice
       isActive
       material
@@ -44,6 +45,7 @@ export const GET_PRODUCT = gql`
       name
       description
       designImageURL
+      imageURLs
       basePrice
       isActive
       material
