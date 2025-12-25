@@ -20,13 +20,22 @@ export function ProductGrid() {
   if (error) return <div className="py-16 text-center text-[#666] bg-gradient-to-b from-black via-gray-900 to-black">Error loading products: {error.message}</div>
 
   // Transform GraphQL data to match the existing product structure
-  const products = (data as any)?.products?.map((product: any) => ({
-    id: parseInt(product.id),
-    name: product.name,
-    price: product.basePrice,
-    image: product.designImageURL,
-    description: product.description,
-  })) || []
+  // Support both new imageURLs array and legacy designImageURL
+  const products = (data as any)?.products?.map((product: any) => {
+    const images = product.imageURLs && product.imageURLs.length > 0 
+      ? product.imageURLs 
+      : (product.designImageURL ? [product.designImageURL] : [])
+    
+    return {
+      id: parseInt(product.id),
+      name: product.name,
+      price: product.basePrice,
+      image: images[0] || product.designImageURL || "",
+      hoverImage: images[1] || null, // Use second image as hover image if available
+      images: images,
+      description: product.description,
+    }
+  }) || []
 
   return (
     <section className="py-16 lg:py-24 bg-gradient-to-b from-black via-gray-900 to-black relative">

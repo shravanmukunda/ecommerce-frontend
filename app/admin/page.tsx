@@ -30,6 +30,7 @@ interface ProductData {
   name: string;
   description: string;
   designImageURL: string;
+  imageURLs?: string[]; // Optional for backward compatibility
   basePrice: number;
   isActive: boolean;
   variants: ProductVariant[];
@@ -84,13 +85,21 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (productsData && productsData.products) {
       // Convert ProductData to Product interface
-      const convertedProducts: Product[] = productsData.products.map(product => ({
-        id: parseInt(product.id),
-        name: product.name,
-        price: product.basePrice,
-        image: product.designImageURL || "/placeholder.svg",
-        // Other properties will use defaults from the Product interface
-      }))
+      // Support both new imageURLs array and legacy designImageURL
+      const convertedProducts: Product[] = productsData.products.map(product => {
+        const images = product.imageURLs && product.imageURLs.length > 0 
+          ? product.imageURLs 
+          : (product.designImageURL ? [product.designImageURL] : [])
+        
+        return {
+          id: parseInt(product.id),
+          name: product.name,
+          price: product.basePrice,
+          image: images[0] || product.designImageURL || "/placeholder.svg",
+          images: images,
+          // Other properties will use defaults from the Product interface
+        }
+      })
       setProducts(convertedProducts)
     }
   }, [productsData])

@@ -18,13 +18,18 @@ async function getProductData(id: string) {
       return null
     }
 
+    // Support both new imageURLs array and legacy designImageURL
+    const images = product.imageURLs && product.imageURLs.length > 0 
+      ? product.imageURLs 
+      : (product.designImageURL ? [product.designImageURL] : [])
+    
     return {
       id: product.id,
       name: product.name,
       price: product.basePrice,
       description: product.description,
-      image: product.designImageURL,
-      images: [product.designImageURL], // For now, just use the main image
+      image: images[0] || product.designImageURL || "",
+      images: images, // Use multiple images for slideshow
       variants: product.variants || [],
       materials: product.materials || ["Premium organic cotton", "Sustainable materials"],
       careInstructions: product.careInstructions || ["Machine wash cold", "Tumble dry low", "Do not bleach"],
