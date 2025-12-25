@@ -1,3 +1,5 @@
+"use client";
+
 export const loadRazorpay = (): Promise<boolean> => {
   return new Promise((resolve) => {
     if (typeof window === "undefined") return resolve(false);
