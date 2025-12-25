@@ -7,15 +7,12 @@ import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { ChevronLeft, ChevronRight, Truck, Shield, Ruler, Share2 } from "lucide-react"
 import { useCart } from "@/src/hooks/use-cart"
-import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
 
 export function ProductDetail({ productData }: { productData: any }) {
   const [currentImage, setCurrentImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState("")
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-  const router = useRouter()
   const { addToCart } = useCart()
 
   // Extract available sizes from product variants
@@ -49,14 +46,9 @@ export function ProductDetail({ productData }: { productData: any }) {
     setCurrentImage((prev) => (prev - 1 + productData.images.length) % productData.images.length)
   }
 
-  const { isSignedIn } = useAuth();
-  
   const handleAddToCart = async () => {
-    if (!isSignedIn) {
-      router.push(`/login?redirect=/product/${productData.id}`);
-      return;
-    }
-  
+    // Allow both signed-in and guest users to add to cart
+    // Guest users will have their cart stored in localStorage
     if (!selectedSize) {
       alert("Please select a size first.");
       return;
@@ -81,6 +73,9 @@ export function ProductDetail({ productData }: { productData: any }) {
       );
   
       alert("Added to cart!");
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+      alert("Failed to add item to cart. Please try again.");
     } finally {
       setIsAddingToCart(false);
     }

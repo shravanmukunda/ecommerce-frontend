@@ -1,642 +1,251 @@
 "use client";
-import { useCart } from "@/src/hooks/use-cart";
-import { useMutation, useLazyQuery } from "@apollo/client/react";
-import { CREATE_ORDER } from "@/graphql/orders";
-import { VALIDATE_PROMO_CODE } from "@/graphql/promo";
+
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@apollo/client/react";
+import { Lock } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { Check, CreditCard, MapPin, ArrowRight, ArrowLeft, Lock } from "lucide-react";
-import Image from "next/image";
+
+import { useCart } from "@/hooks/use-cart";
+import { useRazorpay } from "@/hooks/use-razorpay";
+
+import {
+  CREATE_ORDER,
+  CREATE_RAZORPAY_ORDER,
+} from "@/graphql/orders";
+
+export const dynamic = "force-dynamic";
 
 interface CreateOrderResponse {
   createOrder: {
     id: string;
-    totalAmount: number;
-    status: string;
   };
 }
 
-interface ValidatePromoResponse {
-  validatePromoCode: {
-    isValid: boolean;
-    discountAmount: number;
-    message: string;
+interface CreateRazorpayOrderResponse {
+  createRazorpayOrder: {
+    id: string;
+    amount: number;
+    currency: string;
   };
 }
 
 export default function CheckoutPage() {
-  const { cart } = useCart();
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [promoInput, setPromoInput] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
-  const [discount, setDiscount] = useState(0);
-  const [promoError, setPromoError] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { cart, loading: cartLoading, clearCart } = useCart();
+  const { openRazorpay } = useRazorpay();
 
-  // Form data
-  const [shippingData, setShippingData] = useState({
+  const [step, setStep] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const [createOrder] = useMutation<CreateOrderResponse>(CREATE_ORDER);
+  const [createRazorpayOrder] = useMutation<CreateRazorpayOrderResponse>(CREATE_RAZORPAY_ORDER);
+
+  const [formData, setFormData] = useState({
     email: "",
+    phone: "",
     firstName: "",
     lastName: "",
     address: "",
     city: "",
-    state: "",
     postalCode: "",
     country: "",
   });
 
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: "",
-    cardName: "",
-    expiryDate: "",
-    cvv: "",
-  });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-  const [createOrder, { loading: ordering }] = useMutation<CreateOrderResponse>(CREATE_ORDER);
-  const [validatePromo, { loading: validating }] = useLazyQuery<ValidatePromoResponse>(VALIDATE_PROMO_CODE);
-
-  const subtotal = cart?.items.reduce((sum: number, item: any) => sum + item.unitPrice * item.quantity, 0) || 0;
-  const shipping = subtotal > 100 ? 0 : 15;
+  const orderItems = cart?.items || [];
+  const subtotal = orderItems.reduce(
+    (sum: number, item: any) => sum + item.unitPrice * item.quantity,
+    0
+  );
   const tax = subtotal * 0.08;
-  const finalTotal = subtotal + shipping + tax - discount;
-
-  const handleApplyPromo = async () => {
-    if (!promoInput.trim()) return;
-    try {
-      const { data } = await validatePromo({
-        variables: {
-          code: promoInput,
-          orderAmount: subtotal,
-        },
-      });
-
-      if (data?.validatePromoCode.isValid) {
-        setAppliedPromo(promoInput);
-        setDiscount(data.validatePromoCode.discountAmount);
-        setPromoError("");
-      } else {
-        setPromoError(data?.validatePromoCode.message || "Invalid code");
-        setAppliedPromo(null);
-        setDiscount(0);
-      }
-    } catch (error) {
-      setPromoError("Error validating promo code");
-      console.error(error);
-    }
-  };
-
-  const validateShipping = () => {
-    const newErrors: Record<string, string> = {};
-    if (!shippingData.email) newErrors.email = "Email is required";
-    if (!shippingData.firstName) newErrors.firstName = "First name is required";
-    if (!shippingData.lastName) newErrors.lastName = "Last name is required";
-    if (!shippingData.address) newErrors.address = "Address is required";
-    if (!shippingData.city) newErrors.city = "City is required";
-    if (!shippingData.postalCode) newErrors.postalCode = "Postal code is required";
-    if (!shippingData.country) newErrors.country = "Country is required";
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validatePayment = () => {
-    const newErrors: Record<string, string> = {};
-    if (!paymentData.cardNumber) newErrors.cardNumber = "Card number is required";
-    if (!paymentData.cardName) newErrors.cardName = "Cardholder name is required";
-    if (!paymentData.expiryDate) newErrors.expiryDate = "Expiry date is required";
-    if (!paymentData.cvv) newErrors.cvv = "CVV is required";
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleNext = () => {
-    if (currentStep === 1 && validateShipping()) {
-      setCurrentStep(2);
-    } else if (currentStep === 2 && validatePayment()) {
-      setCurrentStep(3);
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+  const total = subtotal + tax;
 
   const handleCheckout = async () => {
     try {
-      const items = cart?.items.map((item) => ({
-        variantId: item.variantId,
-        quantity: item.quantity,
-      })) || [];
+      setIsProcessing(true);
 
-      const res = await createOrder({
+      const orderRes = await createOrder({
         variables: {
           input: {
-            items,
-            promoCode: appliedPromo,
+            shippingAddress: `${formData.firstName} ${formData.lastName}, ${formData.address}, ${formData.city}, ${formData.country} - ${formData.postalCode}`,
           },
         },
       });
 
-      if (res.data?.createOrder.id) {
-        router.push("/order-success?orderId=" + res.data.createOrder.id);
-      }
+      const orderId = orderRes.data!.createOrder.id;
+
+      const rpRes = await createRazorpayOrder({
+        variables: { orderID: orderId },
+      });
+
+      const razorpayOrder = rpRes.data!.createRazorpayOrder;
+
+      openRazorpay({
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        order_id: razorpayOrder.id,
+        name: "AuraGaze",
+        description: "Order Payment",
+
+        handler: async function (response: any) {
+          console.log("Razorpay payment successful");
+          if (cart?.id) {
+            clearCart(cart.id).catch(err => console.error("Cart clear failed", err));
+          }
+          router.push(`/order-success?orderId=${orderId}`);
+        },
+
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+          },
+        },
+
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone,
+        },
+
+        theme: {
+          color: "#000000",
+        },
+      });
     } catch (error) {
-      console.error("Error creating order:", error);
-      alert("Failed to create order. Please try again.");
+      console.error("Checkout failed", error);
+      alert("Checkout failed. Please try again.");
+      setIsProcessing(false);
     }
   };
 
-  if (!cart) {
+  if (cartLoading) {
     return (
-      <div className="min-h-screen pt-20 bg-gradient-to-b from-black via-gray-900 to-black flex items-center justify-center">
-        <div className="text-[#e5e5e5]">Loading cart...</div>
+      <div className="min-h-screen flex items-center justify-center">
+        <h1 className="text-2xl font-bold">Loading cart...</h1>
       </div>
     );
   }
 
-  const steps = [
-    { id: 1, name: "Shipping", icon: MapPin },
-    { id: 2, name: "Payment", icon: CreditCard },
-    { id: 3, name: "Review", icon: Check },
-  ];
+  if (!orderItems.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <h1 className="text-2xl font-bold">Your cart is empty</h1>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen pt-20 bg-gradient-to-b from-black via-gray-900 to-black">
-      <div className="container mx-auto px-4 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight text-[#e5e5e5] mb-2">
-            Checkout
-          </h1>
-          <p className="text-[#999]">Complete your order securely</p>
+    <div className="min-h-screen pt-16 lg:pt-20">
+      <section className="bg-black py-8 text-white text-center">
+        <h1 className="text-4xl md:text-6xl font-black uppercase">
+          Secure Checkout
+        </h1>
+        <div className="mt-2 flex justify-center items-center gap-2 text-sm">
+          <Lock className="h-4 w-4" /> SSL Encrypted
+        </div>
+      </section>
+
+      <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2">
+          {step === 1 && (
+            <>
+              <h2 className="mb-4 text-2xl font-black uppercase">
+                Contact Information
+              </h2>
+              <Input name="email" placeholder="Email" onChange={handleInputChange} />
+              <Input
+                name="phone"
+                placeholder="Phone Number"
+                className="mt-4"
+                onChange={handleInputChange}
+              />
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <Input name="firstName" placeholder="First Name" onChange={handleInputChange} />
+                <Input name="lastName" placeholder="Last Name" onChange={handleInputChange} />
+              </div>
+              <Button className="mt-6" onClick={() => setStep(2)}>
+                Continue
+              </Button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <h2 className="mb-4 text-2xl font-black uppercase">
+                Shipping Address
+              </h2>
+              <Input name="address" placeholder="Address" onChange={handleInputChange} />
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <Input name="city" placeholder="City" onChange={handleInputChange} />
+                <Input name="postalCode" placeholder="Postal Code" onChange={handleInputChange} />
+              </div>
+              <Input
+                name="country"
+                placeholder="Country"
+                className="mt-4"
+                onChange={handleInputChange}
+              />
+              <div className="flex justify-between mt-6">
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+                <Button onClick={() => setStep(3)}>Continue</Button>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <h2 className="mb-4 text-2xl font-black uppercase">
+                Confirm & Pay
+              </h2>
+              <Button
+                disabled={isProcessing}
+                onClick={handleCheckout}
+                className="bg-black text-white w-full"
+              >
+                {isProcessing ? "Processing..." : "Pay Now"}
+              </Button>
+            </>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Checkout Form */}
-          <div className="lg:col-span-2">
-            {/* Step Indicator */}
-            <div className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 mb-6">
-              <div className="flex items-center justify-between">
-                {steps.map((step, index) => {
-                  const Icon = step.icon;
-                  const isActive = currentStep === step.id;
-                  const isCompleted = currentStep > step.id;
-                  
-                  return (
-                    <div key={step.id} className="flex items-center flex-1">
-                      <div className="flex flex-col items-center flex-1">
-                        <div
-                          className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
-                            isActive
-                              ? "bg-gradient-to-r from-[#00bfff] to-[#0099ff] border-[#00bfff] text-white shadow-[0_0_20px_rgba(0,191,255,0.4)]"
-                              : isCompleted
-                              ? "bg-[#00bfff] border-[#00bfff] text-white"
-                              : "bg-[#0f0f0f] border-[#1a1a1a] text-[#666]"
-                          }`}
-                        >
-                          {isCompleted ? (
-                            <Check className="h-6 w-6" />
-                          ) : (
-                            <Icon className="h-6 w-6" />
-                          )}
-                        </div>
-                        <span
-                          className={`mt-2 text-xs font-semibold uppercase tracking-wide ${
-                            isActive ? "text-[#00bfff]" : isCompleted ? "text-[#00bfff]" : "text-[#666]"
-                          }`}
-                        >
-                          {step.name}
-                        </span>
-                      </div>
-                      {index < steps.length - 1 && (
-                        <div
-                          className={`flex-1 h-0.5 mx-4 ${
-                            isCompleted ? "bg-[#00bfff]" : "bg-[#1a1a1a]"
-                          }`}
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+        <div className="bg-gray-50 p-8 rounded">
+          <h2 className="mb-6 text-xl font-bold">Order Summary</h2>
+
+          {orderItems.map((item: any) => (
+            <div key={item.id} className="flex justify-between mb-2 text-sm">
+              <span>
+                {item.product?.name} × {item.quantity}
+              </span>
+              <span>₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
             </div>
+          ))}
 
-            {/* Step 1: Shipping */}
-            {currentStep === 1 && (
-              <div className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 space-y-6">
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#e5e5e5] mb-6">
-                  Shipping Information
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      Email *
-                    </label>
-                    <Input
-                      type="email"
-                      value={shippingData.email}
-                      onChange={(e) => setShippingData({ ...shippingData, email: e.target.value })}
-                      className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                        errors.email ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                      }`}
-                      placeholder="your@email.com"
-                    />
-                    {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      First Name *
-                    </label>
-                    <Input
-                      value={shippingData.firstName}
-                      onChange={(e) => setShippingData({ ...shippingData, firstName: e.target.value })}
-                      className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                        errors.firstName ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                      }`}
-                      placeholder="John"
-                    />
-                    {errors.firstName && <p className="mt-1 text-sm text-red-400">{errors.firstName}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      Last Name *
-                    </label>
-                    <Input
-                      value={shippingData.lastName}
-                      onChange={(e) => setShippingData({ ...shippingData, lastName: e.target.value })}
-                      className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                        errors.lastName ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                      }`}
-                      placeholder="Doe"
-                    />
-                    {errors.lastName && <p className="mt-1 text-sm text-red-400">{errors.lastName}</p>}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                    Address *
-                  </label>
-                  <Input
-                    value={shippingData.address}
-                    onChange={(e) => setShippingData({ ...shippingData, address: e.target.value })}
-                    className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                      errors.address ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                    }`}
-                    placeholder="123 Main Street"
-                  />
-                  {errors.address && <p className="mt-1 text-sm text-red-400">{errors.address}</p>}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      City *
-                    </label>
-                    <Input
-                      value={shippingData.city}
-                      onChange={(e) => setShippingData({ ...shippingData, city: e.target.value })}
-                      className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                        errors.city ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                      }`}
-                      placeholder="New York"
-                    />
-                    {errors.city && <p className="mt-1 text-sm text-red-400">{errors.city}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      State
-                    </label>
-                    <Input
-                      value={shippingData.state}
-                      onChange={(e) => setShippingData({ ...shippingData, state: e.target.value })}
-                      className="bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff]"
-                      placeholder="NY"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      Postal Code *
-                    </label>
-                    <Input
-                      value={shippingData.postalCode}
-                      onChange={(e) => setShippingData({ ...shippingData, postalCode: e.target.value })}
-                      className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                        errors.postalCode ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                      }`}
-                      placeholder="10001"
-                    />
-                    {errors.postalCode && <p className="mt-1 text-sm text-red-400">{errors.postalCode}</p>}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                    Country *
-                  </label>
-                  <Input
-                    value={shippingData.country}
-                    onChange={(e) => setShippingData({ ...shippingData, country: e.target.value })}
-                    className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                      errors.country ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                    }`}
-                    placeholder="United States"
-                  />
-                  {errors.country && <p className="mt-1 text-sm text-red-400">{errors.country}</p>}
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <Button
-                    onClick={handleNext}
-                    className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] transition-all duration-300 border-0"
-                  >
-                    Continue to Payment
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Payment */}
-            {currentStep === 2 && (
-              <div className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 space-y-6">
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#e5e5e5] mb-6">
-                  Payment Information
-                </h2>
-
-                <div>
-                  <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                    Card Number *
-                  </label>
-                  <Input
-                    type="text"
-                    value={paymentData.cardNumber}
-                    onChange={(e) => setPaymentData({ ...paymentData, cardNumber: e.target.value })}
-                    className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                      errors.cardNumber ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                    }`}
-                    placeholder="1234 5678 9012 3456"
-                    maxLength={19}
-                  />
-                  {errors.cardNumber && <p className="mt-1 text-sm text-red-400">{errors.cardNumber}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                    Cardholder Name *
-                  </label>
-                  <Input
-                    value={paymentData.cardName}
-                    onChange={(e) => setPaymentData({ ...paymentData, cardName: e.target.value })}
-                    className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                      errors.cardName ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                    }`}
-                    placeholder="John Doe"
-                  />
-                  {errors.cardName && <p className="mt-1 text-sm text-red-400">{errors.cardName}</p>}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      Expiry Date *
-                    </label>
-                    <Input
-                      type="text"
-                      value={paymentData.expiryDate}
-                      onChange={(e) => setPaymentData({ ...paymentData, expiryDate: e.target.value })}
-                      className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                        errors.expiryDate ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                      }`}
-                      placeholder="MM/YY"
-                      maxLength={5}
-                    />
-                    {errors.expiryDate && <p className="mt-1 text-sm text-red-400">{errors.expiryDate}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                      CVV *
-                    </label>
-                    <Input
-                      type="text"
-                      value={paymentData.cvv}
-                      onChange={(e) => setPaymentData({ ...paymentData, cvv: e.target.value })}
-                      className={`bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff] ${
-                        errors.cvv ? "border-red-400 focus:border-red-400 focus:ring-red-400" : ""
-                      }`}
-                      placeholder="123"
-                      maxLength={4}
-                    />
-                    {errors.cvv && <p className="mt-1 text-sm text-red-400">{errors.cvv}</p>}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-[#999] pt-2">
-                  <Lock className="h-4 w-4" />
-                  <span>Your payment information is secure and encrypted</span>
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={handleBack}
-                    className="border-[#1a1a1a] text-[#e5e5e5] hover:border-[#00bfff]/50 hover:text-[#00bfff] bg-transparent"
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handleNext}
-                    className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] transition-all duration-300 border-0"
-                  >
-                    Review Order
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Review */}
-            {currentStep === 3 && (
-              <div className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 space-y-6">
-                <h2 className="text-xl font-bold uppercase tracking-wide text-[#e5e5e5] mb-6">
-                  Review Your Order
-                </h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">Shipping Address</h3>
-                    <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg p-4 text-[#e5e5e5]">
-                      <p>{shippingData.firstName} {shippingData.lastName}</p>
-                      <p>{shippingData.address}</p>
-                      <p>{shippingData.city}, {shippingData.state} {shippingData.postalCode}</p>
-                      <p>{shippingData.country}</p>
-                      <p className="mt-2 text-[#999]">{shippingData.email}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">Payment Method</h3>
-                    <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg p-4 text-[#e5e5e5]">
-                      <p>**** **** **** {paymentData.cardNumber.slice(-4)}</p>
-                      <p>{paymentData.cardName}</p>
-                      <p>Expires: {paymentData.expiryDate}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-between pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={handleBack}
-                    className="border-[#1a1a1a] text-[#e5e5e5] hover:border-[#00bfff]/50 hover:text-[#00bfff] bg-transparent"
-                  >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
-                  </Button>
-                  <Button
-                    onClick={handleCheckout}
-                    disabled={ordering}
-                    className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_30px_rgba(0,191,255,0.6)] transition-all duration-300 border-0 disabled:opacity-50"
-                  >
-                    {ordering ? "Processing..." : "Place Order"}
-                    <Lock className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
+          <div className="border-t mt-4 pt-4 text-sm">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>₹{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Tax</span>
+              <span>₹{tax.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between font-bold mt-2">
+              <span>Total</span>
+              <span>₹{total.toFixed(2)}</span>
+            </div>
           </div>
 
-          {/* Order Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 backdrop-blur-xl">
-              <h2 className="text-xl font-bold uppercase tracking-wide text-[#e5e5e5] mb-6">
-                Order Summary
-              </h2>
-
-              {/* Cart Items */}
-              <div className="space-y-4 mb-6 max-h-64 overflow-y-auto">
-                {cart.items.map((item: any) => {
-                  const productName = item.product?.name || `Product #${item.productId}`;
-                  const productImage = item.product?.designImageURL || "/placeholder.svg";
-                  const variantSize = item.variant?.size || "N/A";
-                  const variantColor = item.variant?.color || null;
-                  
-                  return (
-                    <div key={item.id} className="flex gap-3">
-                      <div className="relative h-16 w-16 rounded-lg overflow-hidden bg-[#0f0f0f] flex-shrink-0">
-                        <Image
-                          src={productImage}
-                          alt={productName}
-                          fill
-                          className="object-cover"
-                          sizes="64px"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-[#e5e5e5] truncate">{productName}</p>
-                        <p className="text-xs text-[#999]">
-                          {variantSize !== "N/A" && `Size: ${variantSize}`}
-                          {variantColor && ` • ${variantColor}`}
-                        </p>
-                        <p className="text-xs text-[#999]">Qty: {item.quantity}</p>
-                        <p className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
-                          ₹{(item.unitPrice * item.quantity).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Promo Code */}
-              <div className="mb-6 pb-6 border-b border-[#1a1a1a]">
-                <label className="block text-sm font-semibold uppercase tracking-wide text-[#999] mb-2">
-                  Promo Code
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    value={promoInput}
-                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                    placeholder="Enter code"
-                    disabled={appliedPromo !== null}
-                    className="flex-1 bg-[#0f0f0f] border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] focus:border-[#00bfff] focus:ring-[#00bfff]"
-                  />
-                  {appliedPromo ? (
-                    <Button
-                      onClick={() => {
-                        setAppliedPromo(null);
-                        setDiscount(0);
-                        setPromoInput("");
-                      }}
-                      className="bg-red-400/20 border border-red-400/50 text-red-400 hover:bg-red-400/30"
-                    >
-                      Remove
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={handleApplyPromo}
-                      disabled={validating}
-                      className="bg-[#1a1a1a] border border-[#1a1a1a] text-[#e5e5e5] hover:bg-[#00bfff] hover:text-white hover:border-[#00bfff]"
-                    >
-                      {validating ? "..." : "Apply"}
-                    </Button>
-                  )}
-                </div>
-                {promoError && <p className="mt-2 text-sm text-red-400">{promoError}</p>}
-                {appliedPromo && <p className="mt-2 text-sm text-[#00bfff]">✓ Code applied!</p>}
-              </div>
-
-              {/* Price Breakdown */}
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-[#999]">
-                  <span>Subtotal</span>
-                  <span className="text-[#e5e5e5]">₹{subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-[#999]">
-                  <span>Shipping</span>
-                  <span className="text-[#e5e5e5]">
-                    {shipping === 0 ? <span className="text-[#00bfff]">Free</span> : `₹${shipping.toFixed(2)}`}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[#999]">
-                  <span>Tax</span>
-                  <span className="text-[#e5e5e5]">₹{tax.toFixed(2)}</span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-[#00bfff]">
-                    <span>Discount ({appliedPromo})</span>
-                    <span>-₹{discount.toFixed(2)}</span>
-                  </div>
-                )}
-                <div className="border-t border-[#1a1a1a] pt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-[#e5e5e5]">Total</span>
-                    <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
-                      ₹{finalTotal.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center text-xs text-[#666] space-y-1">
-                <p className="flex items-center justify-center gap-1">
-                  <Lock className="h-3 w-3" />
-                  Secure SSL encrypted checkout
-                </p>
-              </div>
-            </div>
+          <div className="flex justify-center mt-4 text-xs gap-2">
+            <Lock className="h-3 w-3" /> Secure Payment
           </div>
         </div>
       </div>

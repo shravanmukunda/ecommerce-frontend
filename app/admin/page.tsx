@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 
 import type { Product } from "@/lib/types"
-import Link from "next/link"
 import { OverviewCards } from "@/components/admin/overview-cards"
 import { SalesChart } from "@/components/admin/sales-chart"
 import { RevenueChart } from "@/components/admin/revenue-chart"
@@ -185,16 +184,16 @@ export default function AdminDashboardPage() {
   }
   
   // Handle error states
-  if (productsError || ordersError) {
-    console.error('Products error:', productsError)
-    console.error('Orders error:', ordersError)
+  if (productsError?.message || ordersError?.message) {
+    console.error('Products error:', productsError?.message)
+    console.error('Orders error:', ordersError?.message)
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold">Error loading dashboard data.</p>
           <p className="text-gray-600 mt-2">Please try again later.</p>
-          {productsError && <p className="text-red-500 mt-2">Products Error: {productsError.message}</p>}
-          {ordersError && <p className="text-red-500 mt-2">Orders Error: {ordersError.message}</p>}
+          {productsError?.message && <p className="text-red-500 mt-2">Products Error: {productsError.message}</p>}
+          {ordersError?.message && <p className="text-red-500 mt-2">Orders Error: {ordersError.message}</p>}
         </div>
       </div>
     )

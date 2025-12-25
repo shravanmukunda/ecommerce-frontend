@@ -1,33 +1,72 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@apollo/client/react";
 import { Lock } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useCart } from "@/src/hooks/use-cart";
-import { useMutation } from "@apollo/client/react";
-import { CREATE_ORDER } from "@/graphql/orders";
-import { useRouter } from "next/navigation";
+
+import { useCart } from "@/hooks/use-cart";
+import { useRazorpay } from "@/hooks/use-razorpay";
+
+import {
+  CREATE_ORDER,
+  CREATE_RAZORPAY_ORDER,
+  VERIFY_PAYMENT,
+} from "@/graphql/orders";
+
+/* =======================
+   GraphQL Response Types
+   ======================= */
+
+interface CreateOrderResponse {
+  createOrder: {
+    id: string;
+  };
+}
+
+interface CreateRazorpayOrderResponse {
+  createRazorpayOrder: {
+    id: string;
+    amount: number;
+    currency: string;
+  };
+}
+
+interface VerifyPaymentResponse {
+  verifyPayment: boolean;
+}
 
 export default function CheckoutPage() {
-  const [step, setStep] = useState(1);
-  const { cart, loading: cartLoading, error: cartError, clearCart } = useCart();
   const router = useRouter();
-  const [createOrder, { loading }] = useMutation(CREATE_ORDER);
+  const { cart, loading: cartLoading, clearCart } = useCart();
+  const { openRazorpay } = useRazorpay();
 
-  // Log cart state for debugging
-  console.log("Cart state:", { cart, cartLoading, cartError });
+  const [step, setStep] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Define the type for the createOrder response
-  interface CreateOrderResponse {
-    createOrder: {
-      id: string;
-      // Add other fields as needed
-    };
-  }
+  /* =======================
+     GraphQL Mutations
+     ======================= */
+
+  const [createOrder] =
+    useMutation<CreateOrderResponse>(CREATE_ORDER);
+
+  const [createRazorpayOrder] =
+    useMutation<CreateRazorpayOrderResponse>(CREATE_RAZORPAY_ORDER);
+
+  const [verifyPayment] =
+    useMutation<VerifyPaymentResponse>(VERIFY_PAYMENT);
+
+  /* =======================
+     Form State (phone added)
+     ======================= */
 
   const [formData, setFormData] = useState({
     email: "",
+    phone: "",
     firstName: "",
     lastName: "",
     address: "",
@@ -36,40 +75,88 @@ export default function CheckoutPage() {
     country: "",
   });
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const orderItems = cart?.items || [];
 
   const subtotal = orderItems.reduce(
     (sum: number, item: any) => sum + item.unitPrice * item.quantity,
     0
   );
-
   const tax = subtotal * 0.08;
   const total = subtotal + tax;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  /* =======================
+     Checkout Handler
+     ======================= */
 
   const handleCheckout = async () => {
     try {
-      const res = await createOrder({
+      setIsProcessing(true);
+
+      // 1️⃣ Create DB Order (PENDING)
+      const orderRes = await createOrder({
         variables: {
           input: {
             shippingAddress: `${formData.firstName} ${formData.lastName}, ${formData.address}, ${formData.city}, ${formData.country} - ${formData.postalCode}`,
           },
         },
-      }) as { data: CreateOrderResponse };
+      });
 
-      // Pass the cart ID to clearCart function
-      if (cart?.id) {
-        clearCart(cart.id);
-      }
-      router.push("/order-success?orderId=" + res.data.createOrder.id);
+      const orderId = orderRes.data!.createOrder.id;
+
+      // 2️⃣ Create Razorpay Order
+      const rpRes = await createRazorpayOrder({
+        variables: { orderID: orderId },
+      });
+
+      const razorpayOrder = rpRes.data!.createRazorpayOrder;
+
+      // 3️⃣ Open Razorpay Checkout
+      openRazorpay({
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        order_id: razorpayOrder.id,
+        name: "AuraGaze",
+        description: "Order Payment",
+
+        handler: async function (response: any) {
+          console.log("Razorpay payment successful");
+          if (cart?.id) {
+            clearCart(cart.id).catch(err => console.error("Cart clear failed", err));
+          }
+          router.push(`/order-success?orderId=${orderId}`);
+        },
+
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+          },
+        },
+
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone,
+        },
+
+        theme: {
+          color: "#000000",
+        },
+      });
     } catch (error) {
       console.error("Checkout failed", error);
       alert("Checkout failed. Please try again.");
+      setIsProcessing(false);
     }
   };
+
+  /* =======================
+     UI States
+     ======================= */
 
   if (cartLoading) {
     return (
@@ -79,67 +166,74 @@ export default function CheckoutPage() {
     );
   }
 
-  if (cartError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Error loading cart</h1>
-          <p className="text-gray-600 mb-4">{cartError.message}</p>
-          <Button onClick={() => router.push("/shop")}>Back to Shop</Button>
-        </div>
-      </div>
-    );
-  }
-
   if (!orderItems.length) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty.</h1>
-          <Button onClick={() => router.push("/shop")}>Continue Shopping</Button>
-        </div>
+        <h1 className="text-2xl font-bold">Your cart is empty</h1>
       </div>
     );
   }
 
+  /* =======================
+     UI
+     ======================= */
+
   return (
     <div className="min-h-screen pt-16 lg:pt-20">
-      {/* Hero */}
       <section className="bg-black py-8 text-white text-center">
-        <h1 className="text-4xl md:text-6xl font-black uppercase">Secure Checkout</h1>
+        <h1 className="text-4xl md:text-6xl font-black uppercase">
+          Secure Checkout
+        </h1>
         <div className="mt-2 flex justify-center items-center gap-2 text-sm">
-          <Lock className="h-4 w-4" />
-          SSL Encrypted
+          <Lock className="h-4 w-4" /> SSL Encrypted
         </div>
       </section>
 
       <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* LEFT FORM */}
+        {/* LEFT */}
         <div className="lg:col-span-2">
           {step === 1 && (
             <>
-              <h2 className="mb-4 text-2xl font-black uppercase">Contact Information</h2>
+              <h2 className="mb-4 text-2xl font-black uppercase">
+                Contact Information
+              </h2>
               <Input name="email" placeholder="Email" onChange={handleInputChange} />
+              <Input
+                name="phone"
+                placeholder="Phone Number"
+                className="mt-4"
+                onChange={handleInputChange}
+              />
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <Input name="firstName" placeholder="First Name" onChange={handleInputChange} />
                 <Input name="lastName" placeholder="Last Name" onChange={handleInputChange} />
               </div>
-              <Button className="mt-6" onClick={() => setStep(2)}>Continue</Button>
+              <Button className="mt-6" onClick={() => setStep(2)}>
+                Continue
+              </Button>
             </>
           )}
 
           {step === 2 && (
             <>
-              <h2 className="mb-4 text-2xl font-black uppercase">Shipping Address</h2>
+              <h2 className="mb-4 text-2xl font-black uppercase">
+                Shipping Address
+              </h2>
               <Input name="address" placeholder="Address" onChange={handleInputChange} />
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <Input name="city" placeholder="City" onChange={handleInputChange} />
                 <Input name="postalCode" placeholder="Postal Code" onChange={handleInputChange} />
               </div>
-              <Input name="country" placeholder="Country" className="mt-4" onChange={handleInputChange} />
-              
+              <Input
+                name="country"
+                placeholder="Country"
+                className="mt-4"
+                onChange={handleInputChange}
+              />
               <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
                 <Button onClick={() => setStep(3)}>Continue</Button>
               </div>
             </>
@@ -147,25 +241,30 @@ export default function CheckoutPage() {
 
           {step === 3 && (
             <>
-              <h2 className="mb-4 text-2xl font-black uppercase">Confirm Order</h2>
+              <h2 className="mb-4 text-2xl font-black uppercase">
+                Confirm & Pay
+              </h2>
               <Button
-                disabled={loading}
+                disabled={isProcessing}
                 onClick={handleCheckout}
                 className="bg-black text-white w-full"
               >
-                {loading ? "Placing Order..." : "Place Order"}
+                {isProcessing ? "Processing..." : "Pay Now"}
               </Button>
             </>
           )}
         </div>
 
-        {/* RIGHT SUMMARY */}
+        {/* RIGHT */}
         <div className="bg-gray-50 p-8 rounded">
           <h2 className="mb-6 text-xl font-bold">Order Summary</h2>
+
           {orderItems.map((item: any) => (
             <div key={item.id} className="flex justify-between mb-2 text-sm">
-              <span>{item.product?.name || "Item"} × {item.quantity}</span>
-              <span>₹{(item.quantity * item.unitPrice).toFixed(2)}</span>
+              <span>
+                {item.product?.name} × {item.quantity}
+              </span>
+              <span>₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
             </div>
           ))}
 

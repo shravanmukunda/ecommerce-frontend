@@ -4,7 +4,7 @@ export const GET_CART = gql`
   query GetCart($cartId: ID, $forUser: Boolean) {
     getCart(cartId: $cartId, forUser: $forUser) {
       id
-      userID
+      userId
       totalAmount
       items {
         id
