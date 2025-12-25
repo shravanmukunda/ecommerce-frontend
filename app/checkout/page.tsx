@@ -8,7 +8,7 @@ import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { useCart } from "@/hooks/use-cart";
+import { useCart } from "@/src/hooks/use-cart";
 import { useRazorpay } from "@/hooks/use-razorpay";
 
 import {
@@ -67,9 +67,40 @@ export default function CheckoutPage() {
   const total = subtotal + tax;
 
   const handleCheckout = async () => {
+    // Validate required fields
+    if (!formData.email || !formData.phone || !formData.firstName || !formData.lastName) {
+      alert("Please fill in all contact information fields.");
+      setStep(1);
+      return;
+    }
+
+    if (!formData.address || !formData.city || !formData.postalCode || !formData.country) {
+      alert("Please fill in all shipping address fields.");
+      setStep(2);
+      return;
+    }
+
+    // Validate cart
+    if (!cart || !cart.items || cart.items.length === 0) {
+      alert("Your cart is empty. Please add items to your cart before checkout.");
+      router.push("/cart");
+      return;
+    }
+
+    // Check Razorpay key
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+      alert("Payment gateway is not configured. Please contact support.");
+      setIsProcessing(false);
+      return;
+    }
+
     try {
       setIsProcessing(true);
 
+      console.log("🛒 Creating order with cart:", cart.id);
+      console.log("📦 Cart items:", cart.items.length);
+
+      // Step 1: Create order
       const orderRes = await createOrder({
         variables: {
           input: {
@@ -78,14 +109,26 @@ export default function CheckoutPage() {
         },
       });
 
-      const orderId = orderRes.data!.createOrder.id;
+      if (!orderRes.data?.createOrder?.id) {
+        throw new Error("Failed to create order: No order ID returned");
+      }
 
+      const orderId = orderRes.data.createOrder.id;
+      console.log("✅ Order created:", orderId);
+
+      // Step 2: Create Razorpay order
       const rpRes = await createRazorpayOrder({
         variables: { orderID: orderId },
       });
 
-      const razorpayOrder = rpRes.data!.createRazorpayOrder;
+      if (!rpRes.data?.createRazorpayOrder) {
+        throw new Error("Failed to create Razorpay order");
+      }
 
+      const razorpayOrder = rpRes.data.createRazorpayOrder;
+      console.log("✅ Razorpay order created:", razorpayOrder.id);
+
+      // Step 3: Open Razorpay checkout
       openRazorpay({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: razorpayOrder.amount,
@@ -95,7 +138,7 @@ export default function CheckoutPage() {
         description: "Order Payment",
 
         handler: async function (response: any) {
-          console.log("Razorpay payment successful");
+          console.log("✅ Razorpay payment successful:", response);
           if (cart?.id) {
             clearCart(cart.id).catch(err => console.error("Cart clear failed", err));
           }
@@ -104,6 +147,7 @@ export default function CheckoutPage() {
 
         modal: {
           ondismiss: () => {
+            console.log("❌ Razorpay modal dismissed");
             setIsProcessing(false);
           },
         },
@@ -118,9 +162,22 @@ export default function CheckoutPage() {
           color: "#000000",
         },
       });
-    } catch (error) {
-      console.error("Checkout failed", error);
-      alert("Checkout failed. Please try again.");
+    } catch (error: any) {
+      console.error("❌ Checkout failed:", error);
+      
+      // Extract error message
+      let errorMessage = "Checkout failed. Please try again.";
+      
+      if (error?.graphQLErrors && error.graphQLErrors.length > 0) {
+        errorMessage = error.graphQLErrors[0].message || errorMessage;
+      } else if (error?.networkError) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      // Show detailed error
+      alert(`Checkout failed: ${errorMessage}\n\nPlease check the console for more details.`);
       setIsProcessing(false);
     }
   };
