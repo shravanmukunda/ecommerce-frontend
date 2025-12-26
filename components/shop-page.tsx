@@ -38,6 +38,7 @@ export function ShopPage() {
       images: images,
       description: product.description,
       category: product.category,
+      limitedEdition: product.limitedEdition || false,
     }
   }) || []
 

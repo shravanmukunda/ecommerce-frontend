@@ -63,6 +63,7 @@ interface Product {
   weight: number
   careInstructions: string
   featured: boolean
+  limitedEdition?: boolean
   variants: ProductVariant[]
   createdAt: string
 }
@@ -144,7 +145,8 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
     fit: "",
     weight: "",
     careInstructions: "",
-    featured: false
+    featured: false,
+    limitedEdition: false
   })
 
   const [selectedSizes, setSelectedSizes] = useState<string[]>([])
@@ -178,7 +180,8 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
         fit: p.fit || "",
         weight: p.weight?.toString() || "",
         careInstructions: p.careInstructions || "",
-        featured: p.featured || false
+        featured: p.featured || false,
+        limitedEdition: p.limitedEdition || false
       })
 
       // Extract unique sizes and colors from variants
@@ -412,7 +415,8 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
         designImageURL: images[0] || formData.designImageURL, // Keep for backward compatibility
         imageURLs: images, // New field for multiple images
         basePrice: parseFloat(formData.basePrice),
-        featured: formData.featured || false
+        featured: formData.featured || false,
+        limitedEdition: formData.limitedEdition || false
       }
       
       // Only add optional fields if they have values
@@ -707,17 +711,31 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
             />
           </div>
 
-          <div className="flex items-center space-x-2 pt-8">
-            <Checkbox
-              id="featured"
-              checked={formData.featured}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, featured: checked as boolean }))
-              }
-            />
-            <Label htmlFor="featured" className="cursor-pointer">
-              Featured Product
-            </Label>
+          <div className="flex items-center space-x-6 pt-8">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="featured"
+                checked={formData.featured}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, featured: checked as boolean }))
+                }
+              />
+              <Label htmlFor="featured" className="cursor-pointer">
+                Featured Product
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="limitedEdition"
+                checked={formData.limitedEdition}
+                onCheckedChange={(checked) => 
+                  setFormData(prev => ({ ...prev, limitedEdition: checked as boolean }))
+                }
+              />
+              <Label htmlFor="limitedEdition" className="cursor-pointer">
+                Limited Edition
+              </Label>
+            </div>
           </div>
         </div>
 

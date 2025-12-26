@@ -32,19 +32,26 @@ interface ProductData {
   imageURLs?: string[]; // Optional for backward compatibility
   basePrice: number;
   isActive: boolean;
+  limitedEdition?: boolean;
   variants: ProductVariant[];
 }
 
 interface OrderItem {
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    image: string;
-  };
+  variant?: {
+    id?: string;
+    size?: string;
+    color?: string;
+    sku?: string;
+    price?: number;
+    product?: {
+      id: string;
+      name: string;
+      designImageURL?: string;
+    } | null;
+  } | null;
   quantity: number;
-  size: string;
-  color: string;
+  unitPrice: number;
+  subtotal: number;
 }
 
 interface OrderData {
@@ -77,8 +84,10 @@ export default function AdminDashboardPage() {
   // Fetch products from API
   const { data: productsData, loading: productsLoading, error: productsError, refetch: refetchProducts } = useQuery<{ products: ProductData[] }>(GET_PRODUCTS)
   
-  // Fetch orders from API
-  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<OrdersResponse>(ALL_ORDERS)
+  // Fetch orders from API with error policy to allow partial data
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<OrdersResponse>(ALL_ORDERS, {
+    errorPolicy: 'all' // Allow partial data even if some fields fail
+  })
   
   // Update products state when data is fetched
   useEffect(() => {
@@ -96,6 +105,7 @@ export default function AdminDashboardPage() {
           price: product.basePrice,
           image: images[0] || product.designImageURL || "/placeholder.svg",
           images: images,
+          limitedEdition: product.limitedEdition || false,
           // Other properties will use defaults from the Product interface
         }
       })
@@ -106,23 +116,32 @@ export default function AdminDashboardPage() {
   // Update orders state when data is fetched
   useEffect(() => {
     if (ordersData && ordersData.allOrders) {
+      // Filter out orders with items that have null products, and filter out undefined/null orders
+      const validOrders = ordersData.allOrders
+        .filter((order): order is OrderData => order != null && order.id != null)
+        .filter(order => {
+          // Check if all items have valid products
+          if (!order.items || order.items.length === 0) return true
+          return order.items.every(item => item?.variant?.product != null)
+        })
+      
       // Transform orders to match component expectations
-      const transformedOrders: TransformedOrder[] = ordersData.allOrders.map(order => {
+      const transformedOrders: TransformedOrder[] = validOrders.map(order => {
         // Extract customer name from shipping address or use placeholder
         const customerName = order.shippingAddress || "Customer"
         
         return {
-          id: order.id,
+          id: order.id!,
           customer: customerName,
-          date: new Date(order.createdAt).toLocaleDateString(),
-          amount: order.totalAmount,
-          status: mapOrderStatus(order.status)
+          date: new Date(order.createdAt || Date.now()).toLocaleDateString(),
+          amount: order.totalAmount || 0,
+          status: mapOrderStatus(order.status || "Pending")
         }
       })
       setOrders(transformedOrders)
       
-      // Generate sales data from orders for charts
-      const salesByMonth = generateMonthlySalesData(ordersData.allOrders)
+      // Generate sales data from valid orders for charts
+      const salesByMonth = generateMonthlySalesData(validOrders)
       setSalesData(salesByMonth)
     }
   }, [ordersData])
@@ -183,8 +202,10 @@ export default function AdminDashboardPage() {
     )
   }
   
-  // Handle error states
-  if (productsError?.message || ordersError?.message) {
+  // Handle error states - but allow partial data to be displayed
+  const hasCriticalError = (productsError && !productsData) || (ordersError && !ordersData)
+  
+  if (hasCriticalError) {
     console.error('Products error:', productsError?.message)
     console.error('Orders error:', ordersError?.message)
     return (
@@ -193,7 +214,14 @@ export default function AdminDashboardPage() {
           <p className="text-lg font-semibold">Error loading dashboard data.</p>
           <p className="text-gray-600 mt-2">Please try again later.</p>
           {productsError?.message && <p className="text-red-500 mt-2">Products Error: {productsError.message}</p>}
-          {ordersError?.message && <p className="text-red-500 mt-2">Orders Error: {ordersError.message}</p>}
+          {ordersError?.message && (
+            <p className="text-red-500 mt-2">
+              Orders Error: {ordersError.message}
+              {ordersError.message.includes('null') || ordersError.message.includes('product') 
+                ? " (Some orders may have items with deleted products)"
+                : ""}
+            </p>
+          )}
         </div>
       </div>
     )
@@ -206,6 +234,18 @@ export default function AdminDashboardPage() {
         <h1 className="text-3xl font-black uppercase tracking-tight">Admin Dashboard</h1>
         <p className="text-gray-600 mt-2">Manage your store performance and products</p>
       </div>
+      
+      {/* Warning banner if there are errors but partial data */}
+      {((productsError || ordersError) && (productsData || ordersData)) && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+          <p className="text-sm text-yellow-800">
+            <strong>Warning:</strong> Some data may not be fully loaded. 
+            {ordersError?.message?.includes('null') || ordersError?.message?.includes('product') 
+              ? " Some orders have items with deleted products and were filtered out."
+              : " Please refresh the page if you notice missing information."}
+          </p>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <OverviewCards 

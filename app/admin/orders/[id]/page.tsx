@@ -18,14 +18,14 @@ interface Variant {
   size: string
   color?: string
   price: number
-  product: Product
+  product: Product | null
 }
 
 interface OrderItem {
   quantity: number
   unitPrice: number
   subtotal: number
-  variant: Variant
+  variant: Variant | null
 }
 
 interface Address {
@@ -103,11 +103,16 @@ async function getOrder(id: string): Promise<Order | null> {
       query: GET_ORDER,
       variables: { id },
       fetchPolicy: "no-cache",
+      errorPolicy: "all", // Allow partial data even if some fields fail
     })
 
     return data?.order ?? null
   } catch (err) {
     console.error("Order fetch failed:", err)
+    // If error is about null products, try to return partial data
+    if (err instanceof Error && (err.message.includes('null') || err.message.includes('product'))) {
+      console.warn("Some order items may have null products - attempting to return partial data")
+    }
     return null
   }
 }
@@ -205,21 +210,21 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
           <CardTitle>Items</CardTitle>
         </CardHeader>
         <CardContent>
-          {order.items.map((item, index) => (
+          {order.items.filter(item => item.variant?.product != null).map((item, index) => (
             <div key={index} className="flex items-center border-b pb-4 mb-4 last:border-0">
 
               <div className="w-16 h-16 bg-gray-200 rounded-md overflow-hidden">
                 <img
-                  src={item.variant.product.designImageURL || "/placeholder.svg"}
-                  alt={item.variant.product.name}
+                  src={item.variant?.product?.designImageURL || "/placeholder.svg"}
+                  alt={item.variant?.product?.name || "Product"}
                   className="w-full h-full object-cover"
                 />
               </div>
 
               <div className="ml-4 flex-grow">
-                <p className="font-semibold">{item.variant.product.name}</p>
+                <p className="font-semibold">{item.variant?.product?.name || "Product Unavailable"}</p>
                 <p className="text-sm text-gray-500">
-                  Size: {item.variant.size} | Color: {item.variant.color || "N/A"}
+                  Size: {item.variant?.size || "N/A"} | Color: {item.variant?.color || "N/A"}
                 </p>
               </div>
 
@@ -230,6 +235,13 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
 
             </div>
           ))}
+          {order.items.filter(item => item.variant?.product == null).length > 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-yellow-800">
+                {order.items.filter(item => item.variant?.product == null).length} item(s) could not be loaded (product may have been deleted).
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -9,4 +9,5 @@ export interface Product {
   size?: string
   color?: string
   category?: string
+  limitedEdition?: boolean
 }

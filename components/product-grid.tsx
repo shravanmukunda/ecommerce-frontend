@@ -34,6 +34,7 @@ export function ProductGrid() {
       hoverImage: images[1] || null, // Use second image as hover image if available
       images: images,
       description: product.description,
+      limitedEdition: product.limitedEdition || false,
     }
   }) || []
 

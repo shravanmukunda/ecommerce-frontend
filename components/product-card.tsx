@@ -78,6 +78,11 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
             className="object-cover transition-all duration-500 group-hover:opacity-90"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          {product.limitedEdition && (
+            <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-sm shadow-lg z-10">
+              Limited Edition
+            </div>
+          )}
         </Link>
         <div className="flex-1 p-6 flex flex-col justify-between">
           <div>
@@ -139,6 +144,11 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
             className="object-cover transition-all duration-500 group-hover:opacity-90"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
+          {product.limitedEdition && (
+            <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-amber-600 text-black text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-sm shadow-lg z-10">
+              Limited Edition
+            </div>
+          )}
         </div>
       </Link>
 

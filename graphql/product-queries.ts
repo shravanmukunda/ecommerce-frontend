@@ -19,6 +19,7 @@ export const GET_PRODUCTS = gql`
       careInstructions
       weight
       featured
+      limitedEdition
       variants {
         id
         size
@@ -57,6 +58,7 @@ export const GET_PRODUCT = gql`
       careInstructions
       weight
       featured
+      limitedEdition
       variants {
         id
         size
