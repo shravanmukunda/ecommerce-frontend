@@ -37,12 +37,6 @@ export default function DashboardHomePage() {
       icon: MapPin,
       description: "Add or edit shipping addresses.",
     },
-    {
-      name: "Payment Methods",
-      href: "/dashboard/wallet",
-      icon: CreditCard,
-      description: "Update your payment details.",
-    },
   ]
 
   return (

@@ -4,7 +4,7 @@ import { onError } from "@apollo/client/link/error";
 
 // Always read GraphQL URL from env
 const GRAPHQL_URL =
-  process.env.NEXT_PUBLIC_GRAPHQL_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:8081/query";
 
 const httpLink = new HttpLink({

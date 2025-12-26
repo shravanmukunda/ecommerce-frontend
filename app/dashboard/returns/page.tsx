@@ -1,157 +1,26 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Link from "next/link"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useQuery } from "@apollo/client/react"
-import { gql } from "@apollo/client"
-
-// Define TypeScript interfaces for our data
-interface ReturnableItem {
-  id: string;
-  name: string;
-  orderId: string;
-  price: number;
-  reason: string;
-}
-
-// GraphQL query for returnable items
-const GET_RETURNABLE_ITEMS = gql`
-  query GetReturnableItems {
-    # This would be implemented in a real application
-    # For now, we'll return an empty array
-    orders {
-      id
-      orderNumber
-      items {
-        product {
-          id
-          name
-        }
-        price
-      }
-    }
-  }
-`
 
 export default function ReturnsExchangePage() {
-  const [returnableItems, setReturnableItems] = useState<ReturnableItem[]>([])
-  const [selectedItem, setSelectedItem] = useState<string>("")
-  const [returnReason, setReturnReason] = useState("")
-  const [returnType, setReturnType] = useState<"return" | "exchange">("return")
-  const [message, setMessage] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  // In a real application, you would fetch returnable items from the API
-  // const { data, loading, error } = useQuery(GET_RETURNABLE_ITEMS)
-  
-  // For now, we'll initialize with an empty array
-  useEffect(() => {
-    setReturnableItems([])
-  }, [])
-
-  const handleSubmitReturn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setMessage("")
-    setIsSubmitting(true)
-
-    if (!selectedItem || !returnReason) {
-      setMessage("Please select an item and provide a reason.")
-      setIsSubmitting(false)
-      return
-    }
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    setMessage(`Your ${returnType} request for ${selectedItem} has been submitted successfully!`)
-    setSelectedItem("")
-    setReturnReason("")
-    setIsSubmitting(false)
-  }
-
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-black uppercase tracking-wider">Returns / Exchange</h1>
+      <h1 className="text-2xl md:text-3xl font-black uppercase tracking-wider text-white break-words whitespace-normal">Returns / Exchange</h1>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-bold uppercase tracking-wide">Initiate a New Request</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmitReturn} className="space-y-6">
-            <div>
-              <label htmlFor="returnType" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
-                Request Type
-              </label>
-              <Select value={returnType} onValueChange={(value: "return" | "exchange") => setReturnType(value)}>
-                <SelectTrigger className="w-full border-black text-black">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="return">Return</SelectItem>
-                  <SelectItem value="exchange">Exchange</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label htmlFor="itemSelect" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
-                Select Item to {returnType === "return" ? "Return" : "Exchange"}
-              </label>
-              <Select value={selectedItem} onValueChange={setSelectedItem}>
-                <SelectTrigger className="w-full border-black text-black">
-                  <SelectValue placeholder="Choose an item from your past orders" />
-                </SelectTrigger>
-                <SelectContent>
-                  {returnableItems.map((item) => (
-                    <SelectItem key={item.id} value={item.name}>
-                      {item.name} (Order: {item.orderId})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label htmlFor="reason" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
-                Reason for {returnType === "return" ? "Return" : "Exchange"}
-              </label>
-              <Textarea
-                id="reason"
-                placeholder="e.g., Too small, changed mind, defective item..."
-                value={returnReason}
-                onChange={(e) => setReturnReason(e.target.value)}
-                required
-                rows={4}
-                className="border-black focus:ring-black"
-              />
-            </div>
-
-            {message && <p className="text-sm text-center text-green-600">{message}</p>}
-
-            <Button
-              type="submit"
-              className="w-full bg-black text-white hover:bg-gray-800 disabled:opacity-50"
-              disabled={isSubmitting || !selectedItem || !returnReason}
-            >
-              {isSubmitting ? "Submitting..." : `Submit ${returnType === "return" ? "Return" : "Exchange"} Request`}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-bold uppercase tracking-wide">Your Recent Requests</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">No recent return or exchange requests found.</p>
-          {/* In a real app, you'd list past requests here */}
+      <Card className="bg-[#0f0f0f] border-[#1a1a1a]">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-6 py-8">
+            <p className="text-xl text-white leading-relaxed">
+              For any returns or exchanges, feel free to reach out. We're always here for you!
+            </p>
+            <Link href="/contact">
+              <Button className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] transition-all duration-300 border-0">
+                Contact Us
+              </Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
