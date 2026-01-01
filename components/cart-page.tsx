@@ -1,13 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Minus, Plus, X, ShoppingBag, ArrowRight, Trash2 } from "lucide-react"
+import { Minus, Plus, X, ShoppingBag, ArrowRight, Trash2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { useCart } from "@/src/hooks/use-cart"
 import { useRouter } from "next/navigation"
+import { useQuery } from "@apollo/client/react"
+import { GET_PRODUCT } from "@/graphql/product-queries"
+import { client as apolloClientInstance } from "@/lib/apolloClient"
 
 export function CartPage() {
   const { cart, loading, addToCart, removeItem, clearCart, updateQuantity } = useCart()
@@ -15,6 +18,70 @@ export function CartPage() {
   const [promoCode, setPromoCode] = useState("")
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
+  const [productInventoryMap, setProductInventoryMap] = useState<Map<string, any>>(new Map())
+
+  // Fetch product inventory data for all cart items
+  useEffect(() => {
+    if (!cart?.items || cart.items.length === 0) {
+      setProductInventoryMap(new Map())
+      return
+    }
+
+    const fetchInventoryData = async () => {
+      const map = new Map<string, any>()
+      
+      try {
+        const queries = cart.items.map((item: any) =>
+          apolloClientInstance.query({
+            query: GET_PRODUCT,
+            variables: { id: item.productId },
+            fetchPolicy: "cache-first",
+          })
+        )
+        
+        const results = await Promise.allSettled(queries)
+        results.forEach((result, index) => {
+          if (result.status === "fulfilled") {
+            const value = result.value as any
+            if (value?.data?.product) {
+              const product = value.data.product
+              const variant = product.variants?.find((v: any) => v.id === cart.items[index].variantId)
+              map.set(cart.items[index].id, {
+                availableQuantity: variant?.inventory?.availableQuantity ?? 0,
+                variant,
+              })
+            }
+          }
+        })
+      } catch (error) {
+        console.error("Error fetching inventory data:", error)
+      }
+      
+      setProductInventoryMap(map)
+    }
+
+    fetchInventoryData()
+  }, [cart?.items])
+
+  // Check if any cart items are out of stock
+  const hasOutOfStockItems = useMemo(() => {
+    if (!cart?.items) return false
+    return cart.items.some((item: any) => {
+      const inventory = productInventoryMap.get(item.id)
+      if (!inventory) return false
+      return inventory.availableQuantity < item.quantity
+    })
+  }, [cart?.items, productInventoryMap])
+
+  // Get out of stock items for display
+  const outOfStockItems = useMemo(() => {
+    if (!cart?.items) return []
+    return cart.items.filter((item: any) => {
+      const inventory = productInventoryMap.get(item.id)
+      if (!inventory) return false
+      return inventory.availableQuantity < item.quantity
+    })
+  }, [cart?.items, productInventoryMap])
 
   // Handle loading state
   if (loading) {
@@ -37,6 +104,10 @@ export function CartPage() {
   const total = subtotal + shipping + tax
 
   const handleCheckout = () => {
+    if (hasOutOfStockItems) {
+      alert("Some items in your cart are out of stock. Please remove them or adjust quantities before proceeding to checkout.")
+      return
+    }
     router.push("/checkout")
   }
 
@@ -98,15 +169,43 @@ export function CartPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Out of Stock Warning */}
+            {hasOutOfStockItems && (
+              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-red-400 font-semibold mb-1">Some items are out of stock</h3>
+                    <p className="text-red-300 text-sm">
+                      Please remove out-of-stock items or adjust quantities before proceeding to checkout.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {cartItems.map((item: any, index: number) => {
               const productName = item.product?.name || `Product #${item.productId}`
               const productImage = item.product?.designImageURL || "/placeholder.svg"
               const variantSize = item.variant?.size || "N/A"
               const variantColor = item.variant?.color || null
+              const inventory = productInventoryMap.get(item.id)
+              const isOutOfStock = inventory && inventory.availableQuantity < item.quantity
+              const availableQty = inventory?.availableQuantity ?? null
               
               return (
                 <ScrollReveal key={item.id} direction="up" delay={index * 100}>
-                  <div className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 hover:border-[#1a1a1a]/80 transition-all duration-300">
+                  <div className={`bg-[#121212] border rounded-xl p-6 transition-all duration-300 ${
+                    isOutOfStock 
+                      ? "border-red-500/50 bg-red-500/5" 
+                      : "border-[#1a1a1a] hover:border-[#1a1a1a]/80"
+                  }`}>
+                    {isOutOfStock && (
+                      <div className="mb-4 flex items-center gap-2 text-red-400 text-sm">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>Only {availableQty} available in stock</span>
+                      </div>
+                    )}
                     <div className="flex flex-col sm:flex-row gap-6">
                       {/* Product Image */}
                       <Link href={`/product/${item.productId}`} className="flex-shrink-0">
@@ -325,11 +424,11 @@ export function CartPage() {
                 {/* Checkout Button */}
                 <Button
                   onClick={handleCheckout}
-                  disabled={isCheckingOut || cartItems.length === 0}
+                  disabled={isCheckingOut || cartItems.length === 0 || hasOutOfStockItems}
                   size="lg"
                   className="w-full bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white py-6 text-lg font-bold uppercase tracking-wide hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_30px_rgba(0,191,255,0.6)] transition-all duration-300 border-0 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isCheckingOut ? "Processing..." : "Proceed to Checkout"}
+                  {isCheckingOut ? "Processing..." : hasOutOfStockItems ? "Cannot Checkout - Out of Stock Items" : "Proceed to Checkout"}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
 

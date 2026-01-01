@@ -3,9 +3,18 @@ import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
 
 // Always read GraphQL URL from env
+// NOTE: NEXT_PUBLIC_* variables are embedded at BUILD TIME in Next.js
+// You must rebuild/restart the dev server after changing this variable
+// Support both NEXT_PUBLIC_API_URL and NEXT_PUBLIC_GRAPHQL_URL for compatibility
 const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_GRAPHQL_URL ||
   "http://localhost:8081/query";
+
+// Log the URL being used (helps with debugging)
+console.log("🔗 GraphQL URL configured:", GRAPHQL_URL);
+console.log("🔗 NEXT_PUBLIC_API_URL from env:", process.env.NEXT_PUBLIC_API_URL || "NOT SET");
+console.log("🔗 NEXT_PUBLIC_GRAPHQL_URL from env:", process.env.NEXT_PUBLIC_GRAPHQL_URL || "NOT SET");
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_URL,

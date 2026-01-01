@@ -31,6 +31,16 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
   // Determine the current image based on hover state
   const currentImage = isHovered && product.hoverImage ? product.hoverImage : product.image
 
+  // Check if product is out of stock (all variants have no available quantity)
+  const isOutOfStock = () => {
+    if (!product.variants || product.variants.length === 0) return false
+    return product.variants.every(
+      (v) => v.inventory && (v.inventory.availableQuantity ?? 0) <= 0
+    )
+  }
+
+  const outOfStock = isOutOfStock()
+
   // Get first available variant for quick-add
   const getFirstAvailableVariant = () => {
     if (!product.variants || product.variants.length === 0) return null
@@ -83,6 +93,11 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
               Limited Edition
             </div>
           )}
+          {outOfStock && (
+            <div className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-sm shadow-lg z-10">
+              Out of Stock
+            </div>
+          )}
         </Link>
         <div className="flex-1 p-6 flex flex-col justify-between">
           <div>
@@ -94,6 +109,9 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
             <p className="mb-4 text-2xl font-light text-[#e5e5e5]">
               ₹{product.price}
             </p>
+            {outOfStock && (
+              <p className="text-red-400 text-sm mb-2 font-medium">This product is currently out of stock</p>
+            )}
             <p className="text-[#666] text-sm">Premium quality streetwear piece crafted with attention to detail.</p>
           </div>
           <div className="flex space-x-4 mt-4">
@@ -101,20 +119,22 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
               <Button
                 className="w-full bg-[#e5e5e5] text-[#0f0f0f] hover:bg-[#ccc] transition-all duration-300 border-0 text-sm font-light uppercase tracking-widest"
               >
-                Buy Now
+                View Details
               </Button>
             </Link>
             <Button
               variant="outline"
               onClick={handleQuickAddToCart}
-              disabled={isAddingToCart}
-              className="flex-1 border border-[#333] text-[#e5e5e5] hover:border-[#666] hover:bg-[#1a1a1a] transition-all duration-300 bg-transparent text-sm font-light uppercase tracking-widest"
+              disabled={isAddingToCart || outOfStock}
+              className="flex-1 border border-[#333] text-[#e5e5e5] hover:border-[#666] hover:bg-[#1a1a1a] transition-all duration-300 bg-transparent text-sm font-light uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isAddingToCart ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Adding...
                 </>
+              ) : outOfStock ? (
+                "Out of Stock"
               ) : (
                 <>
                   <ShoppingCart className="mr-2 h-4 w-4" />
@@ -149,6 +169,11 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
               Limited Edition
             </div>
           )}
+          {outOfStock && (
+            <div className="absolute top-3 right-3 bg-red-600 text-white text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-sm shadow-lg z-10">
+              Out of Stock
+            </div>
+          )}
         </div>
       </Link>
 
@@ -159,22 +184,27 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
             {product.name}
           </h3>
         </Link>
-        <p className="text-xl font-light text-[#e5e5e5] mb-4">
+        <p className="text-xl font-light text-[#e5e5e5] mb-2">
           ₹{product.price}
         </p>
+        {outOfStock && (
+          <p className="text-red-400 text-xs mb-4 font-medium">Out of Stock</p>
+        )}
 
         {/* Add to Cart Button - Appears on hover */}
         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Button
             onClick={handleQuickAddToCart}
-            disabled={isAddingToCart}
-            className="w-full bg-[#e5e5e5] text-[#0f0f0f] hover:bg-[#ccc] transition-all duration-300 border-0 text-sm font-light uppercase tracking-widest"
+            disabled={isAddingToCart || outOfStock}
+            className="w-full bg-[#e5e5e5] text-[#0f0f0f] hover:bg-[#ccc] transition-all duration-300 border-0 text-sm font-light uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isAddingToCart ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Adding...
               </>
+            ) : outOfStock ? (
+              "Out of Stock"
             ) : (
               <>
                 <ShoppingCart className="mr-2 h-4 w-4" />

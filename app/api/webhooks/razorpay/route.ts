@@ -140,7 +140,7 @@ async function handlePaymentFailure(payment: any) {
     );
 
     // Update order status in Go backend via GraphQL
-    const graphqlUrl = process.env.GRAPHQL_BACKEND_URL || "http://localhost:4000/query";
+    const graphqlUrl = process.env.GRAPHQL_BACKEND_URL || "http://localhost:8080/query";
     
     const mutation = `
       mutation VerifyPayment($input: VerifyPaymentInput!) {

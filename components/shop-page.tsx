@@ -39,6 +39,7 @@ export function ShopPage() {
       description: product.description,
       category: product.category,
       limitedEdition: product.limitedEdition || false,
+      variants: product.variants || [], // Include variants with inventory data
     }
   }) || []
 
