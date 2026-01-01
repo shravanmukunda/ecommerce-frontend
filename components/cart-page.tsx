@@ -35,7 +35,7 @@ export function CartPage() {
           apolloClientInstance.query({
             query: GET_PRODUCT,
             variables: { id: item.productId },
-            fetchPolicy: "cache-first",
+            fetchPolicy: "network-only", // Always fetch fresh data to get latest inventory
           })
         )
         
@@ -46,16 +46,39 @@ export function CartPage() {
             if (value?.data?.product) {
               const product = value.data.product
               const variant = product.variants?.find((v: any) => v.id === cart.items[index].variantId)
+              
+              // Debug logging
+              console.log(`🛒 Cart: Fetched inventory for item ${cart.items[index].id}:`, {
+                productId: cart.items[index].productId,
+                variantId: cart.items[index].variantId,
+                variant: variant,
+                hasInventory: !!variant?.inventory,
+                inventory: variant?.inventory,
+                availableQuantity: variant?.inventory?.availableQuantity,
+                stockQuantity: variant?.inventory?.stockQuantity,
+              })
+              
+              const availableQty = variant?.inventory?.availableQuantity ?? variant?.inventory?.stockQuantity ?? 0
+              
               map.set(cart.items[index].id, {
-                availableQuantity: variant?.inventory?.availableQuantity ?? 0,
+                availableQuantity: availableQty,
+                stockQuantity: variant?.inventory?.stockQuantity ?? 0,
                 variant,
               })
             }
+          } else {
+            console.error(`Failed to fetch inventory for item ${cart.items[index].id}:`, result)
           }
         })
       } catch (error) {
         console.error("Error fetching inventory data:", error)
       }
+      
+      console.log("🛒 Cart: Final inventory map:", Array.from(map.entries()).map(([id, data]) => ({
+        itemId: id,
+        availableQuantity: data.availableQuantity,
+        stockQuantity: data.stockQuantity
+      })))
       
       setProductInventoryMap(map)
     }
@@ -69,7 +92,9 @@ export function CartPage() {
     return cart.items.some((item: any) => {
       const inventory = productInventoryMap.get(item.id)
       if (!inventory) return false
-      return inventory.availableQuantity < item.quantity
+      // Use availableQuantity if available, otherwise fall back to stockQuantity
+      const availableQty = inventory.availableQuantity ?? inventory.stockQuantity ?? 0
+      return availableQty < item.quantity
     })
   }, [cart?.items, productInventoryMap])
 
@@ -79,7 +104,9 @@ export function CartPage() {
     return cart.items.filter((item: any) => {
       const inventory = productInventoryMap.get(item.id)
       if (!inventory) return false
-      return inventory.availableQuantity < item.quantity
+      // Use availableQuantity if available, otherwise fall back to stockQuantity
+      const availableQty = inventory.availableQuantity ?? inventory.stockQuantity ?? 0
+      return availableQty < item.quantity
     })
   }, [cart?.items, productInventoryMap])
 
@@ -190,8 +217,23 @@ export function CartPage() {
               const variantSize = item.variant?.size || "N/A"
               const variantColor = item.variant?.color || null
               const inventory = productInventoryMap.get(item.id)
-              const isOutOfStock = inventory && inventory.availableQuantity < item.quantity
-              const availableQty = inventory?.availableQuantity ?? null
+              
+              // Use availableQuantity if available, otherwise fall back to stockQuantity
+              const availableQty = inventory?.availableQuantity ?? inventory?.stockQuantity ?? null
+              const isOutOfStock = inventory && availableQty !== null && availableQty < item.quantity
+              
+              // Debug logging for this specific item
+              if (inventory) {
+                console.log(`🛒 Cart Item ${item.id} inventory check:`, {
+                  itemId: item.id,
+                  variantId: item.variantId,
+                  requestedQuantity: item.quantity,
+                  availableQuantity: inventory.availableQuantity,
+                  stockQuantity: inventory.stockQuantity,
+                  finalAvailableQty: availableQty,
+                  isOutOfStock,
+                })
+              }
               
               return (
                 <ScrollReveal key={item.id} direction="up" delay={index * 100}>
