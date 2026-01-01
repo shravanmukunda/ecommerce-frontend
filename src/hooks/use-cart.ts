@@ -12,6 +12,7 @@ import {
 import { GET_PRODUCT } from "@/graphql/product-queries";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { client as apolloClientInstance } from "@/lib/apolloClient";
 
 // Define types for our GraphQL responses
@@ -92,6 +93,7 @@ interface GetProductResponse {
 export const useCart = () => {
   // Use Clerk authentication
   const { isSignedIn } = useAuth();
+  const router = useRouter();
   const guestCartId =
     typeof window !== "undefined" ? localStorage.getItem("guest_cart_id") : null;
 
@@ -206,6 +208,16 @@ export const useCart = () => {
     variantId: string,
     quantity = 1
   ) => {
+    // Check if user is authenticated - redirect to login if not
+    if (!isSignedIn) {
+      // Get current full URL for redirect after login (preserves query params)
+      const currentUrl = typeof window !== "undefined" 
+        ? window.location.pathname + window.location.search 
+        : "/";
+      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+      return;
+    }
+
     // Validate inputs - ensure they exist and are not null/undefined
     if (productId == null || productId === "" || productId === "null" || productId === "undefined") {
       throw new Error("Invalid product ID");
