@@ -7,6 +7,7 @@ import {
   createApolloClient,
   setGetCurrentToken,
 } from "@/lib/apolloClient";
+import { PromoProvider } from "@/hooks/use-promo";
 
 // Create client once at module level
 const client = createApolloClient();
@@ -34,7 +35,9 @@ function ApolloAuthBridge({ children }: { children: ReactNode }) {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider>
-      <ApolloAuthBridge>{children}</ApolloAuthBridge>
+      <ApolloAuthBridge>
+        <PromoProvider>{children}</PromoProvider>
+      </ApolloAuthBridge>
     </ClerkProvider>
   );
 }

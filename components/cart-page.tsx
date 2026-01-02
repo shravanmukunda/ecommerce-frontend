@@ -11,14 +11,19 @@ import { useRouter } from "next/navigation"
 import { useQuery } from "@apollo/client/react"
 import { GET_PRODUCT } from "@/graphql/product-queries"
 import { client as apolloClientInstance } from "@/lib/apolloClient"
+import { usePromo } from "@/hooks/use-promo"
+import { VALIDATE_PROMO_CODE } from "@/graphql/promo"
 
 export function CartPage() {
   const { cart, loading, addToCart, removeItem, clearCart, updateQuantity } = useCart()
   const router = useRouter()
+  const { promo, setPromo } = usePromo()
   const [promoCode, setPromoCode] = useState("")
   const [isCheckingOut, setIsCheckingOut] = useState(false)
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set())
   const [productInventoryMap, setProductInventoryMap] = useState<Map<string, any>>(new Map())
+  const [promoError, setPromoError] = useState("")
+  const [promoLoading, setPromoLoading] = useState(false)
 
   // Fetch product inventory data for all cart items
   useEffect(() => {
@@ -86,6 +91,46 @@ export function CartPage() {
     fetchInventoryData()
   }, [cart?.items])
 
+  // Apply promo code handler
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoError("Please enter a promo code")
+      return
+    }
+
+    setPromoLoading(true)
+    setPromoError("")
+
+    try {
+      const { data } = await apolloClientInstance.query({
+        query: VALIDATE_PROMO_CODE,
+        variables: {
+          code: promoCode,
+          orderAmount: subtotal,
+        },
+        fetchPolicy: "no-cache",
+      })
+
+      const validateData = data as any
+      if (!validateData.validatePromoCode.isValid) {
+        setPromoError(validateData.validatePromoCode.message || "Invalid promo code")
+        return
+      }
+
+      setPromo({
+        code: promoCode,
+        discount: validateData.validatePromoCode.discountAmount,
+      })
+      setPromoCode("")
+      setPromoError("")
+    } catch (err) {
+      console.error("Error validating promo code:", err)
+      setPromoError("Failed to apply promo code")
+    } finally {
+      setPromoLoading(false)
+    }
+  }
+
   // Check if any cart items are out of stock
   const hasOutOfStockItems = useMemo(() => {
     if (!cart?.items) return false
@@ -128,7 +173,8 @@ export function CartPage() {
   const subtotal = cartItems.reduce((sum: number, item: any) => sum + item.unitPrice * item.quantity, 0)
   const shipping = subtotal > 100 ? 0 : 15
   const tax = subtotal * 0.08
-  const total = subtotal + shipping + tax
+  const finalTotal = subtotal + shipping + tax - promo.discount
+  const total = Math.max(finalTotal, 0) // Ensure total doesn't go negative
 
   const handleCheckout = () => {
     if (hasOutOfStockItems) {
@@ -433,6 +479,12 @@ export function CartPage() {
                     <span>Tax</span>
                     <span className="text-[#e5e5e5]">₹{tax.toFixed(2)}</span>
                   </div>
+                  {promo.discount > 0 && (
+                    <div className="flex justify-between text-[#00bfff]">
+                      <span>Discount</span>
+                      <span>-₹{promo.discount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="border-t border-[#1a1a1a] pt-4">
                     <div className="flex justify-between items-center">
                       <span className="text-lg font-bold text-[#e5e5e5]">Total</span>
@@ -448,19 +500,38 @@ export function CartPage() {
                   <label htmlFor="promoCode" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#999]">
                     Promo Code
                   </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      id="promoCode"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                      placeholder="Enter code"
-                      className="flex-1 bg-[#0f0f0f] border border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00bfff] focus:border-[#00bfff]"
-                    />
-                    <Button className="bg-[#1a1a1a] border border-[#1a1a1a] text-[#e5e5e5] hover:bg-[#00bfff] hover:text-white hover:border-[#00bfff] transition-all duration-300">
-                      Apply
-                    </Button>
-                  </div>
+                  {promo.code ? (
+                    <div className="bg-[#00bfff]/10 border border-[#00bfff]/50 rounded-lg p-3 mb-2">
+                      <p className="text-[#00bfff] text-sm font-semibold">
+                        ✓ {promo.code} applied
+                      </p>
+                      <p className="text-[#00bfff] text-xs mt-1">
+                        Discount: ₹{promo.discount.toFixed(2)}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        id="promoCode"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                        onKeyPress={(e) => e.key === "Enter" && applyPromoCode()}
+                        placeholder="Enter code"
+                        className="flex-1 bg-[#0f0f0f] border border-[#1a1a1a] text-[#e5e5e5] placeholder:text-[#666] px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00bfff] focus:border-[#00bfff]"
+                      />
+                      <Button 
+                        onClick={applyPromoCode}
+                        disabled={promoLoading || !promoCode.trim()}
+                        className="bg-[#1a1a1a] border border-[#1a1a1a] text-[#e5e5e5] hover:bg-[#00bfff] hover:text-white hover:border-[#00bfff] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {promoLoading ? "..." : "Apply"}
+                      </Button>
+                    </div>
+                  )}
+                  {promoError && (
+                    <p className="text-red-400 text-xs mt-2">{promoError}</p>
+                  )}
                 </div>
 
                 {/* Checkout Button */}
