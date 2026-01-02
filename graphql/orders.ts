@@ -8,6 +8,18 @@ export const CREATE_ORDER = gql`
   }
 `;
 
+// Simplified query for dashboard - only basic order info
+export const MY_ORDERS_SIMPLE = gql`
+  query MyOrdersSimple {
+    myOrders {
+      id
+      totalAmount
+      status
+      createdAt
+    }
+  }
+`;
+
 export const MY_ORDERS = gql`
   query MyOrders {
     myOrders {

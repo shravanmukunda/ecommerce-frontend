@@ -3,9 +3,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Package, User, Heart, Repeat, MapPin, CreditCard } from "lucide-react"
+import { Package, User, Repeat } from "lucide-react"
 import { useQuery } from "@apollo/client/react"
-import { MY_ORDERS } from "@/graphql/orders"
+import { MY_ORDERS_SIMPLE } from "@/graphql/orders"
 import { useUser } from "@clerk/nextjs"
 
 interface Order {
@@ -21,7 +21,9 @@ interface MyOrdersResponse {
 
 export default function DashboardHomePage() {
   const { user } = useUser()
-  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<MyOrdersResponse>(MY_ORDERS)
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<MyOrdersResponse>(MY_ORDERS_SIMPLE, {
+    errorPolicy: 'all' // Allow partial data even if some fields fail
+  })
 
   if (!user) {
     return null // Should be redirected by DashboardLayout
@@ -31,12 +33,6 @@ export default function DashboardHomePage() {
     { name: "Update Profile", href: "/dashboard/profile", icon: User, description: "Manage your personal details." },
     { name: "View Orders", href: "/dashboard/orders", icon: Package, description: "Track your purchases." },
     { name: "Initiate Return", href: "/dashboard/returns", icon: Repeat, description: "Start a return or exchange." },
-    {
-      name: "Manage Addresses",
-      href: "/dashboard/addresses",
-      icon: MapPin,
-      description: "Add or edit shipping addresses.",
-    },
   ]
 
   return (
@@ -84,22 +80,33 @@ export default function DashboardHomePage() {
           <CardContent className="pt-6">
             {ordersLoading ? (
               <p className="text-gray-400">Loading orders...</p>
-            ) : ordersError ? (
-              <p className="text-red-400">Error loading orders: {ordersError.message}</p>
+            ) : ordersError && !ordersData ? (
+              <div className="space-y-2">
+                <p className="text-red-400">Error loading orders: {ordersError.message}</p>
+                <p className="text-gray-400 text-sm">Please try refreshing the page or contact support if the issue persists.</p>
+              </div>
             ) : ordersData?.myOrders && ordersData.myOrders.length > 0 ? (
               <div className="space-y-4">
-                {ordersData.myOrders.slice(0, 3).map((order) => (
-                  <div key={order.id} className="flex justify-between items-center border-b border-[#1a1a1a] pb-4 last:border-0 last:pb-0">
-                    <div>
-                      <p className="font-semibold text-white">Order #{order.id}</p>
-                      <p className="text-gray-400 text-sm">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                {ordersData.myOrders
+                  .filter((order) => order != null && order.id != null)
+                  .slice(0, 3)
+                  .map((order) => (
+                    <div key={order.id} className="flex justify-between items-center border-b border-[#1a1a1a] pb-4 last:border-0 last:pb-0">
+                      <div>
+                        <p className="font-semibold text-white">Order #{order.id}</p>
+                        <p className="text-gray-400 text-sm">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-white">₹{order.totalAmount.toFixed(2)}</p>
+                        <p className="text-gray-400 text-sm">Status: {order.status}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-white">₹{order.totalAmount.toFixed(2)}</p>
-                      <p className="text-gray-400 text-sm">Status: {order.status}</p>
-                    </div>
+                  ))}
+                {ordersError && (
+                  <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-3 text-sm text-yellow-300">
+                    <p>Some order details may be incomplete due to data issues.</p>
                   </div>
-                ))}
+                )}
                 <Link href="/dashboard/orders">
                   <Button variant="outline" className="w-full border-[#333] text-white hover:bg-gradient-to-r hover:from-[#00bfff] hover:to-[#0099ff] hover:text-white hover:border-transparent bg-transparent transition-all duration-300">
                     View All Orders

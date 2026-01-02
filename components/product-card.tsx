@@ -21,9 +21,10 @@ interface ProductCardProps {
     }>
   }
   viewMode?: "grid" | "list"
+  showAddToCart?: boolean
 }
 
-export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
+export function ProductCard({ product, viewMode = "grid", showAddToCart = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const { addToCart } = useCart()
@@ -122,26 +123,28 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
                 View Details
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              onClick={handleQuickAddToCart}
-              disabled={isAddingToCart || outOfStock}
-              className="flex-1 border border-[#333] text-[#e5e5e5] hover:border-[#666] hover:bg-[#1a1a1a] transition-all duration-300 bg-transparent text-sm font-light uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isAddingToCart ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding...
-                </>
-              ) : outOfStock ? (
-                "Out of Stock"
-              ) : (
-                <>
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Add to Cart
-                </>
-              )}
-            </Button>
+            {showAddToCart && (
+              <Button
+                variant="outline"
+                onClick={handleQuickAddToCart}
+                disabled={isAddingToCart || outOfStock}
+                className="flex-1 border border-[#333] text-[#e5e5e5] hover:border-[#666] hover:bg-[#1a1a1a] transition-all duration-300 bg-transparent text-sm font-light uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAddingToCart ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding...
+                  </>
+                ) : outOfStock ? (
+                  "Out of Stock"
+                ) : (
+                  <>
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Add to Cart
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -191,33 +194,37 @@ export function ProductCard({ product, viewMode = "grid" }: ProductCardProps) {
           <p className="text-red-400 text-xs mb-4 font-medium">Out of Stock</p>
         )}
 
-        {/* Add to Cart Button - Appears on hover */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Button
-            onClick={handleQuickAddToCart}
-            disabled={isAddingToCart || outOfStock}
-            className="w-full bg-[#e5e5e5] text-[#0f0f0f] hover:bg-[#ccc] transition-all duration-300 border-0 text-sm font-light uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isAddingToCart ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Adding...
-              </>
-            ) : outOfStock ? (
-              "Out of Stock"
-            ) : (
-              <>
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Add to Cart
-              </>
-            )}
-          </Button>
-        </div>
+        {/* Add to Cart Button - Appears on hover (only if showAddToCart is true) */}
+        {showAddToCart && (
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <Button
+              onClick={handleQuickAddToCart}
+              disabled={isAddingToCart || outOfStock}
+              className="w-full bg-[#e5e5e5] text-[#0f0f0f] hover:bg-[#ccc] transition-all duration-300 border-0 text-sm font-light uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAddingToCart ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : outOfStock ? (
+                "Out of Stock"
+              ) : (
+                <>
+                  <ShoppingCart className="mr-2 h-4 w-4" />
+                  Add to Cart
+                </>
+              )}
+            </Button>
+          </div>
+        )}
 
-        {/* Fallback View Details button when not hovered */}
+        {/* View Details button */}
         <Link href={`/product/${product.id}`}>
           <Button
-            className="w-full mt-2 bg-transparent border border-[#333] text-[#999] hover:border-[#666] hover:text-[#e5e5e5] transition-all duration-300 group-hover:hidden text-sm font-light uppercase tracking-widest"
+            className={`w-full mt-2 bg-transparent border border-[#333] text-[#999] hover:border-[#666] hover:text-[#e5e5e5] transition-all duration-300 text-sm font-light uppercase tracking-widest ${
+              showAddToCart ? "group-hover:hidden" : ""
+            }`}
           >
             View Details
           </Button>

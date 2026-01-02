@@ -44,11 +44,6 @@ const faqData = [
     category: "Sizing & Fit",
     questions: [
       {
-        question: "How do I find my size?",
-        answer:
-          "Use our detailed size guide available on each product page. We recommend measuring yourself and comparing to our size chart for the best fit.",
-      },
-      {
         question: "Do your items run true to size?",
         answer:
           "Our items generally run true to size, but fit can vary by style. Check individual product descriptions for specific fit notes and sizing recommendations.",

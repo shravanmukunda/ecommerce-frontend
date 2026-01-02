@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, Repeat, MapPin, CreditCard } from "lucide-react"
+import { User, Package, Repeat, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@clerk/nextjs"
 import Image from "next/image"
@@ -15,7 +15,6 @@ export function DashboardSidebar() {
     { name: "Profile", href: "/dashboard/profile", icon: User },
     { name: "My Orders", href: "/dashboard/orders", icon: Package },
     { name: "Returns", href: "/dashboard/returns", icon: Repeat },
-    { name: "Addresses", href: "/dashboard/addresses", icon: MapPin },
   ]
 
   return (
