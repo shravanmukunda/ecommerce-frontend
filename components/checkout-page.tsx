@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 
 import { useCart } from "@/src/hooks/use-cart";
 import { useRazorpay } from "@/hooks/use-razorpay";
+import { usePromo } from "@/hooks/use-promo";
 
 import {
   CREATE_ORDER,
@@ -43,6 +44,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { cart, loading: cartLoading, clearCart } = useCart();
   const { openRazorpay } = useRazorpay();
+  const { promo } = usePromo();
 
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -85,8 +87,10 @@ export default function CheckoutPage() {
     (sum: number, item: any) => sum + item.unitPrice * item.quantity,
     0
   );
+  const shipping = subtotal > 100 ? 0 : 15;
   const tax = subtotal * 0.08;
-  const total = subtotal + tax;
+  const finalTotal = subtotal + shipping + tax - promo.discount;
+  const total = Math.max(finalTotal, 0);
 
   /* =======================
      Checkout Handler
@@ -310,34 +314,56 @@ export default function CheckoutPage() {
         </div>
 
         {/* RIGHT */}
-        <div className="bg-gray-50 p-8 rounded">
-          <h2 className="mb-6 text-xl font-bold">Order Summary</h2>
+        <div className="bg-[#121212] border border-[#1a1a1a] rounded-xl p-6 backdrop-blur-xl">
+          <h2 className="mb-6 text-xl font-bold uppercase tracking-wide text-[#e5e5e5]">
+            Order Summary
+          </h2>
 
           {orderItems.map((item: any) => (
-            <div key={item.id} className="flex justify-between mb-2 text-sm">
+            <div key={item.id} className="flex justify-between mb-2 text-sm text-[#999]">
               <span>
                 {item.product?.name} × {item.quantity}
               </span>
-              <span>₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
+              <span className="text-[#e5e5e5]">₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
             </div>
           ))}
 
-          <div className="border-t mt-4 pt-4 text-sm">
-            <div className="flex justify-between">
+          <div className="space-y-4 mt-6 mb-6">
+            <div className="flex justify-between text-[#999]">
               <span>Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
+              <span className="text-[#e5e5e5]">₹{subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-[#999]">
+              <span>Shipping</span>
+              <span className="text-[#e5e5e5]">
+                {shipping === 0 ? (
+                  <span className="text-[#00bfff]">Free</span>
+                ) : (
+                  `₹${shipping.toFixed(2)}`
+                )}
+              </span>
+            </div>
+            <div className="flex justify-between text-[#999]">
               <span>Tax</span>
-              <span>₹{tax.toFixed(2)}</span>
+              <span className="text-[#e5e5e5]">₹{tax.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold mt-2">
-              <span>Total</span>
-              <span>₹{total.toFixed(2)}</span>
+            {promo.discount > 0 && (
+              <div className="flex justify-between text-[#00bfff]">
+                <span>Discount ({promo.code})</span>
+                <span>-₹{promo.discount.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="border-t border-[#1a1a1a] pt-4">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-bold text-[#e5e5e5]">Total</span>
+                <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#00bfff] to-[#0099ff]">
+                  ₹{total.toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex justify-center mt-4 text-xs gap-2">
+          <div className="flex justify-center mt-6 text-xs text-[#666] gap-2">
             <Lock className="h-3 w-3" /> Secure Payment
           </div>
         </div>
