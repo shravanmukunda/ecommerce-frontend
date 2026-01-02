@@ -285,17 +285,31 @@ export const useCart = () => {
       const res = await addToCartMutation({ 
         variables: { 
           input: graphQLInput
-        } 
+        },
+        errorPolicy: "all", // Return both data and errors
       });
       
+      const apolloError = res.error as any;
       console.log("✅ Mutation response received:", {
         hasData: !!res.data,
         hasError: !!res.error,
+        graphQLErrors: apolloError?.graphQLErrors,
+        networkError: apolloError?.networkError,
         error: res.error ? res.error.message : null,
       });
 
+      // Check for errors in the response
       if (res.error) {
         console.error("❌ GraphQL Error:", res.error);
+        
+        // Extract GraphQL errors if they exist
+        if (apolloError?.graphQLErrors && apolloError.graphQLErrors.length > 0) {
+          const errorMessages = apolloError.graphQLErrors.map((e: any) => e.message).join(", ");
+          const error = new Error(errorMessages);
+          (error as any).graphQLErrors = apolloError.graphQLErrors;
+          throw error;
+        }
+        
         throw res.error;
       }
 
@@ -323,7 +337,51 @@ export const useCart = () => {
         toString: error?.toString(),
         type: typeof error,
       });
-      throw error;
+      
+      // Extract a more user-friendly error message
+      let errorMessage = "Failed to add item to cart. Please try again.";
+      
+      // Handle Apollo Client error structure
+      const apolloError = error as any;
+      
+      if (apolloError?.graphQLErrors && apolloError.graphQLErrors.length > 0) {
+        // Get the first GraphQL error message
+        const firstError = apolloError.graphQLErrors[0];
+        errorMessage = firstError.message || errorMessage;
+        
+        // Clean up repeated error messages (remove duplicates)
+        if (errorMessage.includes("internal system error")) {
+          // Remove duplicate "internal system error" text
+          const uniqueParts = errorMessage.split("\n").filter((part: string, index: number, self: string[]) => 
+            self.indexOf(part) === index && part.trim().length > 0
+          );
+          if (uniqueParts.length === 1 && uniqueParts[0].includes("internal system error")) {
+            errorMessage = "Server error occurred. Please try again later.";
+          } else {
+            errorMessage = uniqueParts.join(" ").replace(/internal system error/gi, "Server error").trim();
+          }
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+        // Clean up repeated error messages
+        if (errorMessage.includes("internal system error")) {
+          const uniqueParts = errorMessage.split("\n").filter((part: string, index: number, self: string[]) => 
+            self.indexOf(part) === index && part.trim().length > 0
+          );
+          if (uniqueParts.length === 1 && uniqueParts[0].includes("internal system error")) {
+            errorMessage = "Server error occurred. Please try again later.";
+          } else {
+            errorMessage = uniqueParts.join(" ").replace(/internal system error/gi, "Server error").trim();
+          }
+        }
+      } else if (apolloError?.networkError) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      }
+      
+      // Create a new error with the cleaned message
+      const userFriendlyError = new Error(errorMessage);
+      (userFriendlyError as any).originalError = error;
+      throw userFriendlyError;
     }
   };
 

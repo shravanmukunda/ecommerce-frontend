@@ -66,9 +66,23 @@ export function ProductCard({ product, viewMode = "grid", showAddToCart = false 
       await addToCart(String(product.id), variant.id, 1)
       // Show success feedback (you could use a toast here)
     } catch (error: any) {
-      console.error("Error adding to cart:", error)
-      // If quick-add fails, redirect to product page
-      window.location.href = `/product/${product.id}`
+      console.error("❌ Error adding to cart:", error)
+      console.error("Failed to add to cart:", error?.message || error?.toString() || "Unknown error")
+      
+      // Extract user-friendly error message
+      const errorMessage = error?.message || "Failed to add item to cart"
+      
+      // Show user-friendly error (you could use a toast here instead)
+      alert(errorMessage.includes("Server error") 
+        ? "Server error occurred. Please try again later." 
+        : errorMessage.includes("login") || errorMessage.includes("authentication")
+        ? "Please log in to add items to your cart."
+        : "Unable to add item to cart. Please try again or visit the product page to select options.")
+      
+      // If it's not an auth error, redirect to product page for manual selection
+      if (!errorMessage.toLowerCase().includes("login") && !errorMessage.toLowerCase().includes("authentication")) {
+        window.location.href = `/product/${product.id}`
+      }
     } finally {
       setIsAddingToCart(false)
     }
