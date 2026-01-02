@@ -559,8 +559,11 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
         productInput.imageURLs = formData.imageURLs
       }
       
-      // Note: isActive and limitedEdition may not be in ProductInput schema
-      // They may be set via separate mutations or set automatically by backend
+      // Add limitedEdition flag
+      productInput.limitedEdition = formData.limitedEdition || false
+      
+      // Note: isActive may not be in ProductInput schema
+      // It may be set via separate mutations or set automatically by backend
       
       // Only add optional fields if they have values
       if (formData.material) productInput.material = formData.material

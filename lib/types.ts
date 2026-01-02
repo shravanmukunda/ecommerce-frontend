@@ -1,5 +1,5 @@
 export interface Product {
-  id: number
+  id: string | number // Support both string (GraphQL ID) and number for backward compatibility
   name: string
   description?: string
   price: number

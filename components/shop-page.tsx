@@ -30,7 +30,7 @@ export function ShopPage() {
       : (product.designImageURL ? [product.designImageURL] : [])
     
     return {
-      id: parseInt(product.id),
+      id: String(product.id), // Keep as string to match GraphQL ID type
       name: product.name,
       price: product.basePrice,
       image: images[0] || product.designImageURL || "",
