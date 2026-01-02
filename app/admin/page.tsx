@@ -80,6 +80,8 @@ interface OrdersResponse {
 
 
 export default function AdminDashboardPage() {
+  console.log("AdminDashboardPage loaded")
+  
   const [products, setProducts] = useState<Product[]>([])
   const [salesData, setSalesData] = useState<any[]>([])
   
@@ -240,7 +242,12 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Promo Code Management */}
-      <PromoCodeManagement />
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Promo Code Management</h2>
+        <div style={{ border: '1px solid red', padding: '10px' }}>
+          <PromoCodeManagement />
+        </div>
+      </div>
 
       {/* Products Management */}
       <ProductManagement 
