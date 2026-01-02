@@ -554,9 +554,13 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
         featured: formData.featured || false
       }
       
-      // Note: isActive, limitedEdition, and imageURLs are not in ProductInput schema
+      // Add imageURLs array if we have multiple images
+      if (formData.imageURLs.length > 0) {
+        productInput.imageURLs = formData.imageURLs
+      }
+      
+      // Note: isActive and limitedEdition may not be in ProductInput schema
       // They may be set via separate mutations or set automatically by backend
-      // If you need these fields, they must be added to the backend ProductInput type first
       
       // Only add optional fields if they have values
       if (formData.material) productInput.material = formData.material
