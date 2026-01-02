@@ -199,7 +199,7 @@ export default function CheckoutPage() {
                 <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
                 <Button onClick={() => setStep(3)}>Continue</Button>
               </div>
-            </div>
+            </>
           )}
 
           {step === 3 && (
@@ -208,7 +208,7 @@ export default function CheckoutPage() {
               <Button disabled={isProcessing} onClick={handleCheckout} className="bg-black text-white w-full">
                 {isProcessing ? "Processing..." : "Pay Now"}
               </Button>
-            </div>
+            </>
           )}
         </div>
 
