@@ -144,7 +144,7 @@ export default function MyOrdersPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-black uppercase tracking-wider">My Orders</h1>
+      <h1 className="text-3xl font-black uppercase tracking-wider text-[#e5e5e5]">My Orders</h1>
       
       {hasPartialDataErrors && (
         <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-4 text-sm text-yellow-300">

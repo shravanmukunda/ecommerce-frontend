@@ -18,11 +18,6 @@ const faqData = [
         answer:
           "Yes! Once your order ships, you'll receive a tracking number via email. You can also track your order in your account dashboard.",
       },
-      {
-        question: "Do you ship internationally?",
-        answer:
-          "We ship to over 45 countries worldwide. Shipping costs and delivery times vary by destination. International customers are responsible for any customs duties or taxes.",
-      },
     ],
   },
   {

@@ -271,28 +271,31 @@ export default function CheckoutPage() {
 
   if (cartLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="text-2xl font-bold">Loading cart...</h1>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <h1 className="text-2xl font-bold text-[#e5e5e5]">Loading cart...</h1>
       </div>
     );
   }
 
   if (!orderItems.length) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <h1 className="text-2xl font-bold">Your cart is empty</h1>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <h1 className="text-2xl font-bold text-[#e5e5e5]">Your cart is empty</h1>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-16 lg:pt-20">
-      <section className="bg-black py-8 text-white text-center">
-        <h1 className="text-4xl md:text-6xl font-black uppercase">
-          Secure Checkout
-        </h1>
-        <div className="mt-2 flex justify-center items-center gap-2 text-sm">
-          <Lock className="h-4 w-4" /> SSL Encrypted
+    <div className="min-h-screen pt-16 lg:pt-20 bg-black">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-black via-gray-900 to-black py-16 border-b border-[#1a1a1a]">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="mb-4 text-4xl font-black uppercase tracking-wider md:text-6xl lg:text-8xl text-[#e5e5e5]">
+            Secure Checkout
+          </h1>
+          <div className="mt-2 flex justify-center items-center gap-2 text-sm text-[#999]">
+            <Lock className="h-4 w-4" /> SSL Encrypted
+          </div>
         </div>
       </section>
 
@@ -319,98 +322,148 @@ export default function CheckoutPage() {
           </div>
         )}
 
+        {/* Form Section */}
         <div className="lg:col-span-2">
           {step === 1 && (
-            <>
-              <h2 className="mb-4 text-2xl font-black uppercase">
+            <div className="p-8 bg-[#121212] border border-[#1a1a1a] rounded-xl">
+              <h2 className="mb-6 text-2xl font-black uppercase tracking-wider text-[#e5e5e5]">
                 Contact Information
               </h2>
-              <Input name="email" placeholder="Email" onChange={handleInputChange} />
-              <Input
-                name="phone"
-                placeholder="Phone Number"
-                className="mt-4"
-                onChange={handleInputChange}
-              />
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <Input name="firstName" placeholder="First Name" onChange={handleInputChange} />
-                <Input name="lastName" placeholder="Last Name" onChange={handleInputChange} />
+              <div className="space-y-4">
+                <Input 
+                  name="email" 
+                  placeholder="Email" 
+                  value={formData.email}
+                  onChange={handleInputChange} 
+                />
+                <Input
+                  name="phone"
+                  placeholder="Phone Number"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    name="firstName" 
+                    placeholder="First Name" 
+                    value={formData.firstName}
+                    onChange={handleInputChange} 
+                  />
+                  <Input 
+                    name="lastName" 
+                    placeholder="Last Name" 
+                    value={formData.lastName}
+                    onChange={handleInputChange} 
+                  />
+                </div>
               </div>
-              <Button className="mt-6" onClick={() => setStep(2)}>
+              <Button 
+                className="mt-6 bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] hover:scale-105 transition-all duration-300 border-0" 
+                onClick={() => setStep(2)}
+              >
                 Continue
               </Button>
-            </>
+            </div>
           )}
 
           {step === 2 && (
-            <>
-              <h2 className="mb-4 text-2xl font-black uppercase">
+            <div className="p-8 bg-[#121212] border border-[#1a1a1a] rounded-xl">
+              <h2 className="mb-6 text-2xl font-black uppercase tracking-wider text-[#e5e5e5]">
                 Shipping Address
               </h2>
-              <Input name="address" placeholder="Address" onChange={handleInputChange} />
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <Input name="city" placeholder="City" onChange={handleInputChange} />
-                <Input name="postalCode" placeholder="Postal Code" onChange={handleInputChange} />
+              <div className="space-y-4">
+                <Input 
+                  name="address" 
+                  placeholder="Address" 
+                  value={formData.address}
+                  onChange={handleInputChange} 
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <Input 
+                    name="city" 
+                    placeholder="City" 
+                    value={formData.city}
+                    onChange={handleInputChange} 
+                  />
+                  <Input 
+                    name="postalCode" 
+                    placeholder="Postal Code" 
+                    value={formData.postalCode}
+                    onChange={handleInputChange} 
+                  />
+                </div>
+                <Input
+                  name="country"
+                  placeholder="Country"
+                  value={formData.country}
+                  onChange={handleInputChange}
+                />
               </div>
-              <Input
-                name="country"
-                placeholder="Country"
-                className="mt-4"
-                onChange={handleInputChange}
-              />
               <div className="flex justify-between mt-6">
-                <Button variant="outline" onClick={() => setStep(1)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep(1)}
+                  className="border-[#1a1a1a] text-[#e5e5e5] hover:border-[#00bfff]/50 hover:bg-[#00bfff]/10 hover:text-[#00bfff] bg-transparent"
+                >
                   Back
                 </Button>
-                <Button onClick={() => setStep(3)}>Continue</Button>
+                <Button 
+                  className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] hover:scale-105 transition-all duration-300 border-0"
+                  onClick={() => setStep(3)}
+                >
+                  Continue
+                </Button>
               </div>
-            </>
+            </div>
           )}
 
           {step === 3 && (
-            <>
-              <h2 className="mb-4 text-2xl font-black uppercase">
+            <div className="p-8 bg-[#121212] border border-[#1a1a1a] rounded-xl">
+              <h2 className="mb-6 text-2xl font-black uppercase tracking-wider text-[#e5e5e5]">
                 Confirm & Pay
               </h2>
               <Button
                 disabled={isProcessing || hasOutOfStockItems}
                 onClick={handleCheckout}
-                className="bg-black text-white w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] hover:scale-105 transition-all duration-300 border-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none"
               >
                 {isProcessing ? "Processing..." : hasOutOfStockItems ? "Cannot Proceed - Out of Stock Items" : "Pay Now"}
               </Button>
-            </>
+            </div>
           )}
         </div>
 
-        <div className="bg-gray-50 p-8 rounded">
-          <h2 className="mb-6 text-xl font-bold">Order Summary</h2>
+        {/* Order Summary */}
+        <div className="bg-[#121212] border border-[#1a1a1a] p-8 rounded-xl">
+          <h2 className="mb-6 text-xl font-bold uppercase tracking-wider text-[#e5e5e5]">Order Summary</h2>
 
-          {orderItems.map((item: any) => (
-            <div key={item.id} className="flex justify-between mb-2 text-sm">
-              <span>
-                {item.product?.name} × {item.quantity}
-              </span>
-              <span>₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
-            </div>
-          ))}
+          <div className="space-y-3 mb-4">
+            {orderItems.map((item: any) => (
+              <div key={item.id} className="flex justify-between text-sm text-[#999]">
+                <span className="text-[#e5e5e5]">
+                  {item.product?.name} × {item.quantity}
+                </span>
+                <span className="text-[#e5e5e5]">₹{(item.unitPrice * item.quantity).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
 
-          <div className="border-t mt-4 pt-4 text-sm">
-            <div className="flex justify-between">
+          <div className="border-t border-[#1a1a1a] mt-4 pt-4 space-y-2 text-sm">
+            <div className="flex justify-between text-[#999]">
               <span>Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
+              <span className="text-[#e5e5e5]">₹{subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-[#999]">
               <span>Tax</span>
-              <span>₹{tax.toFixed(2)}</span>
+              <span className="text-[#e5e5e5]">₹{tax.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between font-bold mt-2">
+            <div className="flex justify-between font-bold mt-2 pt-2 border-t border-[#1a1a1a] text-[#e5e5e5]">
               <span>Total</span>
               <span>₹{total.toFixed(2)}</span>
             </div>
           </div>
 
-          <div className="flex justify-center mt-4 text-xs gap-2">
+          <div className="flex justify-center items-center mt-6 text-xs gap-2 text-[#999]">
             <Lock className="h-3 w-3" /> Secure Payment
           </div>
         </div>

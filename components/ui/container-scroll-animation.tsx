@@ -34,7 +34,8 @@ export const ContainerScroll = ({
 
   const rotate = useTransform(scrollYProgress, [0, 1], [20, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions());
-  const translate = useTransform(scrollYProgress, [0, 1], [0, -100]);
+  // Use a larger translate value to ensure button is fully revealed on mobile
+  const translate = useTransform(scrollYProgress, [0, 1], [0, -120]);
 
   return (
     <div
@@ -68,7 +69,7 @@ export const Header = ({
       style={{
         translateY: translate,
       }}
-      className="div max-w-5xl mx-auto text-center"
+      className="div max-w-5xl mx-auto text-center relative z-10"
     >
       {titleComponent}
     </motion.div>
@@ -93,7 +94,7 @@ export const Card = ({
         boxShadow:
           "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003",
       }}
-      className="max-w-5xl -mt-12 mx-auto h-[20rem] md:h-[40rem] w-full overflow-hidden rounded-lg md:rounded-[30px] shadow-2xl"
+      className="max-w-5xl -mt-20 md:-mt-12 mx-auto h-[20rem] md:h-[40rem] w-full overflow-hidden rounded-lg md:rounded-[30px] shadow-2xl relative z-20"
     >
       <div className="h-full w-full overflow-hidden">
         {children}

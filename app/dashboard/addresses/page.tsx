@@ -170,37 +170,40 @@ export default function AddressesPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-black uppercase tracking-wider">My Addresses</h1>
+      <h1 className="text-3xl font-black uppercase tracking-wider text-[#e5e5e5]">My Addresses</h1>
 
-      <Card>
+      <Card className="bg-[#121212] border-[#1a1a1a]">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-xl font-bold uppercase tracking-wide">Your Saved Addresses</CardTitle>
-          <Button onClick={startAdding} className="bg-black text-white hover:bg-gray-800">
+          <CardTitle className="text-xl font-bold uppercase tracking-wide text-[#e5e5e5]">Your Saved Addresses</CardTitle>
+          <Button 
+            onClick={startAdding} 
+            className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] hover:scale-105 transition-all duration-300 border-0"
+          >
             <Plus className="mr-2 h-4 w-4" /> Add New
           </Button>
         </CardHeader>
         <CardContent className="space-y-6">
           {addresses.length === 0 ? (
-            <p className="text-gray-600">You have no saved addresses.</p>
+            <p className="text-[#999]">You have no saved addresses.</p>
           ) : (
             addresses.map((address) => (
               <div
                 key={address.id}
-                className="border border-gray-200 p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center"
+                className="border border-[#1a1a1a] bg-[#0f0f0f] p-4 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center hover:border-[#00bfff]/50 transition-all duration-300"
               >
                 <div>
-                  <h3 className="font-bold uppercase tracking-wide">{address.name}</h3>
-                  <p className="text-gray-700">{address.street}</p>
-                  <p className="text-gray-700">
+                  <h3 className="font-bold uppercase tracking-wide text-[#e5e5e5]">{address.name}</h3>
+                  <p className="text-[#999]">{address.street}</p>
+                  <p className="text-[#999]">
                     {address.city}, {address.state} {address.zip}
                   </p>
-                  <p className="text-gray-700">{address.country}</p>
+                  <p className="text-[#999]">{address.country}</p>
                   <div className="flex space-x-2 mt-2 text-sm">
                     {address.isDefaultShipping && (
-                      <span className="bg-gray-200 px-2 py-1 rounded-full text-xs font-semibold">Default Shipping</span>
+                      <span className="bg-[#00bfff]/20 border border-[#00bfff]/50 px-2 py-1 rounded-full text-xs font-semibold text-[#00bfff]">Default Shipping</span>
                     )}
                     {address.isDefaultBilling && (
-                      <span className="bg-gray-200 px-2 py-1 rounded-full text-xs font-semibold">Default Billing</span>
+                      <span className="bg-[#00bfff]/20 border border-[#00bfff]/50 px-2 py-1 rounded-full text-xs font-semibold text-[#00bfff]">Default Billing</span>
                     )}
                   </div>
                 </div>
@@ -209,7 +212,7 @@ export default function AddressesPage() {
                     variant="outline"
                     size="icon"
                     onClick={() => startEditing(address)}
-                    className="border-black text-black hover:bg-black hover:text-white"
+                    className="border-[#1a1a1a] text-[#e5e5e5] hover:border-[#00bfff]/50 hover:bg-[#00bfff]/10 hover:text-[#00bfff] bg-transparent"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -217,7 +220,7 @@ export default function AddressesPage() {
                     variant="outline"
                     size="icon"
                     onClick={() => handleDeleteAddress(address.id)}
-                    className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-700"
+                    className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-500 hover:text-red-300 bg-transparent"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -229,16 +232,16 @@ export default function AddressesPage() {
       </Card>
 
       {(isAddingNew || editingAddress) && (
-        <Card>
+        <Card className="bg-[#121212] border-[#1a1a1a]">
           <CardHeader>
-            <CardTitle className="text-xl font-bold uppercase tracking-wide">
+            <CardTitle className="text-xl font-bold uppercase tracking-wide text-[#e5e5e5]">
               {editingAddress ? "Edit Address" : "Add New Address"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSaveAddress} className="space-y-6">
               <div>
-                <label htmlFor="name" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                <label htmlFor="name" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                   Address Name
                 </label>
                 <Input
@@ -249,11 +252,10 @@ export default function AddressesPage() {
                   onChange={handleInputChange}
                   placeholder="e.g., Home, Work"
                   required
-                  className="border-black focus:ring-black"
                 />
               </div>
               <div>
-                <label htmlFor="street" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                <label htmlFor="street" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                   Street Address
                 </label>
                 <Input
@@ -264,12 +266,11 @@ export default function AddressesPage() {
                   onChange={handleInputChange}
                   placeholder="123 Main St"
                   required
-                  className="border-black focus:ring-black"
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="city" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                  <label htmlFor="city" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                     City
                   </label>
                   <Input
@@ -279,11 +280,10 @@ export default function AddressesPage() {
                     value={formData.city}
                     onChange={handleInputChange}
                     required
-                    className="border-black focus:ring-black"
                   />
                 </div>
                 <div>
-                  <label htmlFor="state" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                  <label htmlFor="state" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                     State / Province
                   </label>
                   <Input
@@ -293,13 +293,12 @@ export default function AddressesPage() {
                     value={formData.state}
                     onChange={handleInputChange}
                     required
-                    className="border-black focus:ring-black"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="zip" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                  <label htmlFor="zip" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                     Zip / Postal Code
                   </label>
                   <Input
@@ -309,11 +308,10 @@ export default function AddressesPage() {
                     value={formData.zip}
                     onChange={handleInputChange}
                     required
-                    className="border-black focus:ring-black"
                   />
                 </div>
                 <div>
-                  <label htmlFor="country" className="mb-2 block text-sm font-semibold uppercase tracking-wide">
+                  <label htmlFor="country" className="mb-2 block text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                     Country
                   </label>
                   <Input
@@ -323,7 +321,6 @@ export default function AddressesPage() {
                     value={formData.country}
                     onChange={handleInputChange}
                     required
-                    className="border-black focus:ring-black"
                   />
                 </div>
               </div>
@@ -334,9 +331,9 @@ export default function AddressesPage() {
                   type="checkbox"
                   checked={formData.isDefaultShipping}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                  className="h-4 w-4 text-[#00bfff] focus:ring-[#00bfff] border-[#1a1a1a] rounded bg-[#0f0f0f]"
                 />
-                <label htmlFor="isDefaultShipping" className="text-sm font-semibold uppercase tracking-wide">
+                <label htmlFor="isDefaultShipping" className="text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                   Set as default shipping address
                 </label>
               </div>
@@ -347,14 +344,17 @@ export default function AddressesPage() {
                   type="checkbox"
                   checked={formData.isDefaultBilling}
                   onChange={handleInputChange}
-                  className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                  className="h-4 w-4 text-[#00bfff] focus:ring-[#00bfff] border-[#1a1a1a] rounded bg-[#0f0f0f]"
                 />
-                <label htmlFor="isDefaultBilling" className="text-sm font-semibold uppercase tracking-wide">
+                <label htmlFor="isDefaultBilling" className="text-sm font-semibold uppercase tracking-wide text-[#e5e5e5]">
                   Set as default billing address
                 </label>
               </div>
               <div className="flex space-x-4">
-                <Button type="submit" className="bg-black text-white hover:bg-gray-800">
+                <Button 
+                  type="submit" 
+                  className="bg-gradient-to-r from-[#00bfff] to-[#0099ff] text-white hover:from-[#0099ff] hover:to-[#00bfff] hover:shadow-[0_0_20px_rgba(0,191,255,0.5)] hover:scale-105 transition-all duration-300 border-0"
+                >
                   Save Address
                 </Button>
                 <Button
@@ -364,7 +364,7 @@ export default function AddressesPage() {
                     setIsAddingNew(false)
                     setEditingAddress(null)
                   }}
-                  className="border-black text-black hover:bg-black hover:text-white"
+                  className="border-[#1a1a1a] text-[#e5e5e5] hover:border-[#00bfff]/50 hover:bg-[#00bfff]/10 hover:text-[#00bfff] bg-transparent"
                 >
                   Cancel
                 </Button>
