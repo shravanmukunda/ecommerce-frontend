@@ -4,6 +4,39 @@ import { NextResponse } from 'next/server';
 // Define routes that require admin role
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
+// Extract role from session claims - matching Go backend logic
+function extractRoleFromClaims(sessionClaims: any): string {
+  if (!sessionClaims) return '';
+
+  // Check multiple possible locations for role (matching Go backend extractRoleFromMetadata)
+  // 1. org_metadata.role
+  if (sessionClaims.org_metadata?.role) {
+    return String(sessionClaims.org_metadata.role);
+  }
+  
+  // 2. public_metadata.role (most common location)
+  if (sessionClaims.public_metadata?.role) {
+    return String(sessionClaims.public_metadata.role);
+  }
+  
+  // 3. metadata.role
+  if (sessionClaims.metadata?.role) {
+    return String(sessionClaims.metadata.role);
+  }
+  
+  // 4. org_role
+  if (sessionClaims.org_role) {
+    return String(sessionClaims.org_role);
+  }
+  
+  // 5. role (direct)
+  if (sessionClaims.role) {
+    return String(sessionClaims.role);
+  }
+
+  return '';
+}
+
 export default clerkMiddleware(async (auth, req) => {
   // Check if the route requires admin access
   if (isAdminRoute(req)) {
@@ -16,11 +49,8 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(signInUrl);
     }
 
-    // Check for admin role in session claims or public metadata
-    // Clerk stores custom roles in sessionClaims.publicMetadata or sessionClaims.metadata
-    const publicMetadata = sessionClaims?.publicMetadata as { role?: string } | undefined;
-    const metadata = sessionClaims?.metadata as { role?: string } | undefined;
-    const userRole = publicMetadata?.role || metadata?.role || (sessionClaims as { role?: string })?.role;
+    // Extract role using the same logic as Go backend
+    const userRole = extractRoleFromClaims(sessionClaims);
 
     // If user doesn't have admin role, redirect to home with error message
     if (userRole !== 'admin') {

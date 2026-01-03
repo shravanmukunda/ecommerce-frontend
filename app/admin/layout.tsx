@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { Header } from "@/components/header"
@@ -10,28 +10,41 @@ import { Footer } from "@/components/footer"
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useUser()
   const router = useRouter()
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (!isLoaded) return
+    if (!isLoaded) {
+      setIsAuthorized(null)
+      return
+    }
 
     // Check if user is authenticated
     if (!user) {
-      router.push("/login")
+      setIsAuthorized(false)
+      router.replace("/login")
       return
     }
 
-    // Check for admin role in user's public metadata
-    const userRole = user.publicMetadata?.role as string | undefined
+    // Extract role from user's public metadata (matching Go backend logic)
+    // Check multiple possible locations
+    const userRole = 
+      (user.publicMetadata?.role as string | undefined) ||
+      (user.organizationMemberships?.[0]?.role as string | undefined) ||
+      (user.unsafeMetadata?.role as string | undefined)
 
-    // If user doesn't have admin role, redirect to home
+    // If user doesn't have admin role, mark as unauthorized
     if (userRole !== "admin") {
-      router.push("/")
+      setIsAuthorized(false)
+      router.replace("/")
       return
     }
+
+    // User is authorized
+    setIsAuthorized(true)
   }, [user, isLoaded, router])
 
   // Show loading state while checking authentication
-  if (!isLoaded) {
+  if (!isLoaded || isAuthorized === null) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <p className="text-lg font-semibold">Loading...</p>
@@ -39,8 +52,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  // Show unauthorized message if user is not admin
-  if (user && (user.publicMetadata?.role as string | undefined) !== "admin") {
+  // Show unauthorized message if user is not authenticated or not admin
+  if (!isAuthorized || !user || (user.publicMetadata?.role as string | undefined) !== "admin") {
     return (
       <div className="min-h-screen bg-white">
         <Header />
