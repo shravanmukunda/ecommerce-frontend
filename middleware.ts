@@ -5,14 +5,26 @@ import { NextResponse } from 'next/server';
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (isAdminRoute(req)) {
-    const { userId, sessionClaims } = await auth();
+  const { userId, sessionClaims } = await auth();
 
+  // 🔍 TEMP DEBUG (remove after it works)
+  console.log('--- ADMIN DEBUG START ---');
+  console.log('URL:', req.nextUrl.pathname);
+  console.log('userId:', userId);
+  console.log('sessionClaims:', JSON.stringify(sessionClaims, null, 2));
+  console.log('--- ADMIN DEBUG END ---');
+
+  if (isAdminRoute(req)) {
     if (!userId) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
-    const role = (sessionClaims?.publicMetadata as { role?: string })?.role;
+    // IMPORTANT: support both camelCase & snake_case
+    const role =
+      (sessionClaims as any)?.publicMetadata?.role ||
+      (sessionClaims as any)?.public_metadata?.role;
+
+    console.log('ROLE CHECK:', role);
 
     if (role !== 'admin') {
       return NextResponse.redirect(new URL('/', req.url));
@@ -24,10 +36,7 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
     '/(api|trpc)(.*)',
   ],
 };
-
