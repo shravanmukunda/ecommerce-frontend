@@ -35,12 +35,12 @@ export function ContactPage() {
                 <div>
                   <h3 className="mb-1 font-bold uppercase tracking-wide text-white">Phone</h3>
                   <a 
-                    href="https://wa.me/919743198455" 
+                    href="https://wa.me/7676497819" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-gray-300 hover:text-white transition-colors"
                   >
-                    +91 97431 98455
+                    +91 7676497819
                   </a>
                 </div>
               </div>
@@ -50,10 +50,10 @@ export function ContactPage() {
                 <div>
                   <h3 className="mb-1 font-bold uppercase tracking-wide text-white">Email</h3>
                   <a 
-                    href="mailto:support@auragaze.com"
+                    href="mailto:auragaze.in@gmail.com"
                     className="text-gray-300 hover:text-white transition-colors"
                   >
-                    support@auragaze.com
+                    auragaze.in@gmail.com
                   </a>
                 </div>
               </div>
