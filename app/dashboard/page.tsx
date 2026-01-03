@@ -20,7 +20,7 @@ interface MyOrdersResponse {
 }
 
 // 🔐 SUPER ADMIN EMAIL
-const ADMIN_EMAILS = ["vishnujoshi062@gmail.com", "shravanmukunda3@gmail.com"]
+const ADMIN_EMAILS = ["vishnujoshi062@gmail.com", "shravanmukunda3@gmail.com", "chiraaag8@gmail.com"]
 
 export default function DashboardHomePage() {
   const { user, isLoaded } = useUser()
