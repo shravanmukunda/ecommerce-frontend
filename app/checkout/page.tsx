@@ -100,9 +100,10 @@ export default function CheckoutPage() {
         description: "Order Payment",
 
         handler: () => {
-          console.log("Razorpay payment successful");
           if (cart?.id) {
-            clearCart(cart.id).catch(err => console.error("Cart clear failed", err));
+            clearCart(cart.id).catch(() => {
+              // Silently handle cart clear failure
+            });
           }
           setIsRedirecting(true);
           router.push(`/order-success?orderId=${orderId}`);
@@ -126,9 +127,9 @@ export default function CheckoutPage() {
           color: "#000000",
         },
       });
-    } catch (error) {
-      console.error("Checkout failed", error);
-      alert("Checkout failed. Please try again.");
+    } catch (error: any) {
+      const errorMessage = error?.message || "Checkout failed. Please try again.";
+      alert(errorMessage);
       setIsProcessing(false);
     }
   };

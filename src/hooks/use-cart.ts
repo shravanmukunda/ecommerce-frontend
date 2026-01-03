@@ -148,12 +148,11 @@ export const useCart = () => {
         results.forEach((result, index) => {
           if (result.status === "fulfilled" && result.value.data?.product) {
             map.set(productIds[index], result.value.data.product);
-          } else if (result.status === "rejected") {
-            console.error(`Failed to fetch product ${productIds[index]}:`, result.reason);
           }
+          // Silently handle rejected product fetches
         });
       } catch (error) {
-        console.error("Error fetching products:", error);
+        // Silently handle fetch errors
       } finally {
         setProductMap(map);
         setProductsLoading(false);
@@ -268,20 +267,6 @@ export const useCart = () => {
     }
 
     try {
-      console.log("🛒 Adding to cart with input:", {
-        productId: graphQLInput.productId,
-        variantId: graphQLInput.variantId,
-        quantity: graphQLInput.quantity,
-        cartId: graphQLInput.cartId,
-        isSignedIn,
-        types: {
-          productId: typeof graphQLInput.productId,
-          variantId: typeof graphQLInput.variantId,
-          quantity: typeof graphQLInput.quantity,
-        }
-      });
-
-      console.log("📤 Calling addToCartMutation with variables:", JSON.stringify({ input: graphQLInput }, null, 2));
       const res = await addToCartMutation({ 
         variables: { 
           input: graphQLInput
@@ -290,18 +275,9 @@ export const useCart = () => {
       });
       
       const apolloError = res.error as any;
-      console.log("✅ Mutation response received:", {
-        hasData: !!res.data,
-        hasError: !!res.error,
-        graphQLErrors: apolloError?.graphQLErrors,
-        networkError: apolloError?.networkError,
-        error: res.error ? res.error.message : null,
-      });
 
       // Check for errors in the response
       if (res.error) {
-        console.error("❌ GraphQL Error:", res.error);
-        
         // Extract GraphQL errors if they exist
         if (apolloError?.graphQLErrors && apolloError.graphQLErrors.length > 0) {
           const errorMessages = apolloError.graphQLErrors.map((e: any) => e.message).join(", ");
@@ -327,17 +303,6 @@ export const useCart = () => {
       await refetch();
       return cart;
     } catch (error: any) {
-      console.error("❌ Error adding to cart:", error);
-      console.error("Error details:", {
-        message: error?.message,
-        graphQLErrors: error?.graphQLErrors,
-        networkError: error?.networkError,
-        statusCode: error?.networkError?.statusCode,
-        response: error?.networkError?.response,
-        toString: error?.toString(),
-        type: typeof error,
-      });
-      
       // Extract a more user-friendly error message
       let errorMessage = "Failed to add item to cart. Please try again.";
       
@@ -416,7 +381,6 @@ export const useCart = () => {
       // Refetch to get updated cart data
       await refetch();
     } catch (error: any) {
-      console.error("Error removing item from cart:", error);
       throw error;
     }
   };
@@ -461,7 +425,6 @@ export const useCart = () => {
         }
       } catch (updateError: any) {
         // If UpdateCartItemQuantity doesn't exist, fall back to remove + re-add
-        console.log("UpdateCartItemQuantity not available, using fallback method");
       }
 
       // Fallback: Remove item and re-add with new quantity
@@ -487,7 +450,6 @@ export const useCart = () => {
 
       await refetch();
     } catch (error: any) {
-      console.error("Error updating quantity:", error);
       throw error;
     }
   };
@@ -518,7 +480,6 @@ export const useCart = () => {
       // Refetch to get updated cart data
       await refetch();
     } catch (error: any) {
-      console.error("Error clearing cart:", error);
       throw error;
     }
   };

@@ -127,9 +127,6 @@ export default function CheckoutPage() {
     try {
       setIsProcessing(true);
 
-      console.log("🛒 Creating order with cart:", cart.id);
-      console.log("📦 Cart items:", cart.items.length);
-
       // 1️⃣ Create DB Order
       const orderRes = await createOrder({
         variables: {
@@ -144,7 +141,6 @@ export default function CheckoutPage() {
       }
 
       const orderId = orderRes.data.createOrder.id;
-      console.log("✅ Order created:", orderId);
 
       // 2️⃣ Create Razorpay Order
       const rpRes = await createRazorpayOrder({
@@ -156,7 +152,6 @@ export default function CheckoutPage() {
       }
 
       const razorpayOrder = rpRes.data.createRazorpayOrder;
-      console.log("✅ Razorpay order created:", razorpayOrder.id);
 
       // 3️⃣ Open Razorpay Checkout
       openRazorpay({
@@ -168,16 +163,16 @@ export default function CheckoutPage() {
         description: "Order Payment",
 
         handler: async function (response: any) {
-          console.log("✅ Razorpay payment successful:", response);
           if (cart?.id) {
-            clearCart(cart.id).catch(err => console.error("Cart clear failed", err));
+            clearCart(cart.id).catch(() => {
+              // Silently handle cart clear failure
+            });
           }
           router.push(`/order-success?orderId=${orderId}`);
         },
 
         modal: {
           ondismiss: () => {
-            console.log("❌ Razorpay modal dismissed");
             setIsProcessing(false);
           },
         },
@@ -193,8 +188,6 @@ export default function CheckoutPage() {
         },
       });
     } catch (error: any) {
-      console.error("❌ Checkout failed:", error);
-      
       // Extract error message
       let errorMessage = "Checkout failed. Please try again.";
       
@@ -206,8 +199,7 @@ export default function CheckoutPage() {
         errorMessage = error.message;
       }
 
-      // Show detailed error
-      alert(`Checkout failed: ${errorMessage}\n\nPlease check the console for more details.`);
+      alert(`Checkout failed: ${errorMessage}`);
       setIsProcessing(false);
     }
   };

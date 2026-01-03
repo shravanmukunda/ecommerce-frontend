@@ -10,11 +10,8 @@ export default function ClerkApolloBridge() {
   useEffect(() => {
     if (!isLoaded) return;
 
-    console.log("✅ Clerk loaded");
-
     setGetCurrentToken(async () => {
       const token = await getToken();
-      console.log("🔥 Clerk token:", token);
       return token || null;
     });
 

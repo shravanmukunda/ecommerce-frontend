@@ -25,9 +25,8 @@ export function CartSync() {
       apolloClient.refetchQueries({
         include: [GET_CART],
       })
-      console.log("✅ Cart refetched for authenticated user")
     } catch (error) {
-      console.error("❌ Error refetching cart:", error)
+      // Silently fail - cart will be fetched on next render
     }
   }, [user?.id, isLoaded, apolloClient])
 

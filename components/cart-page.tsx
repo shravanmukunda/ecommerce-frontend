@@ -52,17 +52,6 @@ export function CartPage() {
               const product = value.data.product
               const variant = product.variants?.find((v: any) => v.id === cart.items[index].variantId)
               
-              // Debug logging
-              console.log(`🛒 Cart: Fetched inventory for item ${cart.items[index].id}:`, {
-                productId: cart.items[index].productId,
-                variantId: cart.items[index].variantId,
-                variant: variant,
-                hasInventory: !!variant?.inventory,
-                inventory: variant?.inventory,
-                availableQuantity: variant?.inventory?.availableQuantity,
-                stockQuantity: variant?.inventory?.stockQuantity,
-              })
-              
               const availableQty = variant?.inventory?.availableQuantity ?? variant?.inventory?.stockQuantity ?? 0
               
               map.set(cart.items[index].id, {
@@ -71,19 +60,12 @@ export function CartPage() {
                 variant,
               })
             }
-          } else {
-            console.error(`Failed to fetch inventory for item ${cart.items[index].id}:`, result)
           }
+          // Silently handle failed inventory fetches
         })
       } catch (error) {
-        console.error("Error fetching inventory data:", error)
+        // Silently handle inventory fetch errors
       }
-      
-      console.log("🛒 Cart: Final inventory map:", Array.from(map.entries()).map(([id, data]) => ({
-        itemId: id,
-        availableQuantity: data.availableQuantity,
-        stockQuantity: data.stockQuantity
-      })))
       
       setProductInventoryMap(map)
     }
@@ -124,7 +106,6 @@ export function CartPage() {
       setPromoCode("")
       setPromoError("")
     } catch (err) {
-      console.error("Error validating promo code:", err)
       setPromoError("Failed to apply promo code")
     } finally {
       setPromoLoading(false)
@@ -268,19 +249,6 @@ export function CartPage() {
               const availableQty = inventory?.availableQuantity ?? inventory?.stockQuantity ?? null
               const isOutOfStock = inventory && availableQty !== null && availableQty < item.quantity
               
-              // Debug logging for this specific item
-              if (inventory) {
-                console.log(`🛒 Cart Item ${item.id} inventory check:`, {
-                  itemId: item.id,
-                  variantId: item.variantId,
-                  requestedQuantity: item.quantity,
-                  availableQuantity: inventory.availableQuantity,
-                  stockQuantity: inventory.stockQuantity,
-                  finalAvailableQty: availableQty,
-                  isOutOfStock,
-                })
-              }
-              
               return (
                 <ScrollReveal key={item.id} direction="up" delay={index * 100}>
                   <div className={`bg-[#121212] border rounded-xl p-6 transition-all duration-300 ${
@@ -347,7 +315,6 @@ export function CartPage() {
                                       await updateQuantity(item.id, cart.id, newQuantity, item.productId, item.variantId || "")
                                     }
                                   } catch (error) {
-                                    console.error("Error decreasing quantity:", error)
                                     alert("Failed to update quantity. Please try again.")
                                   } finally {
                                     setUpdatingItems(prev => {
@@ -373,7 +340,6 @@ export function CartPage() {
                                   try {
                                     await addToCart(item.productId, item.variantId || "", 1)
                                   } catch (error) {
-                                    console.error("Error increasing quantity:", error)
                                     alert("Failed to update quantity. Please try again.")
                                   } finally {
                                     setUpdatingItems(prev => {
@@ -405,7 +371,6 @@ export function CartPage() {
                                   try {
                                     await removeItem(item.id, cart.id)
                                   } catch (error) {
-                                    console.error("Error removing item:", error)
                                     alert("Failed to remove item. Please try again.")
                                   } finally {
                                     setUpdatingItems(prev => {

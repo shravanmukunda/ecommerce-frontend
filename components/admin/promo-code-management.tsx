@@ -55,8 +55,6 @@ const MOCK_PROMO_CODES: PromoCode[] = [
 ]
 
 export function PromoCodeManagement() {
-  console.log("PromoCodeManagement component rendered - START")
-  
   const { data, loading, error, refetch } = useQuery<GetPromoCodesResponse>(
     GET_PROMO_CODES,
     { 
@@ -65,33 +63,10 @@ export function PromoCodeManagement() {
     }
   )
 
-  console.log("Query state:", { data, loading, error })
-  if (error) {
-    console.error("Query error details:", {
-      message: error.message,
-    })
-  }
-
-  const [createPromoCode, { loading: creating }] = useMutation(CREATE_PROMO_CODE, {
-    onError: (err) => {
-      console.error("Mutation error:", err)
-    }
-  })
-  const [updatePromoCode] = useMutation(UPDATE_PROMO_CODE, {
-    onError: (err) => {
-      console.error("Mutation error:", err)
-    }
-  })
-  const [deletePromoCode] = useMutation(DELETE_PROMO_CODE, {
-    onError: (err) => {
-      console.error("Mutation error:", err)
-    }
-  })
-  const [toggleStatus] = useMutation(TOGGLE_PROMO_CODE_STATUS, {
-    onError: (err) => {
-      console.error("Mutation error:", err)
-    }
-  })
+  const [createPromoCode, { loading: creating }] = useMutation(CREATE_PROMO_CODE)
+  const [updatePromoCode] = useMutation(UPDATE_PROMO_CODE)
+  const [deletePromoCode] = useMutation(DELETE_PROMO_CODE)
+  const [toggleStatus] = useMutation(TOGGLE_PROMO_CODE_STATUS)
 
   const [newPromoCode, setNewPromoCode] = useState({
     code: "",
@@ -107,24 +82,14 @@ export function PromoCodeManagement() {
   const promoCodes = data?.promoCodes || localPromos
 
   const handleAddPromoCode = async () => {
-    console.log("Button clicked!")
-    
     if (!newPromoCode.code || newPromoCode.discountValue <= 0) {
       alert("Please fill in all fields")
       return
     }
 
     try {
-      console.log("Starting promo code creation...")
       const futureDate = new Date()
       futureDate.setFullYear(futureDate.getFullYear() + 1)
-
-      console.log("Creating promo code with:", {
-        code: newPromoCode.code,
-        discountType: newPromoCode.discountType,
-        discountValue: newPromoCode.discountValue,
-        validUntil: futureDate.toISOString(),
-      })
 
       // Try to create via backend
       if (!error) {
@@ -138,8 +103,6 @@ export function PromoCodeManagement() {
             },
           },
         })
-
-        console.log("Promo code created successfully:", result)
 
         if (result.data && typeof result.data === 'object' && 'createPromoCode' in result.data) {
           const createPromoCodeData = (result.data as any).createPromoCode
@@ -157,7 +120,6 @@ export function PromoCodeManagement() {
       }
 
       // Fallback: add to local state if backend unavailable
-      console.log("Backend unavailable, adding to local state")
       const newId = String(Date.now())
       const newPromo: PromoCode = {
         id: newId,
@@ -175,10 +137,8 @@ export function PromoCodeManagement() {
       alert("Promo code added (local storage - backend unavailable)")
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err)
-      console.error("Error creating promo code:", err)
       
       // Fallback: add to local state on error
-      console.log("Error occurred, adding to local state as fallback")
       const newId = String(Date.now())
       const newPromo: PromoCode = {
         id: newId,
@@ -242,8 +202,6 @@ export function PromoCodeManagement() {
       setEditForm({})
       alert("Promo code updated (local storage)")
     } catch (err: unknown) {
-      console.error("Error updating promo code:", err)
-      
       // Fallback: update local state on error
       setLocalPromos(localPromos.map(p => 
         p.id === editingId 
@@ -271,8 +229,6 @@ export function PromoCodeManagement() {
       setLocalPromos(localPromos.filter(p => p.id !== id))
       alert("Promo code deleted (local storage)")
     } catch (err: unknown) {
-      console.error("Error deleting promo code:", err)
-      
       // Fallback: delete from local state on error
       setLocalPromos(localPromos.filter(p => p.id !== id))
       alert("Promo code deleted (local storage - backend error)")
@@ -293,8 +249,6 @@ export function PromoCodeManagement() {
         p.id === id ? { ...p, isActive: !p.isActive } : p
       ))
     } catch (err: unknown) {
-      console.error("Error toggling promo status:", err)
-      
       // Fallback: toggle in local state on error
       setLocalPromos(localPromos.map(p =>
         p.id === id ? { ...p, isActive: !p.isActive } : p

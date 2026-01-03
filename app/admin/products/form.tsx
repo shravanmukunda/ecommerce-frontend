@@ -207,18 +207,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
         const sizes = [...new Set(p.variants.map((v: any) => v.size))] as string[]
         const colors = [...new Set(p.variants.map((v: any) => v.color).filter(Boolean))] as string[]
         
-        // Debug: Log raw variant data from backend
-        console.log("🔍 Raw variants from backend:", p.variants.map((v: any) => ({
-          id: v.id,
-          size: v.size,
-          color: v.color,
-          inventory: v.inventory,
-          hasInventory: !!v.inventory,
-          inventoryStockQuantity: v.inventory?.stockQuantity,
-          inventoryType: typeof v.inventory,
-          fullInventory: v.inventory
-        })))
-        
         // Map variants - include ID for existing variants
         const mappedVariants = p.variants.map((v: any) => {
           // Try multiple ways to get stock quantity in case the structure varies
@@ -228,21 +216,9 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
             if (typeof v.inventory === 'object' && v.inventory !== null) {
               // Direct access to stockQuantity from inventory object
               stockQuantity = v.inventory.stockQuantity ?? v.inventory.stock_quantity ?? 0
-              
-              // Debug log for each variant
-              console.log(`📊 Variant ${v.size} - ${v.color}:`, {
-                hasInventory: true,
-                inventoryType: typeof v.inventory,
-                inventoryKeys: Object.keys(v.inventory || {}),
-                stockQuantity: v.inventory.stockQuantity,
-                stock_quantity: (v.inventory as any).stock_quantity,
-                finalStockQuantity: stockQuantity
-              })
             } else if (typeof v.inventory === 'number') {
               stockQuantity = v.inventory
             }
-          } else {
-            console.warn(`⚠️ Variant ${v.size} - ${v.color} (ID: ${v.id}) has no inventory object`)
           }
           
           // Fallback: check if stockQuantity is directly on the variant
@@ -259,14 +235,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
             stockQuantity: stockQuantity
           }
         })
-        
-        console.log("📦 Loaded variants from product:", mappedVariants.map(v => ({
-          id: v.id,
-          size: v.size,
-          color: v.color,
-          stockQuantity: v.stockQuantity,
-          hasId: !!v.id
-        })))
         
         // IMPORTANT: Set variants FIRST before sizes/colors to prevent regeneration
         // Use a ref to prevent the regenerate useEffect from running
@@ -584,7 +552,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
           variables: { id: productId, input: productInput }
           // Removed refetchQueries to prevent resetting variants during update
         })
-        console.log("Product updated:", data)
       } else {
         // Create new product
         const { data } = await createProduct({
@@ -592,19 +559,10 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
           refetchQueries: ['GetProducts']
         })
         productIdToUse = data?.createProduct.id
-        console.log("Product created:", data)
       }
 
       // Create or update variants
       if (productIdToUse) {
-        console.log("Submitting variants:", variants.map(v => ({
-          id: v.id,
-          size: v.size,
-          color: v.color,
-          stockQuantity: v.stockQuantity,
-          hasId: !!v.id
-        })))
-        
         let updatedCount = 0
         let createdCount = 0
         let errorCount = 0
@@ -635,26 +593,8 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
               
               // Validate that we have a valid variant ID
               if (!variant.id || variant.id === 'undefined' || variant.id === 'null') {
-                console.error(`Invalid variant ID for ${variant.size} - ${variant.color}:`, variant.id)
                 throw new Error(`Invalid variant ID for ${variant.size} - ${variant.color}`)
               }
-              
-              console.log(`Updating inventory for variant:`, {
-                id: variant.id,
-                size: variant.size,
-                color: variant.color,
-                originalStockQuantity: variant.stockQuantity,
-                parsedQuantity: quantity,
-                type: typeof variant.stockQuantity
-              })
-              
-              // Wait for inventory update to complete before moving on
-              console.log(`📤 Sending updateInventory mutation:`, {
-                variantID: variant.id,
-                quantity: quantity,
-                size: variant.size,
-                color: variant.color
-              })
               
               const result = await updateInventory({
                 variables: {
@@ -663,52 +603,19 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
                 }
               })
               
-              console.log(`📥 updateInventory mutation response:`, {
-                fullResponse: result,
-                data: result.data,
-                updateInventory: (result.data as any)?.updateInventory,
-                error: result.error
-              })
-              
               // Type assertion for the response
               const inventoryData = (result.data as any)?.updateInventory
               if (inventoryData) {
                 updatedCount++
-                console.log(`✅ Variant ${i + 1}/${variants.length} inventory updated successfully:`, {
-                  variantId: variant.id,
-                  requestedQuantity: quantity,
-                  updatedStockQuantity: inventoryData.stockQuantity,
-                  availableQuantity: inventoryData.availableQuantity,
-                  fullInventoryData: inventoryData
-                })
-                
-                // Verify the saved quantity matches what we requested
-                if (inventoryData.stockQuantity !== quantity) {
-                  console.warn(`⚠️ Quantity mismatch: requested ${quantity}, backend returned ${inventoryData.stockQuantity}`)
-                  console.warn(`   This might indicate a backend issue or that the quantity was modified by the backend.`)
-                } else {
-                  console.log(`✓ Quantity verified: ${quantity} was saved correctly to backend`)
-                }
               } else {
                 errorCount++
                 const errorMsg = `Variant ${variant.size} - ${variant.color}: Update returned no data`
                 errors.push(errorMsg)
-                console.error(`❌ ${errorMsg}:`, {
-                  fullResult: result,
-                  data: result.data,
-                  error: result.error
-                })
               }
             } catch (inventoryError: any) {
               errorCount++
               const errorMsg = `Variant ${variant.size} - ${variant.color}: ${inventoryError.message || 'Unknown error'}`
               errors.push(errorMsg)
-              console.error(`❌ Failed to update inventory for variant ${variant.size} - ${variant.color} (ID: ${variant.id}):`, {
-                error: inventoryError,
-                message: inventoryError.message,
-                graphQLErrors: inventoryError.graphQLErrors,
-                networkError: inventoryError.networkError
-              })
               // Continue with other variants, but collect errors
             }
           }
@@ -749,14 +656,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
               variantInput.color = variant.color
             }
             
-            console.log(`Creating variant:`, {
-              size: variant.size,
-              color: variant.color,
-              sku: variant.sku,
-              stockQuantity: stockQuantity,
-              originalStockQuantity: variant.stockQuantity
-            })
-            
             try {
               await createVariant({
                 variables: {
@@ -764,7 +663,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
                 }
               })
               createdCount++
-              console.log(`✅ Variant ${i + 1}/${variants.length} created: ${variant.size} - ${variant.color} (SKU: ${variant.sku}, Stock: ${stockQuantity})`)
               
               // Small delay to ensure uniqueness in database operations
               if (i < variants.length - 1) {
@@ -774,41 +672,24 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
               errorCount++
               const errorMsg = `Variant ${variant.size} - ${variant.color}: ${variantError.message || 'Unknown error'}`
               errors.push(errorMsg)
-              console.error(`Failed to create variant ${variant.size} - ${variant.color} (SKU: ${variant.sku}):`, variantError)
               
               // Check if it's a duplicate SKU error
               if (variantError.message?.includes('duplicate key') || variantError.message?.includes('idx_product_variants_sku')) {
                 throw new Error(`Duplicate SKU detected: ${variant.sku}. This SKU already exists in the database. Please try again or contact support.`)
               }
-              
-              // Continue with other variants instead of throwing (unless it's a critical error)
-              console.warn(`Continuing with other variants despite error for ${variant.size} - ${variant.color}`)
             }
           }
         }
         
-        // Show summary of what was updated
-        console.log(`📊 Variant Update Summary:`, {
-          total: variants.length,
-          updated: updatedCount,
-          created: createdCount,
-          errors: errorCount,
-          errorDetails: errors.length > 0 ? errors : undefined
-        })
-        
         if (errorCount > 0) {
-          console.warn(`⚠️ ${errorCount} variant(s) had errors during update. Check console for details.`)
           // Don't proceed if there were critical errors
           if (updatedCount === 0 && createdCount === 0) {
-            throw new Error(`Failed to save any variants. Please check the console for details.`)
+            throw new Error(`Failed to save any variants: ${errors.join(', ')}`)
           }
-        } else {
-          console.log(`✅ All ${variants.length} variant(s) processed successfully!`)
         }
         
         // Refetch product data after all updates are complete to ensure we have the latest data
         if (productId && (updatedCount > 0 || createdCount > 0)) {
-          console.log('🔄 Refetching product data to verify all updates were saved...')
           try {
             // Wait a moment for backend to process all updates
             await new Promise(resolve => setTimeout(resolve, 500))
@@ -817,78 +698,17 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
             if (refetchProduct) {
               const { data: freshData } = await refetchProduct({ fetchPolicy: 'network-only' })
               
-              // Detailed logging of the refetched data
-              console.log('✅ Product data refetched. Full response:', freshData)
-              console.log('🔍 Raw product object:', freshData?.product)
-              console.log('🔍 Raw variants array:', freshData?.product?.variants)
-              
-              // Log each variant in detail
-              if (freshData?.product?.variants) {
-                freshData.product.variants.forEach((v: any, index: number) => {
-                  console.log(`📦 Variant ${index + 1}:`, {
-                    id: v.id,
-                    size: v.size,
-                    color: v.color,
-                    sku: v.sku,
-                    hasInventoryField: 'inventory' in v,
-                    inventoryValue: v.inventory,
-                    inventoryType: typeof v.inventory,
-                    inventoryIsNull: v.inventory === null,
-                    inventoryIsUndefined: v.inventory === undefined,
-                    allVariantKeys: Object.keys(v || {}),
-                    fullVariantObject: JSON.parse(JSON.stringify(v)) // Deep copy for inspection
-                  })
-                })
-              }
-              
-              console.log('🔍 Detailed variant inventory data:', 
-                freshData?.product?.variants?.map((v: any) => ({
-                  id: v.id,
-                  size: v.size,
-                  color: v.color,
-                  hasInventory: !!v.inventory,
-                  inventory: v.inventory,
-                  inventoryId: v.inventory?.id,
-                  stockQuantity: v.inventory?.stockQuantity,
-                  stockQuantityType: typeof v.inventory?.stockQuantity,
-                  availableQuantity: v.inventory?.availableQuantity,
-                  fullVariant: v
-                }))
-              )
-              
-              // Check if inventory is missing - THIS IS THE KEY ISSUE
+              // Check if inventory is missing
               const variantsWithMissingInventory = freshData?.product?.variants?.filter((v: any) => {
                 const hasInventory = !!v.inventory
                 const hasStockQuantity = v.inventory?.stockQuantity !== undefined
-                console.log(`🔍 Checking variant ${v.id} (${v.size} - ${v.color}):`, {
-                  hasInventory,
-                  hasStockQuantity,
-                  inventory: v.inventory,
-                  inventoryKeys: v.inventory ? Object.keys(v.inventory) : [],
-                  allVariantKeys: Object.keys(v)
-                })
                 return !hasInventory || !hasStockQuantity
               })
               
               if (variantsWithMissingInventory && variantsWithMissingInventory.length > 0) {
-                console.error('❌ BACKEND ISSUE DETECTED: Variants are missing inventory data in GET_PRODUCT response')
-                console.error('   Mutation successfully saved stockQuantity')
-                console.error('   Variants with missing inventory:', variantsWithMissingInventory.map((v: any) => ({
-                  id: v.id,
-                  size: v.size,
-                  color: v.color,
-                  hasInventory: !!v.inventory,
-                  inventory: v.inventory,
-                  allKeys: Object.keys(v)
-                })))
-                console.error('   ⚠️ This means:')
-                console.error('   1. Either the backend Preload("Variants.Inventory") is not working')
-                console.error('   2. Or the GraphQL query is not requesting the inventory field')
-                console.error('   3. Or the inventory record does not exist in the database')
-                console.error('   Please check your backend resolver and verify inventory exists in DB')
+                // Some variants may have missing inventory data - this is a backend issue
+                // Continue processing with available data
               } else {
-                console.log('✅ All variants have inventory data after refetch')
-                
                 // Reload variants with fresh inventory data if we're still on the edit page
                 // This ensures the form shows the updated stock quantities
                 if (freshData?.product?.variants && freshData.product.variants.length > 0) {
@@ -907,13 +727,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
                     }
                   })
                   
-                  console.log('🔄 Updating form variants with fresh inventory data:', updatedVariants.map(v => ({
-                    id: v.id,
-                    size: v.size,
-                    color: v.color,
-                    stockQuantity: v.stockQuantity
-                  })))
-                  
                   // Update variants without triggering regeneration
                   initialLoadRef.current = true
                   setVariants(updatedVariants)
@@ -925,7 +738,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
               }
             }
           } catch (refetchError) {
-            console.warn('⚠️ Error during refetch:', refetchError)
             // Don't fail the whole operation if refetch fails
           }
         }
@@ -939,8 +751,6 @@ export function ProductForm({ productId, onSubmit, onCancel }: ProductFormProps)
       
       onSubmit()
     } catch (error: any) {
-      console.error("Error saving product:", error)
-      
       // Reset the flag on error
       isUpdatingRef.current = false
       

@@ -39,10 +39,12 @@ export function ProductDetail({ productData }: { productData: any }) {
   }, [productData?.variants])
 
   const nextImage = () => {
+    if (!productData?.images || productData.images.length === 0) return
     setCurrentImage((prev) => (prev + 1) % productData.images.length)
   }
 
   const prevImage = () => {
+    if (!productData?.images || productData.images.length === 0) return
     setCurrentImage((prev) => (prev - 1 + productData.images.length) % productData.images.length)
   }
 
@@ -54,11 +56,11 @@ export function ProductDetail({ productData }: { productData: any }) {
       return;
     }
   
-    const matchingVariant = productData.variants?.find(
+    const matchingVariant = productData?.variants?.find(
       (v: any) => v.size === selectedSize
     );
   
-    if (!matchingVariant) {
+    if (!matchingVariant || !productData?.id) {
       alert("Selected size is not available.");
       return;
     }
@@ -74,7 +76,6 @@ export function ProductDetail({ productData }: { productData: any }) {
   
       alert("Added to cart!");
     } catch (error) {
-      console.error("Failed to add to cart:", error);
       alert("Failed to add item to cart. Please try again.");
     } finally {
       setIsAddingToCart(false);
@@ -98,7 +99,7 @@ export function ProductDetail({ productData }: { productData: any }) {
                 Shop
               </Link>
               <span className="text-[#333]">/</span>
-              <span className="text-[#e5e5e5]">{productData.name}</span>
+              <span className="text-[#e5e5e5]">{productData?.name || "Product"}</span>
             </nav>
           </div>
         </div>
@@ -112,8 +113,8 @@ export function ProductDetail({ productData }: { productData: any }) {
               {/* Main Image */}
               <div className="relative aspect-[3/4] overflow-hidden bg-[#1a1a1a]">
                 <Image
-                  src={productData.images[currentImage] || "/placeholder.svg"}
-                  alt={`${productData.name} - View ${currentImage + 1}`}
+                  src={productData?.images?.[currentImage] || productData?.image || "/placeholder.svg"}
+                  alt={`${productData?.name || "Product"} - View ${currentImage + 1}`}
                   fill
                   className="object-cover"
                   priority={currentImage === 0}
@@ -121,7 +122,7 @@ export function ProductDetail({ productData }: { productData: any }) {
                 />
 
                 {/* Navigation Arrows */}
-                {productData.images.length > 1 && (
+                {productData?.images && productData.images.length > 1 && (
                   <>
                     <Button
                       variant="ghost"
@@ -143,7 +144,7 @@ export function ProductDetail({ productData }: { productData: any }) {
                 )}
 
                 {/* Image Indicators */}
-                {productData.images.length > 1 && (
+                {productData?.images && productData.images.length > 1 && (
                   <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 space-x-2">
                     {productData.images.map((_: any, index: number) => (
                       <button
@@ -160,7 +161,7 @@ export function ProductDetail({ productData }: { productData: any }) {
               </div>
 
               {/* Thumbnail Gallery */}
-              {productData.images.length > 1 && (
+              {productData?.images && productData.images.length > 1 && (
                 <div className="flex space-x-2 overflow-x-auto">
                   {productData.images.map((image: string, index: number) => (
                     <button
@@ -189,12 +190,12 @@ export function ProductDetail({ productData }: { productData: any }) {
           <ScrollReveal direction="right">
             <div className="space-y-8">
               <div>
-                <h1 className="text-3xl font-light uppercase tracking-wider md:text-4xl text-[#e5e5e5] mb-4">{productData.name}</h1>
-                <p className="text-2xl font-light text-[#e5e5e5]">₹{productData.price}</p>
+                <h1 className="text-3xl font-light uppercase tracking-wider md:text-4xl text-[#e5e5e5] mb-4">{productData?.name || "Product"}</h1>
+                <p className="text-2xl font-light text-[#e5e5e5]">₹{productData?.price || 0}</p>
               </div>
 
               <div className="border-t border-[#1a1a1a] pt-6">
-                <p className="text-[#999] leading-relaxed text-sm">{productData.description}</p>
+                <p className="text-[#999] leading-relaxed text-sm">{productData?.description || ""}</p>
               </div>
 
               {/* Size Selection */}

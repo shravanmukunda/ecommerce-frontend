@@ -11,10 +11,6 @@ const GRAPHQL_URL =
   process.env.NEXT_PUBLIC_GRAPHQL_URL ||
   "http://localhost:8081/query";
 
-// Log the URL being used (helps with debugging)
-console.log("🔗 GraphQL URL configured:", GRAPHQL_URL);
-console.log("🔗 NEXT_PUBLIC_API_URL from env:", process.env.NEXT_PUBLIC_API_URL || "NOT SET");
-console.log("🔗 NEXT_PUBLIC_GRAPHQL_URL from env:", process.env.NEXT_PUBLIC_GRAPHQL_URL || "NOT SET");
 
 const httpLink = new HttpLink({
   uri: GRAPHQL_URL,
@@ -33,11 +29,6 @@ export const setGetCurrentToken = (
 const authLink = setContext(async (_, { headers }) => {
   try {
     const token = await getCurrentToken();
-    
-    console.log("🔐 Auth token status:", token ? "✅ Present" : "❌ Missing");
-    if (token) {
-      console.log("🔐 Token value:", token.substring(0, 20) + "...");
-    }
 
     // Dev mode: allow requests without token (backend has dev user fallback)
     // If token is available, send it; otherwise backend will use dev user
@@ -45,17 +36,12 @@ const authLink = setContext(async (_, { headers }) => {
       ...headers,
       ...(token && { Authorization: `Bearer ${token}` }),
     };
-    
-    console.log("📤 Request headers:", {
-      hasAuth: !!newHeaders.Authorization,
-      authLength: newHeaders.Authorization?.length || 0,
-    });
 
     return {
       headers: newHeaders,
     };
   } catch (error) {
-    console.error("❌ Error getting Clerk token:", error);
+    // Silently fail - backend will handle authentication
     return { headers };
   }
 });

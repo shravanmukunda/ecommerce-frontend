@@ -80,8 +80,6 @@ interface OrdersResponse {
 
 
 export default function AdminDashboardPage() {
-  console.log("AdminDashboardPage loaded")
-  
   const [products, setProducts] = useState<Product[]>([])
   const [salesData, setSalesData] = useState<any[]>([])
   
@@ -186,8 +184,6 @@ export default function AdminDashboardPage() {
   const hasCriticalError = (productsError && !productsData) || (ordersError && !ordersData)
   
   if (hasCriticalError) {
-    console.error('Products error:', productsError?.message)
-    console.error('Orders error:', ordersError?.message)
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -244,9 +240,7 @@ export default function AdminDashboardPage() {
       {/* Promo Code Management */}
       <div>
         <h2 className="text-2xl font-bold mb-4">Promo Code Management</h2>
-        <div style={{ border: '1px solid red', padding: '10px' }}>
-          <PromoCodeManagement />
-        </div>
+        <PromoCodeManagement />
       </div>
 
       {/* Products Management */}
