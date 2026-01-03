@@ -25,6 +25,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return
     }
 
+    // Debug: Log user metadata structure
+    if (process.env.NODE_ENV === 'development') {
+      console.log('User object:', user)
+      console.log('Public metadata:', user.publicMetadata)
+      console.log('Unsafe metadata:', user.unsafeMetadata)
+      console.log('Organization memberships:', user.organizationMemberships)
+    }
+
     // Extract role from user's public metadata (matching Go backend logic)
     // Check multiple possible locations
     const userRole = 
@@ -32,8 +40,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       (user.organizationMemberships?.[0]?.role as string | undefined) ||
       (user.unsafeMetadata?.role as string | undefined)
 
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Extracted user role:', userRole)
+      console.log('Is admin?', userRole === 'admin')
+    }
+
     // If user doesn't have admin role, mark as unauthorized
     if (userRole !== "admin") {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('User does not have admin role, redirecting')
+      }
       setIsAuthorized(false)
       router.replace("/")
       return
