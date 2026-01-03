@@ -83,12 +83,18 @@ export function CartPage() {
     setPromoLoading(true)
     setPromoError("")
 
+    // Calculate total (subtotal + shipping) for promo validation
+    const cartItemsForValidation = cart?.items || []
+    const subtotalForValidation = cartItemsForValidation.reduce((sum: number, item: any) => sum + item.unitPrice * item.quantity, 0)
+    const shippingForValidation = subtotalForValidation > 100 ? 0 : 15
+    const totalForValidation = subtotalForValidation + shippingForValidation
+
     try {
       const { data } = await apolloClientInstance.query({
         query: VALIDATE_PROMO_CODE,
         variables: {
           code: promoCode,
-          orderAmount: subtotal,
+          orderAmount: totalForValidation,
         },
         fetchPolicy: "no-cache",
       })
@@ -153,8 +159,8 @@ export function CartPage() {
   
   const subtotal = cartItems.reduce((sum: number, item: any) => sum + item.unitPrice * item.quantity, 0)
   const shipping = subtotal > 100 ? 0 : 15
-  const tax = subtotal * 0.08
-  const finalTotal = subtotal + shipping + tax - promo.discount
+  const totalBeforeDiscount = subtotal + shipping
+  const finalTotal = totalBeforeDiscount - promo.discount
   const total = Math.max(finalTotal, 0) // Ensure total doesn't go negative
 
   const handleCheckout = () => {
@@ -439,10 +445,6 @@ export function CartPage() {
                         `₹${shipping.toFixed(2)}`
                       )}
                     </span>
-                  </div>
-                  <div className="flex justify-between text-[#999]">
-                    <span>Tax</span>
-                    <span className="text-[#e5e5e5]">₹{tax.toFixed(2)}</span>
                   </div>
                   {promo.discount > 0 && (
                     <div className="flex justify-between text-[#00bfff]">

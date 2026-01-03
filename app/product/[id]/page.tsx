@@ -32,8 +32,17 @@ async function getProductData(id: string) {
       image: images[0] || product.designImageURL || "",
       images: images, // Use multiple images for slideshow
       variants: product.variants || [],
-      materials: product.materials || ["Premium organic cotton", "Sustainable materials"],
-      careInstructions: product.careInstructions || ["Machine wash cold", "Tumble dry low", "Do not bleach"],
+      // Product specifications
+      material: product.material || "",
+      neckline: product.neckline || "",
+      sleeveType: product.sleeveType || "",
+      fit: product.fit || "",
+      brand: product.brand || "",
+      category: product.category || "",
+      careInstructions: product.careInstructions || "",
+      weight: product.weight || null,
+      featured: product.featured || false,
+      limitedEdition: product.limitedEdition || false,
     }
   } catch (error) {
     console.error("Error fetching product:", error)

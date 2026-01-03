@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { ScrollReveal } from "@/components/scroll-reveal"
 import { ChevronLeft, ChevronRight, Truck, Shield, Ruler, Share2 } from "lucide-react"
 import { useCart } from "@/src/hooks/use-cart"
+import { useToast } from "@/hooks/use-toast"
 
 export function ProductDetail({ productData }: { productData: any }) {
   const [currentImage, setCurrentImage] = useState(0)
@@ -14,6 +15,7 @@ export function ProductDetail({ productData }: { productData: any }) {
   const [quantity, setQuantity] = useState(1)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const { addToCart } = useCart()
+  const { toast } = useToast()
 
   // Extract available sizes from product variants
   // Only show sizes that were added by admin in the dashboard
@@ -81,6 +83,51 @@ export function ProductDetail({ productData }: { productData: any }) {
       setIsAddingToCart(false);
     }
   };
+
+  const handleShare = async () => {
+    const productUrl = typeof window !== "undefined" 
+      ? `${window.location.origin}/product/${productData?.id}`
+      : ""
+    
+    const shareData = {
+      title: productData?.name || "Check out this product",
+      text: productData?.description || `Check out ${productData?.name || "this product"} - ₹${productData?.price || 0}`,
+      url: productUrl,
+    }
+
+    // Check if Web Share API is available (mainly for mobile devices)
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData)
+        toast({
+          title: "Shared successfully!",
+          description: "Product link has been shared.",
+        })
+      } catch (error: any) {
+        // User cancelled or error occurred
+        if (error.name !== "AbortError") {
+          // Only show error if it wasn't a user cancellation
+          console.error("Error sharing:", error)
+        }
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(productUrl)
+        toast({
+          title: "Link copied!",
+          description: "Product link has been copied to your clipboard.",
+        })
+      } catch (error) {
+        console.error("Error copying to clipboard:", error)
+        toast({
+          title: "Failed to copy link",
+          description: "Please try again or copy the URL manually.",
+          variant: "destructive",
+        })
+      }
+    }
+  }
   
   
 
@@ -198,6 +245,65 @@ export function ProductDetail({ productData }: { productData: any }) {
                 <p className="text-[#999] leading-relaxed text-sm">{productData?.description || ""}</p>
               </div>
 
+              {/* Product Specifications */}
+              {(productData?.material || productData?.neckline || productData?.sleeveType || productData?.fit || productData?.brand || productData?.category || productData?.weight) && (
+                <div className="border-t border-[#1a1a1a] pt-6">
+                  <h3 className="mb-4 text-xs font-light uppercase tracking-widest text-[#999]">Product Details</h3>
+                  <div className="space-y-3 text-sm">
+                    {productData?.brand && (
+                      <div className="flex justify-between">
+                        <span className="text-[#666]">Brand:</span>
+                        <span className="text-[#e5e5e5]">{productData.brand}</span>
+                      </div>
+                    )}
+                    {productData?.category && (
+                      <div className="flex justify-between">
+                        <span className="text-[#666]">Category:</span>
+                        <span className="text-[#e5e5e5]">{productData.category}</span>
+                      </div>
+                    )}
+                    {productData?.material && (
+                      <div className="flex justify-between">
+                        <span className="text-[#666]">Material:</span>
+                        <span className="text-[#e5e5e5]">{productData.material}</span>
+                      </div>
+                    )}
+                    {productData?.fit && (
+                      <div className="flex justify-between">
+                        <span className="text-[#666]">Fit:</span>
+                        <span className="text-[#e5e5e5]">{productData.fit}</span>
+                      </div>
+                    )}
+                    {productData?.neckline && (
+                      <div className="flex justify-between">
+                        <span className="text-[#666]">Neckline:</span>
+                        <span className="text-[#e5e5e5]">{productData.neckline}</span>
+                      </div>
+                    )}
+                    {productData?.sleeveType && (
+                      <div className="flex justify-between">
+                        <span className="text-[#666]">Sleeve Type:</span>
+                        <span className="text-[#e5e5e5]">{productData.sleeveType}</span>
+                      </div>
+                    )}
+                    {productData?.weight && (
+                      <div className="flex justify-between">
+                        <span className="text-[#666]">Weight:</span>
+                        <span className="text-[#e5e5e5]">{productData.weight}g</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Care Instructions */}
+              {productData?.careInstructions && (
+                <div className="border-t border-[#1a1a1a] pt-6">
+                  <h3 className="mb-4 text-xs font-light uppercase tracking-widest text-[#999]">Care Instructions</h3>
+                  <p className="text-[#999] leading-relaxed text-sm whitespace-pre-line">{productData.careInstructions}</p>
+                </div>
+              )}
+
               {/* Size Selection */}
               <div className="border-t border-[#1a1a1a] pt-6">
                 <h3 className="mb-4 text-xs font-light uppercase tracking-widest text-[#999]">Size</h3>
@@ -261,19 +367,10 @@ export function ProductDetail({ productData }: { productData: any }) {
                 >
                   {isAddingToCart ? "Adding..." : "Add to Cart"}
                 </Button>
-                <Link href="/checkout">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full border border-[#333] py-6 text-sm font-light uppercase tracking-widest text-[#e5e5e5] hover:bg-[#1a1a1a] hover:border-[#666] transition-all duration-300 bg-transparent"
-                    disabled={!selectedSize}
-                  >
-                    Buy Now
-                  </Button>
-                </Link>
                 <div className="flex justify-center pt-2">
                   <Button
                     variant="ghost"
+                    onClick={handleShare}
                     className="text-[#666] hover:text-[#999] transition-colors"
                     aria-label="Share product"
                   >
