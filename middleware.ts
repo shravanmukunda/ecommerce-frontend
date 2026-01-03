@@ -5,21 +5,24 @@ import { NextResponse } from 'next/server';
 // Define routes that require admin role
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
+// Enable debug logging in production by setting DEBUG_ADMIN_AUTH=true
+const DEBUG = process.env.NODE_ENV === 'development' || process.env.DEBUG_ADMIN_AUTH === 'true';
+
 // Extract role from user object or session claims - matching Go backend logic
 function extractRole(user: any, sessionClaims: any): string {
   // First, try to get role from user object (most reliable)
   if (user?.publicMetadata?.role) {
     const role = String(user.publicMetadata.role);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Found role in user.publicMetadata:', role);
+    if (DEBUG) {
+      console.log('[Admin Auth] Found role in user.publicMetadata:', role);
     }
     return role;
   }
 
   if (user?.unsafeMetadata?.role) {
     const role = String(user.unsafeMetadata.role);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Found role in user.unsafeMetadata:', role);
+    if (DEBUG) {
+      console.log('[Admin Auth] Found role in user.unsafeMetadata:', role);
     }
     return role;
   }
@@ -27,9 +30,8 @@ function extractRole(user: any, sessionClaims: any): string {
   // Fallback to sessionClaims if user object is not available
   if (!sessionClaims) return '';
 
-  // Debug: Log the sessionClaims structure (remove in production)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('SessionClaims structure:', JSON.stringify(sessionClaims, null, 2));
+  if (DEBUG) {
+    console.log('[Admin Auth] SessionClaims structure:', JSON.stringify(sessionClaims, null, 2));
   }
 
   // Check multiple possible locations for role (matching Go backend extractRoleFromMetadata)
@@ -37,8 +39,8 @@ function extractRole(user: any, sessionClaims: any): string {
   const publicMetadata = sessionClaims.public_metadata || sessionClaims.publicMetadata;
   if (publicMetadata?.role) {
     const role = String(publicMetadata.role);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Found role in sessionClaims.public_metadata:', role);
+    if (DEBUG) {
+      console.log('[Admin Auth] Found role in sessionClaims.public_metadata:', role);
     }
     return role;
   }
@@ -47,8 +49,8 @@ function extractRole(user: any, sessionClaims: any): string {
   const metadata = sessionClaims.metadata;
   if (metadata?.role) {
     const role = String(metadata.role);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Found role in sessionClaims.metadata:', role);
+    if (DEBUG) {
+      console.log('[Admin Auth] Found role in sessionClaims.metadata:', role);
     }
     return role;
   }
@@ -57,8 +59,8 @@ function extractRole(user: any, sessionClaims: any): string {
   const orgMetadata = sessionClaims.org_metadata || sessionClaims.orgMetadata;
   if (orgMetadata?.role) {
     const role = String(orgMetadata.role);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Found role in sessionClaims.org_metadata:', role);
+    if (DEBUG) {
+      console.log('[Admin Auth] Found role in sessionClaims.org_metadata:', role);
     }
     return role;
   }
@@ -66,8 +68,8 @@ function extractRole(user: any, sessionClaims: any): string {
   // 4. org_role
   if (sessionClaims.org_role || sessionClaims.orgRole) {
     const role = String(sessionClaims.org_role || sessionClaims.orgRole);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Found role in sessionClaims.org_role:', role);
+    if (DEBUG) {
+      console.log('[Admin Auth] Found role in sessionClaims.org_role:', role);
     }
     return role;
   }
@@ -75,14 +77,14 @@ function extractRole(user: any, sessionClaims: any): string {
   // 5. role (direct)
   if (sessionClaims.role) {
     const role = String(sessionClaims.role);
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Found role directly in sessionClaims:', role);
+    if (DEBUG) {
+      console.log('[Admin Auth] Found role directly in sessionClaims:', role);
     }
     return role;
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('No role found in user object or sessionClaims');
+  if (DEBUG) {
+    console.log('[Admin Auth] No role found in user object or sessionClaims');
   }
   return '';
 }
@@ -92,15 +94,15 @@ export default clerkMiddleware(async (auth, req) => {
   if (isAdminRoute(req)) {
     const { userId, sessionClaims } = await auth();
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Admin route access attempt:', req.url);
-      console.log('UserId:', userId);
+    if (DEBUG) {
+      console.log('[Admin Auth] Admin route access attempt:', req.url);
+      console.log('[Admin Auth] UserId:', userId);
     }
     
     // If user is not authenticated, redirect to login
     if (!userId) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('No userId, redirecting to login');
+      if (DEBUG) {
+        console.log('[Admin Auth] No userId, redirecting to login');
       }
       const signInUrl = new URL('/login', req.url);
       signInUrl.searchParams.set('redirect_url', req.url);
@@ -111,38 +113,40 @@ export default clerkMiddleware(async (auth, req) => {
     let user = null;
     try {
       user = await currentUser();
-      if (process.env.NODE_ENV === 'development') {
-        console.log('User object from currentUser():', user ? 'Found' : 'Not found');
+      if (DEBUG) {
+        console.log('[Admin Auth] User object from currentUser():', user ? 'Found' : 'Not found');
         if (user) {
-          console.log('User publicMetadata:', user.publicMetadata);
+          console.log('[Admin Auth] User publicMetadata:', JSON.stringify(user.publicMetadata, null, 2));
         }
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Error fetching currentUser:', error);
+      if (DEBUG) {
+        console.log('[Admin Auth] Error fetching currentUser:', error);
       }
     }
 
     // Extract role using the same logic as Go backend
     const userRole = extractRole(user, sessionClaims);
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Extracted user role:', userRole);
-      console.log('Is admin?', userRole === 'admin');
+    if (DEBUG) {
+      console.log('[Admin Auth] Extracted user role:', userRole);
+      console.log('[Admin Auth] Is admin?', userRole === 'admin');
     }
 
     // If user doesn't have admin role, redirect to home with error message
     if (userRole !== 'admin') {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('User does not have admin role, redirecting to home');
+      if (DEBUG) {
+        console.log('[Admin Auth] User does not have admin role, redirecting to home');
+        console.log('[Admin Auth] User object:', user ? 'exists' : 'null');
+        console.log('[Admin Auth] SessionClaims keys:', sessionClaims ? Object.keys(sessionClaims) : 'null');
       }
       const homeUrl = new URL('/', req.url);
       homeUrl.searchParams.set('error', 'unauthorized');
       return NextResponse.redirect(homeUrl);
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Admin access granted');
+    if (DEBUG) {
+      console.log('[Admin Auth] Admin access granted');
     }
   }
 
