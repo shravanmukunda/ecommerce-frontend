@@ -5,17 +5,46 @@ import { NextResponse } from 'next/server';
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
+  // 🔍 ENHANCED DEBUG - Logs appear in SERVER TERMINAL (not browser console)
+  const timestamp = new Date().toISOString();
+  const pathname = req.nextUrl.pathname;
+  
+  console.log('\n🚀 ========== MIDDLEWARE EXECUTED ==========');
+  console.log(`⏰ Time: ${timestamp}`);
+  console.log(`📍 Path: ${pathname}`);
+  console.log(`🔗 Full URL: ${req.url}`);
+  console.log(`🔍 Method: ${req.method}`);
+  
   const { userId, sessionClaims } = await auth();
 
-  // 🔍 TEMP DEBUG (remove after it works)
-  console.log('--- ADMIN DEBUG START ---');
-  console.log('URL:', req.nextUrl.pathname);
-  console.log('userId:', userId);
-  console.log('sessionClaims:', JSON.stringify(sessionClaims, null, 2));
-  console.log('--- ADMIN DEBUG END ---');
+  console.log(`👤 User ID: ${userId || 'NOT AUTHENTICATED'}`);
+  
+  if (sessionClaims) {
+    // IMPORTANT: support both camelCase & snake_case
+    const role =
+      (sessionClaims as any)?.publicMetadata?.role ||
+      (sessionClaims as any)?.public_metadata?.role;
+    
+    console.log(`🎭 Role: ${role || 'NO ROLE FOUND'}`);
+    console.log(`📋 Session Claims Keys: ${Object.keys(sessionClaims).join(', ')}`);
+    
+    if ((sessionClaims as any)?.publicMetadata) {
+      console.log(`📦 publicMetadata:`, JSON.stringify((sessionClaims as any).publicMetadata, null, 2));
+    }
+    if ((sessionClaims as any)?.public_metadata) {
+      console.log(`📦 public_metadata:`, JSON.stringify((sessionClaims as any).public_metadata, null, 2));
+    }
+  } else {
+    console.log('⚠️  No session claims found');
+  }
 
-  if (isAdminRoute(req)) {
+  const isAdmin = isAdminRoute(req);
+  console.log(`🛡️  Is Admin Route: ${isAdmin}`);
+
+  if (isAdmin) {
     if (!userId) {
+      console.log('❌ No userId - Redirecting to /login');
+      console.log('==========================================\n');
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
@@ -24,13 +53,20 @@ export default clerkMiddleware(async (auth, req) => {
       (sessionClaims as any)?.publicMetadata?.role ||
       (sessionClaims as any)?.public_metadata?.role;
 
-    console.log('ROLE CHECK:', role);
+    console.log(`🔐 Checking role for admin access: ${role}`);
 
     if (role !== 'admin') {
+      console.log('❌ Not admin - Redirecting to /');
+      console.log('==========================================\n');
       return NextResponse.redirect(new URL('/', req.url));
     }
+    
+    console.log('✅ Admin access granted');
   }
 
+  console.log('✅ Middleware passed - Continuing to route');
+  console.log('==========================================\n');
+  
   return NextResponse.next();
 });
 
