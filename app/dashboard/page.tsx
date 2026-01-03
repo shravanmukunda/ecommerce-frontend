@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Package, User, Repeat } from "lucide-react"
+import { Package, User, Repeat, ShieldCheck } from "lucide-react"
 import { useQuery } from "@apollo/client/react"
 import { MY_ORDERS_SIMPLE } from "@/graphql/orders"
 import { useUser } from "@clerk/nextjs"
@@ -19,20 +19,33 @@ interface MyOrdersResponse {
   myOrders: Order[]
 }
 
-export default function DashboardHomePage() {
-  const { user } = useUser()
-  const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<MyOrdersResponse>(MY_ORDERS_SIMPLE, {
-    errorPolicy: 'all' // Allow partial data even if some fields fail
-  })
+// 🔐 SUPER ADMIN EMAIL
+const ADMIN_EMAILS = ["vishnujoshi062@gmail.com", "shravanmukunda3@gmail.com"]
 
-  if (!user) {
-    return null // Should be redirected by DashboardLayout
+export default function DashboardHomePage() {
+  const { user, isLoaded } = useUser()
+
+  const { data: ordersData, loading: ordersLoading, error: ordersError } =
+    useQuery<MyOrdersResponse>(MY_ORDERS_SIMPLE, {
+      errorPolicy: "all",
+      skip: !user,
+    })
+
+  if (!isLoaded || !user) {
+    return null
   }
+
+  const email = user.primaryEmailAddress?.emailAddress
+  const isAdmin = ADMIN_EMAILS.includes(email || "")
 
   const quickActions = [
     { name: "Update Profile", href: "/dashboard/profile", icon: User, description: "Manage your personal details." },
     { name: "View Orders", href: "/dashboard/orders", icon: Package, description: "Track your purchases." },
     { name: "Initiate Return", href: "/dashboard/returns", icon: Repeat, description: "Start a return or exchange." },
+  ]
+
+  const adminActions = [
+    { name: "Admin Panel", href: "/admin", icon: ShieldCheck, description: "Full administrative controls." },
   ]
 
   return (
@@ -42,17 +55,24 @@ export default function DashboardHomePage() {
         <h1 className="text-4xl md:text-5xl font-black uppercase tracking-wider mb-2 bg-gradient-to-r from-white via-gray-200 to-white bg-clip-text text-transparent">
           Welcome, {user.firstName || user.username}!
         </h1>
-        <p className="text-lg text-gray-300">Your personal hub for managing everything AuraGaze.</p>
+        <p className="text-lg text-gray-300">
+          Your personal hub for managing everything AuraGaze.
+        </p>
       </div>
 
-      {/* Quick Actions Section */}
+      {/* Quick Actions */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-black uppercase tracking-wider text-white">Quick Actions</h2>
+        <h2 className="text-2xl font-black uppercase tracking-wider text-white">
+          Quick Actions
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {quickActions.map((action) => (
-            <Card key={action.name} className="bg-[#0f0f0f] border-[#1a1a1a] hover:border-[#333] hover:shadow-lg transition-all duration-200">
+            <Card
+              key={action.name}
+              className="bg-[#0f0f0f] border-[#1a1a1a] hover:border-[#333] transition-all"
+            >
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-3 text-xl font-bold uppercase tracking-wide text-white">
+                <CardTitle className="flex items-center gap-3 text-xl font-bold uppercase text-white">
                   <action.icon className="h-6 w-6 text-[#00bfff]" />
                   {action.name}
                 </CardTitle>
@@ -60,10 +80,7 @@ export default function DashboardHomePage() {
               <CardContent>
                 <p className="text-gray-400 mb-4 text-sm">{action.description}</p>
                 <Link href={action.href}>
-                  <Button
-                    variant="outline"
-                    className="w-full border-[#333] text-white hover:bg-gradient-to-r hover:from-[#00bfff] hover:to-[#0099ff] hover:text-white hover:border-transparent bg-transparent transition-all duration-300"
-                  >
+                  <Button variant="outline" className="w-full">
                     Go Now
                   </Button>
                 </Link>
@@ -73,42 +90,40 @@ export default function DashboardHomePage() {
         </div>
       </section>
 
-      {/* Recent Orders Section */}
+      {/* Recent Orders */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-black uppercase tracking-wider text-white">Recent Orders</h2>
+        <h2 className="text-2xl font-black uppercase tracking-wider text-white">
+          Recent Orders
+        </h2>
         <Card className="bg-[#0f0f0f] border-[#1a1a1a]">
           <CardContent className="pt-6">
             {ordersLoading ? (
               <p className="text-gray-400">Loading orders...</p>
             ) : ordersError && !ordersData ? (
-              <div className="space-y-2">
-                <p className="text-red-400">Error loading orders: {ordersError.message}</p>
-                <p className="text-gray-400 text-sm">Please try refreshing the page or contact support if the issue persists.</p>
-              </div>
-            ) : ordersData?.myOrders && ordersData.myOrders.length > 0 ? (
+              <p className="text-red-400">Failed to load orders.</p>
+            ) : ordersData?.myOrders?.length ? (
               <div className="space-y-4">
-                {ordersData.myOrders
-                  .filter((order) => order != null && order.id != null)
-                  .slice(0, 3)
-                  .map((order) => (
-                    <div key={order.id} className="flex justify-between items-center border-b border-[#1a1a1a] pb-4 last:border-0 last:pb-0">
-                      <div>
-                        <p className="font-semibold text-white">Order #{order.id}</p>
-                        <p className="text-gray-400 text-sm">Date: {new Date(order.createdAt).toLocaleDateString()}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-white">₹{order.totalAmount.toFixed(2)}</p>
-                        <p className="text-gray-400 text-sm">Status: {order.status}</p>
-                      </div>
+                {ordersData.myOrders.slice(0, 3).map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex justify-between border-b border-[#1a1a1a] pb-4"
+                  >
+                    <div>
+                      <p className="font-semibold text-white">Order #{order.id}</p>
+                      <p className="text-gray-400 text-sm">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
-                  ))}
-                {ordersError && (
-                  <div className="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-3 text-sm text-yellow-300">
-                    <p>Some order details may be incomplete due to data issues.</p>
+                    <div className="text-right">
+                      <p className="font-semibold text-white">
+                        ₹{order.totalAmount.toFixed(2)}
+                      </p>
+                      <p className="text-gray-400 text-sm">{order.status}</p>
+                    </div>
                   </div>
-                )}
+                ))}
                 <Link href="/dashboard/orders">
-                  <Button variant="outline" className="w-full border-[#333] text-white hover:bg-gradient-to-r hover:from-[#00bfff] hover:to-[#0099ff] hover:text-white hover:border-transparent bg-transparent transition-all duration-300">
+                  <Button variant="outline" className="w-full">
                     View All Orders
                   </Button>
                 </Link>
@@ -120,7 +135,43 @@ export default function DashboardHomePage() {
         </Card>
       </section>
 
-      {/* Admin Panel Access (if applicable) */}
+      {/* 🔥 ADMIN DASHBOARD (ONLY FOR YOU) */}
+      {isAdmin && (
+        <section className="space-y-6 border-t border-red-800 pt-10">
+          <h2 className="text-2xl font-black uppercase tracking-wider text-red-500">
+            Admin Dashboard
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {adminActions.map((action) => (
+              <Card
+                key={action.name}
+                className="bg-[#140000] border-red-800 hover:border-red-600 transition-all"
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-red-400">
+                    <action.icon className="h-6 w-6" />
+                    {action.name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-red-300 text-sm mb-4">
+                    {action.description}
+                  </p>
+                  <Link href={action.href} className="w-full">
+                    <Button 
+                      variant="destructive" 
+                      className="w-full"
+                    >
+                      Open
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
+

@@ -82,25 +82,24 @@ interface OrdersResponse {
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [salesData, setSalesData] = useState<any[]>([])
-  
+
   // Fetch products from API
   const { data: productsData, loading: productsLoading, error: productsError, refetch: refetchProducts } = useQuery<{ products: ProductData[] }>(GET_PRODUCTS)
-  
   // Fetch orders from API with error policy to allow partial data
   const { data: ordersData, loading: ordersLoading, error: ordersError } = useQuery<OrdersResponse>(ALL_ORDERS, {
     errorPolicy: 'all' // Allow partial data even if some fields fail
   })
-  
+
   // Update products state when data is fetched
   useEffect(() => {
     if (productsData && productsData.products) {
       // Convert ProductData to Product interface
       // Support both new imageURLs array and legacy designImageURL
       const convertedProducts: Product[] = productsData.products.map(product => {
-        const images = product.imageURLs && product.imageURLs.length > 0 
-          ? product.imageURLs 
+        const images = product.imageURLs && product.imageURLs.length > 0
+          ? product.imageURLs
           : (product.designImageURL ? [product.designImageURL] : [])
-        
+
         return {
           id: parseInt(product.id),
           name: product.name,
@@ -114,7 +113,7 @@ export default function AdminDashboardPage() {
       setProducts(convertedProducts)
     }
   }, [productsData])
-  
+
   // Update orders state when data is fetched
   useEffect(() => {
     if (ordersData && ordersData.allOrders) {
@@ -126,18 +125,18 @@ export default function AdminDashboardPage() {
           if (!order.items || order.items.length === 0) return true
           return order.items.every(item => item?.variant?.product != null)
         })
-      
+
       // Generate sales data from valid orders for charts
       const salesByMonth = generateMonthlySalesData(validOrders)
       setSalesData(salesByMonth)
     }
   }, [ordersData])
-  
+
   // Generate monthly sales data from orders
   const generateMonthlySalesData = (orders: OrderData[]) => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const monthlyData: { [key: string]: { sales: number, revenue: number, count: number } } = {}
-    
+
     // Initialize last 6 months
     const currentDate = new Date()
     for (let i = 5; i >= 0; i--) {
@@ -145,19 +144,19 @@ export default function AdminDashboardPage() {
       const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`
       monthlyData[monthKey] = { sales: 0, revenue: 0, count: 0 }
     }
-    
+
     // Aggregate order data by month
     orders.forEach(order => {
       const orderDate = new Date(order.createdAt)
       const monthKey = `${monthNames[orderDate.getMonth()]} ${orderDate.getFullYear()}`
-      
+
       if (monthlyData[monthKey]) {
         monthlyData[monthKey].revenue += order.totalAmount
         monthlyData[monthKey].count += 1
         monthlyData[monthKey].sales += order.totalAmount // Using revenue as sales for now
       }
     })
-    
+
     // Convert to array format for charts
     return Object.entries(monthlyData).map(([month, data]) => ({
       month,
@@ -165,12 +164,12 @@ export default function AdminDashboardPage() {
       revenue: data.revenue
     }))
   }
-  
+
   // Calculate stats from actual data
   const totalRevenue = salesData.reduce((sum, data) => sum + (data.revenue || 0), 0)
   const totalOrders = ordersData?.allOrders?.length || 0
   const totalProducts = products.length
-  
+
   // Handle loading states
   if (productsLoading || ordersLoading) {
     return (
@@ -179,10 +178,10 @@ export default function AdminDashboardPage() {
       </div>
     )
   }
-  
+
   // Handle error states - but allow partial data to be displayed
   const hasCriticalError = (productsError && !productsData) || (ordersError && !ordersData)
-  
+
   if (hasCriticalError) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -193,7 +192,7 @@ export default function AdminDashboardPage() {
           {ordersError?.message && (
             <p className="text-red-500 mt-2">
               Orders Error: {ordersError.message}
-              {ordersError.message.includes('null') || ordersError.message.includes('product') 
+              {ordersError.message.includes('null') || ordersError.message.includes('product')
                 ? " (Some orders may have items with deleted products)"
                 : ""}
             </p>
@@ -202,7 +201,7 @@ export default function AdminDashboardPage() {
       </div>
     )
   }
-  
+
   return (
     <div className="space-y-8">
       {/* Page Header */}
@@ -210,13 +209,13 @@ export default function AdminDashboardPage() {
         <h1 className="text-3xl font-black uppercase tracking-tight">Admin Dashboard</h1>
         <p className="text-gray-600 mt-2">Manage your store performance and products</p>
       </div>
-      
+
       {/* Warning banner if there are errors but partial data */}
       {((productsError || ordersError) && (productsData || ordersData)) && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
           <p className="text-sm text-yellow-800">
-            <strong>Warning:</strong> Some data may not be fully loaded. 
-            {ordersError?.message?.includes('null') || ordersError?.message?.includes('product') 
+            <strong>Warning:</strong> Some data may not be fully loaded.
+            {ordersError?.message?.includes('null') || ordersError?.message?.includes('product')
               ? " Some orders have items with deleted products and were filtered out."
               : " Please refresh the page if you notice missing information."}
           </p>
@@ -224,7 +223,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Stats Cards */}
-      <OverviewCards 
+      <OverviewCards
         totalRevenue={totalRevenue}
         totalSales={totalRevenue} // Using revenue as sales for now
         totalOrders={totalOrders}
@@ -244,8 +243,8 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Products Management */}
-      <ProductManagement 
-        products={products} 
+      <ProductManagement
+        products={products}
         onProductDeleted={() => refetchProducts()}
       />
     </div>
